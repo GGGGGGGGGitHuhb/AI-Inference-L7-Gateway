@@ -1,0 +1,54 @@
+#pragma once
+#include <chrono>
+#include <cstdint>
+#include <functional>
+#include <map>
+#include <optional>
+#include <set>
+#include <thread>
+
+#include "base/NonCopyable.h"
+
+namespace gateway::timer {
+struct TimerQueueTestAccess;
+
+class TimerQueue final : private base::NonCopyable {
+ public:
+  using Clock = std::chrono::steady_clock;
+  using TimePoint = Clock::time_point;
+  using Id = std::uint64_t;
+  using TimerExpiryCallback = std::function<void()>;
+
+  TimerQueue() = default;
+  ~TimerQueue() noexcept;
+
+  Id addTimer(TimePoint deadline, TimerExpiryCallback timerExpiryCallback);
+  bool rescheduleTimer(Id id, TimePoint deadline);
+  bool cancelTimer(Id id);
+
+  std::optional<TimePoint> nextDeadline() const;
+  std::size_t size() const;
+  Id lastId() const;
+
+  void runDueTimers(TimePoint now, Id cutoff = UINT64_MAX);
+  void clearTimers() noexcept;
+
+ private:
+  friend struct TimerQueueTestAccess;
+
+  static Id exchangeNextIdForTest(Id value);
+  void requireOwner() const;
+
+  struct Record {
+    TimePoint deadline;
+    TimerExpiryCallback timerExpiryCallback;
+  };
+
+  const std::thread::id ownerThread_{std::this_thread::get_id()};
+  std::map<Id, Record> timerRecords_;
+  std::set<std::pair<TimePoint, Id>> orderedTimers_;
+  Id lastId_{0};
+
+  bool clearing_{false}, running_{false};
+};
+}  // namespace gateway::timer
