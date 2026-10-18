@@ -1,0 +1,78 @@
+{
+  "version": 5,
+  "configurePresets": [
+    {
+      "name": "debug",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-local/$env{GATEWAY_BUILD_ROLE}/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "GATEWAY_SANITIZERS": false
+      },
+      "environment": {
+        "GATEWAY_BUILD_ROLE": "builder"
+      }
+    },
+    {
+      "name": "release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-local/$env{GATEWAY_BUILD_ROLE}/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "GATEWAY_SANITIZERS": false
+      },
+      "environment": {
+        "GATEWAY_BUILD_ROLE": "builder"
+      }
+    },
+    {
+      "name": "asan",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-local/$env{GATEWAY_BUILD_ROLE}/asan",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "GATEWAY_SANITIZERS": true
+      },
+      "environment": {
+        "GATEWAY_BUILD_ROLE": "builder"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "asan",
+      "configurePreset": "asan"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "release",
+      "configurePreset": "release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "asan",
+      "configurePreset": "asan",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

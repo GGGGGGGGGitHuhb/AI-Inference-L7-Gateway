@@ -1,0 +1,53 @@
+{
+  "dependencies": [
+    {
+      "name": "llhttp",
+      "version": "9.4.3",
+      "license": "third_party/llhttp/LICENSE-MIT",
+      "files": [
+        {
+          "path": "third_party/llhttp/LICENSE-MIT",
+          "source": "https://raw.githubusercontent.com/nodejs/llhttp/release/v9.4.3/LICENSE-MIT",
+          "sha256": "ebca854e0134cd256d673627c20499f42577eb74bacf08b9f25b626a73c91277"
+        },
+        {
+          "path": "third_party/llhttp/include/llhttp.h",
+          "source": "https://raw.githubusercontent.com/nodejs/llhttp/release/v9.4.3/include/llhttp.h",
+          "sha256": "5bc82fa51b19aa8bee7d921038393fbfc74e8cc9bae0844c2d82c102fb8cfd68"
+        },
+        {
+          "path": "third_party/llhttp/src/api.c",
+          "source": "https://raw.githubusercontent.com/nodejs/llhttp/release/v9.4.3/src/api.c",
+          "sha256": "0f8590206fe2f264db2825401b5fb856b979ee1363dc88b06f36dc9577afb941"
+        },
+        {
+          "path": "third_party/llhttp/src/http.c",
+          "source": "https://raw.githubusercontent.com/nodejs/llhttp/release/v9.4.3/src/http.c",
+          "sha256": "a1f2b23168f8e9b5bfa464c89027d3ca259fc649ae3d7e72bfff997d1aeb5d72"
+        },
+        {
+          "path": "third_party/llhttp/src/llhttp.c",
+          "source": "https://raw.githubusercontent.com/nodejs/llhttp/release/v9.4.3/src/llhttp.c",
+          "sha256": "391e7c99912abf3b1c9dd8a9c85fdeaac2663e9fa55b6f3871154d16fef8b892"
+        }
+      ]
+    },
+    {
+      "name": "nlohmann",
+      "version": "3.12.0",
+      "license": "third_party/nlohmann/LICENSE.MIT",
+      "files": [
+        {
+          "path": "third_party/nlohmann/LICENSE.MIT",
+          "source": "https://raw.githubusercontent.com/nlohmann/json/v3.12.0/LICENSE.MIT",
+          "sha256": "46a65cffd1ea955132d95a8dd921640714a8d6b537d2e4e482d31145ae95b603"
+        },
+        {
+          "path": "third_party/nlohmann/json.hpp",
+          "source": "https://raw.githubusercontent.com/nlohmann/json/v3.12.0/single_include/nlohmann/json.hpp",
+          "sha256": "aaf127c04cb31c406e5b04a63f1ae89369fccde6d8fa7cdda1ed4f32dfc5de63"
+        }
+      ]
+    }
+  ]
+}
