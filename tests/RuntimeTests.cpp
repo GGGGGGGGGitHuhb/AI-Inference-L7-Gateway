@@ -1,5 +1,6 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <sys/eventfd.h>
 #include <unistd.h>
 
@@ -79,6 +80,33 @@ struct ProxySessionTestAccess {
     return session.upstreamOffset_;
   }
 };
+struct StreamingSessionTestAccess {
+  static bool started(const ProxySession& session) {
+    return session.responseStarted_;
+  }
+
+  static std::size_t pending(const ProxySession& session) {
+    return session.streamOutput_ ? session.streamOutput_->size() : 0;
+  }
+
+  static std::size_t decoded(const ProxySession& session) {
+    return session.streamDecodedTotal_;
+  }
+
+  static std::size_t bufferedBody(const ProxySession& session) {
+    return session.responseParser_
+               ? session.responseParser_->message().body.size()
+               : 0;
+  }
+
+  static bool uploaded(const ProxySession& session) {
+    return session.requestWriteComplete_;
+  }
+
+  static void error(ProxySession& session) {
+    session.prepareError(500, "internal_error");
+  }
+};
 }  // namespace gateway::gateway_api
 
 using namespace gateway;
@@ -130,6 +158,7 @@ class FakeIo final : public gateway_api::SessionIo {
   int connectError = 0;
   int connectInterrupts = 0;
   int readInterrupts = 0;
+  int advanceUpstreamReadMs = 0;
   int writeInterrupts = 0;
 
   bool blockUpstream = false;
@@ -139,6 +168,7 @@ class FakeIo final : public gateway_api::SessionIo {
   bool upstreamReset = false;
   bool upstreamEof = false;
   std::size_t sendLimit = 7;
+  std::size_t clientSendBudget = 16777216;
 };
 
 int FakeIo::shutdownWrite(int) {
@@ -176,6 +206,11 @@ ssize_t FakeIo::receiveBytes(int fd, void* data, std::size_t size) {
     return -1;
   }
   const bool client = fd == clientFd;
+  if (!client && advanceUpstreamReadMs) {
+    time += std::chrono::milliseconds(advanceUpstreamReadMs);
+    advanceUpstreamReadMs = 0;
+  }
+
   if (client) {
     if (throwRead) throw std::bad_alloc();
     operations.push_back("read");
@@ -208,13 +243,16 @@ ssize_t FakeIo::sendBytes(int fd, const void* data, std::size_t size) {
     errno = EPIPE;
     return -1;
   }
-  if (client ? blockClient : blockUpstream) {
+  if ((client && clientSendBudget == 0) ||
+      (client ? blockClient : blockUpstream)) {
     errno = EAGAIN;
     return -1;
   }
 
   if (client) operations.push_back("send");
-  const auto count = std::min(size, sendLimit);
+  const auto count =
+      std::min({size, sendLimit, client ? clientSendBudget : size});
+  if (client) clientSendBudget -= count;
   (client ? sentClient : sentUpstream)
       .append(static_cast<const char*>(data), count);
   return count;
@@ -666,6 +704,245 @@ void testReusedFailureAndDeadlines() {
   failure.checkCleanup();
 }
 
+const std::string kStreamHeaders =
+    "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nTransfer-Encoding: "
+    "chunked\r\n\r\n";
+
+void startStreamRequest(SessionFixture& fixture, bool upload = true) {
+  auto body = std::string(
+      "{\"model\":\"m\",\"messages\":[{\"role\":\"user\",\"content\":\"x\"}],"
+      "\"stream\":true}");
+  fixture.io.clientInput =
+      "POST /v1/chat/completions HTTP/1.1\r\nHost: h\r\nContent-Type: "
+      "application/json\r\nContent-Length: " +
+      std::to_string(body.size()) + "\r\n\r\n" + body;
+  ProxySessionTestAccess::downstream(*fixture.session, EPOLLIN);
+  fixture.io.sendLimit = 65536;
+  if (upload) ProxySessionTestAccess::upstream(*fixture.session, EPOLLOUT);
+}
+
+void feedStream(SessionFixture& fixture, std::string bytes) {
+  fixture.io.upstreamInput = std::move(bytes);
+  ProxySessionTestAccess::upstream(*fixture.session, EPOLLIN);
+}
+
+void testStreamingCommitAndEarly() {
+  using gateway_api::StreamingSessionTestAccess;
+  for (int sent : {0, 1, 65536}) {
+    SessionFixture fixture;
+    startStreamRequest(fixture);
+    feedStream(fixture, kStreamHeaders + "10\r\ndata: hel");
+    GATEWAY_CHECK(StreamingSessionTestAccess::pending(*fixture.session) > 0);
+    if (sent) {
+      fixture.io.sendLimit = sent;
+      fixture.io.clientSendBudget = sent;
+      ProxySessionTestAccess::downstream(*fixture.session, EPOLLOUT);
+    }
+    GATEWAY_CHECK(StreamingSessionTestAccess::started(*fixture.session) ==
+                  (sent != 0));
+    const auto prefix = fixture.io.sentClient;
+    if (sent == 1) GATEWAY_CHECK(prefix == "H");
+    fixture.io.clientSendBudget = 16777216;
+    fixture.io.upstreamEof = true;
+    ProxySessionTestAccess::upstream(*fixture.session, EPOLLIN | EPOLLRDHUP);
+    fixture.flushClient();
+    fixture.checkCleanup();
+    if (!sent)
+      GATEWAY_CHECK(fixture.io.sentClient.starts_with("HTTP/1.1 502"));
+    else {
+      GATEWAY_CHECK(fixture.io.sentClient == prefix &&
+                    !prefix.ends_with("0\r\n\r\n"));
+      GATEWAY_CHECK(prefix.find("HTTP/1.1 ", 1) == std::string::npos);
+    }
+    GATEWAY_CHECK(fixture.pool->snapshot().total == 0);
+  }
+  SessionFixture early;
+  startStreamRequest(early, false);
+  feedStream(early, kStreamHeaders);
+  GATEWAY_CHECK(!StreamingSessionTestAccess::uploaded(*early.session));
+  ProxySessionTestAccess::upstream(*early.session, EPOLLOUT);
+  GATEWAY_CHECK(early.io.sentUpstream.empty());
+  ProxySessionTestAccess::downstream(*early.session, EPOLLOUT);
+  GATEWAY_CHECK(!early.session->finished() && early.io.shutdownSuccesses == 0);
+  GATEWAY_CHECK(StreamingSessionTestAccess::pending(*early.session) == 0);
+  feedStream(early, "3\r\nabc\r\n0\r\n\r\n");
+  early.flushClient();
+  early.checkCleanup();
+  GATEWAY_CHECK(early.io.sentClient.ends_with("3\r\nabc\r\n0\r\n\r\n"));
+  GATEWAY_CHECK(early.pool->snapshot().total == 0);
+  // 候选头已排队但还没send时，绝对response期限仍可替换为单个504。
+  app::Timeouts timeoutLimits;
+  timeoutLimits.response = 10;
+  SessionFixture uncommitted(timeoutLimits);
+  startStreamRequest(uncommitted);
+  feedStream(uncommitted, kStreamHeaders);
+  uncommitted.io.time += std::chrono::milliseconds(10);
+  ProxySessionTestAccess::deadline(*uncommitted.session);
+  uncommitted.flushClient();
+  uncommitted.checkCleanup();
+  GATEWAY_CHECK(uncommitted.io.sentClient.starts_with("HTTP/1.1 504") &&
+                uncommitted.io.sentClient.find("HTTP/1.1 200") ==
+                    std::string::npos);
+
+  // 回调内分配异常被C边界捕获，parse返回后才生成500。
+  SessionFixture allocation;
+  startStreamRequest(allocation);
+  allocation.io.upstreamInput = kStreamHeaders;
+  failNextAllocation = true;
+  ProxySessionTestAccess::upstream(*allocation.session, EPOLLIN);
+  failNextAllocation = false;
+  allocation.flushClient();
+  allocation.checkCleanup();
+  GATEWAY_CHECK(allocation.io.sentClient.starts_with("HTTP/1.1 500"));
+}
+
+void checkStreamCompletionDeadline(int framing, int committedBytes, int elapsed,
+                                   int deadlineKind) {
+  app::Timeouts limits;
+  limits.response = deadlineKind == 1 ? 1000 : 10;
+  limits.total = deadlineKind == 0 ? 1000 : 10;
+  SessionFixture fixture(limits);
+  startStreamRequest(fixture);
+  const auto headers =
+      std::string("HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\n") +
+      (framing == 0   ? "Content-Length: 2\r\n"
+       : framing == 1 ? "Transfer-Encoding: chunked\r\n"
+                      : "") +
+      "\r\n";
+  if (committedBytes || framing == 2) {
+    feedStream(fixture, headers + (framing == 1 ? "2\r\nx" : "x"));
+    fixture.io.clientSendBudget = committedBytes;
+    ProxySessionTestAccess::downstream(*fixture.session, EPOLLOUT);
+    if (committedBytes == 1) GATEWAY_CHECK(fixture.io.sentClient == "H");
+    fixture.io.upstreamInput = framing == 2   ? ""
+                               : framing == 1 ? "y\r\n0\r\n\r\n"
+                                              : "y";
+  } else {
+    fixture.io.upstreamInput =
+        headers + (framing == 1 ? "2\r\nxy\r\n0\r\n\r\n" : "xy");
+  }
+
+  const auto prefix = fixture.io.sentClient;
+  fixture.io.clientSendBudget = 16777216;
+  fixture.io.upstreamEof = framing == 2;
+  fixture.io.advanceUpstreamReadMs = elapsed;
+  ProxySessionTestAccess::upstream(*fixture.session, EPOLLIN);
+  fixture.flushClient();
+  fixture.checkCleanup();
+  if (elapsed < 10) {
+    GATEWAY_CHECK(fixture.io.sentClient.starts_with("HTTP/1.1 200") &&
+                  fixture.io.sentClient.ends_with("0\r\n\r\n"));
+  } else if (committedBytes) {
+    GATEWAY_CHECK(fixture.io.sentClient == prefix &&
+                  !prefix.ends_with("0\r\n\r\n"));
+  } else {
+    GATEWAY_CHECK(fixture.io.sentClient.starts_with("HTTP/1.1 504") &&
+                  fixture.io.sentClient.find("HTTP/1.1 200") ==
+                      std::string::npos);
+    if (deadlineKind != 0)
+      GATEWAY_CHECK(fixture.io.sentClient.find("total_timeout") !=
+                    std::string::npos);
+  }
+}
+
+void testStreamingCompletionDeadlines() {
+  // response、total及同刻total优先；三定界 × 三提交状态 × 截止前/等于/超过。
+  for (int deadlineKind : {0, 1, 2})
+    for (int framing : {0, 1, 2})
+      for (int committedBytes : {0, 1, 65536})
+        for (int elapsed : {9, 10, 11})
+          checkStreamCompletionDeadline(framing, committedBytes, elapsed,
+                                        deadlineKind);
+
+  // 已排空批次之后的正常尾片，不能重新激活旧批次的写期限。
+  app::Timeouts batchLimits;
+  batchLimits.downstreamWrite = 10;
+  SessionFixture batch(batchLimits);
+  startStreamRequest(batch);
+  feedStream(batch, kStreamHeaders + "2\r\nx");
+  ProxySessionTestAccess::downstream(*batch.session, EPOLLOUT);
+  batch.io.advanceUpstreamReadMs = 20;
+  feedStream(batch, "y\r\n0\r\n\r\n");
+  batch.flushClient();
+  batch.checkCleanup();
+  GATEWAY_CHECK(batch.io.sentClient.ends_with("0\r\n\r\n"));
+
+  // 强制停止后的迟到完整响应不能恢复会话或补成功尾块。
+  for (int committedBytes : {0, 1, 65536}) {
+    SessionFixture fixture;
+    startStreamRequest(fixture);
+    feedStream(fixture, kStreamHeaders + "1\r\nx\r\n");
+    fixture.io.clientSendBudget = committedBytes;
+    ProxySessionTestAccess::downstream(*fixture.session, EPOLLOUT);
+    const auto prefix = fixture.io.sentClient;
+    fixture.session->finishSession();
+    fixture.io.clientSendBudget = 16777216;
+    feedStream(fixture, "0\r\n\r\n");
+    ProxySessionTestAccess::downstream(*fixture.session, EPOLLOUT);
+    GATEWAY_CHECK(fixture.io.sentClient == prefix &&
+                  !prefix.ends_with("0\r\n\r\n"));
+    fixture.checkCleanup();
+  }
+}
+
+void testStreamingLimitsAndTime() {
+  using gateway_api::StreamingSessionTestAccess;
+  for (bool commit : {false, true}) {
+    SessionFixture fixture;
+    startStreamRequest(fixture);
+    feedStream(fixture, kStreamHeaders + "100000\r\n");
+    if (commit) ProxySessionTestAccess::downstream(*fixture.session, EPOLLOUT);
+    const auto prefix = fixture.io.sentClient;
+    fixture.io.blockClient = true;
+    for (int index = 0; index < 20 && fixture.session->hasUpstream(); ++index)
+      feedStream(fixture, std::string(16384, 'x'));
+    GATEWAY_CHECK(!fixture.session->hasUpstream());
+    fixture.io.blockClient = false;
+    fixture.flushClient();
+    fixture.checkCleanup();
+    if (commit)
+      GATEWAY_CHECK(fixture.io.sentClient == prefix);
+    else
+      GATEWAY_CHECK(fixture.io.sentClient.starts_with("HTTP/1.1 502") &&
+                    fixture.io.sentClient.find("stream_buffer_limit") !=
+                        std::string::npos);
+  }
+  for (const auto* kind : {"response", "total", "write"}) {
+    app::Timeouts limits;
+    limits.response = std::string(kind) == "response" ? 30 : 1000;
+    limits.total = std::string(kind) == "total" ? 30 : 2000;
+    limits.downstreamWrite = std::string(kind) == "write" ? 30 : 1000;
+    SessionFixture fixture(limits);
+    startStreamRequest(fixture);
+    feedStream(fixture, kStreamHeaders + "1000\r\nx");
+    fixture.io.sendLimit = std::string(kind) == "write" ? 1 : 65536;
+    ProxySessionTestAccess::downstream(*fixture.session, EPOLLOUT);
+    fixture.io.time += std::chrono::milliseconds(20);
+    feedStream(fixture, "y");
+    ProxySessionTestAccess::downstream(*fixture.session, EPOLLOUT);
+    fixture.io.time += std::chrono::milliseconds(10);
+    ProxySessionTestAccess::deadline(*fixture.session);
+    fixture.checkCleanup();
+    GATEWAY_CHECK(!fixture.io.sentClient.ends_with("0\r\n\r\n"));
+  }
+  app::Timeouts limits;
+  limits.downstreamWrite = 10;
+  SessionFixture batches(limits);
+  startStreamRequest(batches);
+  feedStream(batches, kStreamHeaders + "100\r\nx");
+  ProxySessionTestAccess::downstream(*batches.session, EPOLLOUT);
+  batches.io.time += std::chrono::milliseconds(20);
+  ProxySessionTestAccess::deadline(*batches.session);
+  GATEWAY_CHECK(!batches.session->finished());
+  feedStream(batches, "y");
+  batches.io.time += std::chrono::milliseconds(9);
+  ProxySessionTestAccess::deadline(*batches.session);
+  GATEWAY_CHECK(!batches.session->finished());
+  batches.io.time += std::chrono::milliseconds(1);
+  ProxySessionTestAccess::deadline(*batches.session);
+  batches.checkCleanup();
+}
+
 class EventFixture {
  public:
   net::EventLoop loop;
@@ -904,6 +1181,98 @@ void testRuntimePoolSnapshots() {
                 stopped.activeTimers == 0);
 }
 
+void testRuntimeStreamSnapshots() {
+  for (int stopMode : {0, 1, 2, 3}) {
+    net::Socket backend = net::Socket::createTcp();
+    sockaddr_in address{};
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    GATEWAY_CHECK(::bind(backend.fd(), reinterpret_cast<sockaddr*>(&address),
+                         sizeof(address)) == 0);
+    backend.listen(8);
+    app::GatewayConfig config;
+    config.listenPort = 0;
+    config.upstreamAddress = "127.0.0.1";
+    config.upstreamPort = backend.localPort();
+    config.timeouts.shutdown = 30;
+    gateway_api::GatewayRuntime runtime(config);
+    const auto port = runtime.startListener();
+    auto client = connectClient(port);
+    const auto body = std::string(
+        "{\"model\":\"m\",\"messages\":[{\"role\":\"user\",\"content\":\"x\"}],"
+        "\"stream\":true}");
+    const auto request =
+        "POST /v1/chat/completions HTTP/1.1\r\nHost: h\r\nContent-Type: "
+        "application/json\r\nContent-Length: " +
+        std::to_string(body.size()) + "\r\n\r\n" + body;
+    GATEWAY_CHECK(::send(client.fd(), request.data(), request.size(),
+                         MSG_NOSIGNAL) == static_cast<ssize_t>(request.size()));
+    net::Socket upstream;
+    for (int step = 0; step < 50 && !upstream.valid(); ++step) {
+      runtime.pollOnce(1);
+      upstream.reset(::accept4(backend.fd(), nullptr, nullptr,
+                               SOCK_NONBLOCK | SOCK_CLOEXEC));
+    }
+    GATEWAY_CHECK(upstream.valid());
+    const auto prefix =
+        kStreamHeaders + (stopMode == 3 ? "" : "20\r\ndata: hel");
+    GATEWAY_CHECK(::send(upstream.fd(), prefix.data(), prefix.size(),
+                         MSG_NOSIGNAL) == static_cast<ssize_t>(prefix.size()));
+    std::string response;
+    for (int step = 0;
+         step < 100 &&
+         response.find(stopMode == 3 ? "\r\n\r\n" : "data: hel") ==
+             std::string::npos;
+         ++step) {
+      runtime.pollOnce(1);
+      char bytes[4096];
+      const auto count = ::recv(client.fd(), bytes, sizeof(bytes), 0);
+      if (count > 0) response.append(bytes, count);
+    }
+    GATEWAY_CHECK(response.starts_with("HTTP/1.1 200"));
+    const auto active = runtime.snapshot();
+    GATEWAY_CHECK(active.activeSessions == 1 &&
+                  active.reservedBytes == 16777216 && active.pool.leased == 1 &&
+                  active.pool.idle == 0 && active.activeTimers == 1);
+    if (stopMode) {
+      GATEWAY_CHECK(::raise(SIGTERM) == 0);
+      runtime.pollOnce(0);
+      if (stopMode == 2 || stopMode == 3) {
+        GATEWAY_CHECK(::raise(SIGINT) == 0);
+        runtime.pollOnce(0);
+      }
+    } else {
+      const auto tail = std::string(23, 'x') + "\r\n0\r\n\r\n";
+      GATEWAY_CHECK(::send(upstream.fd(), tail.data(), tail.size(),
+                           MSG_NOSIGNAL) == static_cast<ssize_t>(tail.size()));
+    }
+    bool eof = false;
+    for (int step = 0; step < 200 && !eof; ++step) {
+      runtime.pollOnce(1);
+      // 事件循环停止后 pollOnce 不再等待；仍须等待内核交付 FIN/RST。
+      pollfd clientEvent{client.fd(), POLLIN, 0};
+      GATEWAY_CHECK(::poll(&clientEvent, 1, 5) >= 0);
+      char bytes[4096];
+      const auto count = ::recv(client.fd(), bytes, sizeof(bytes), 0);
+      if (count > 0) response.append(bytes, count);
+      if (count == 0 || (count < 0 && errno == ECONNRESET)) eof = true;
+    }
+    GATEWAY_CHECK(eof);
+    GATEWAY_CHECK(response.ends_with("0\r\n\r\n") == (stopMode == 0));
+    client.reset();
+    for (int step = 0; step < 50 && runtime.snapshot().activeSessions; ++step)
+      runtime.pollOnce(1);
+    const auto released = runtime.snapshot();
+    GATEWAY_CHECK(released.activeSessions == 0 && released.reservedBytes == 0 &&
+                  released.pool.total == 0 && released.pool.retired == 0 &&
+                  released.activeTimers == 0);
+    if (!stopMode) {
+      GATEWAY_CHECK(::raise(SIGTERM) == 0);
+      runtime.pollOnce(0);
+    }
+  }
+}
+
 void testPoolAllocationFailures() {
   SessionFixture fixture;
   auto baseline = fdCount();
@@ -1019,8 +1388,12 @@ int main() {
     testClosing();
     testReuseSessionBoundaries();
     testReusedFailureAndDeadlines();
+    testStreamingCommitAndEarly();
+    testStreamingLimitsAndTime();
+    testStreamingCompletionDeadlines();
     testPoolAllocationFailures();
     testRuntimePoolSnapshots();
+    testRuntimeStreamSnapshots();
     testRuntimeBudgets();
     testRuntimeClosingBudgets();
     GATEWAY_CHECK(fdCount() == descriptors);

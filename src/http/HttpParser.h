@@ -2,12 +2,14 @@
 
 #include <llhttp.h>
 
+#include <array>
 #include <cstddef>
 #include <string>
 #include <string_view>
 #include <vector>
 
 namespace gateway::http {
+enum class ResponseMode { kBuffered, kAllowEventStream };
 enum class MessageKind { kRequest, kResponse };
 enum class ParseStatus { kNeedMore, kComplete, kRejected };
 struct Header {
@@ -41,11 +43,14 @@ struct ParserLimits {
   std::size_t responseWireBytes = 8388608;
   std::size_t chunkLineBytes = 1024;
   std::size_t chunks = 65536;
+  std::size_t streamBodyBytes = 8388608;
+  std::size_t streamWireBytes = 16777216;
 };
 
 class HttpParser {
  public:
-  explicit HttpParser(MessageKind kind, ParserLimits limits = {});
+  explicit HttpParser(MessageKind kind, ParserLimits limits = {},
+                      ResponseMode responseMode = ResponseMode::kBuffered);
   HttpParser(const HttpParser&) = delete;
   HttpParser& operator=(const HttpParser&) = delete;
   HttpParser(HttpParser&&) = delete;
@@ -54,7 +59,16 @@ class HttpParser {
   ParseResult parseBytes(std::string_view input) noexcept;
   ParseResult finishInput() noexcept;
   void resetParser() noexcept;
+
   const HttpMessage& message() const { return message_; }
+  bool finalHeadersReady() const { return finalHeadersReady_; }
+  bool eventStream() const { return eventStream_; }
+  std::size_t decodedTotal() const { return decodedTotal_; }
+  std::size_t wireTotal() const { return wireBytes_; }
+  // 当前parse调用产生的片段，仅在下一次parse/reset之前有效。
+  std::string_view bodyFragment() const {
+    return {bodyFragment_.data(), bodyFragmentSize_};
+  }
 
  private:
   enum class WirePhase { kHeaders, kBody, kChunkLine, kChunkData, kTrailers };
@@ -80,12 +94,21 @@ class HttpParser {
   bool accountByte(char byte);
   llhttp_errno_t deliverByte(char byte) noexcept;
   bool validateHeaders();
+  bool selectResponseMode();
   int rejectMessage(unsigned status, const char* code) noexcept;
   ParseResult result(std::size_t consumed) const noexcept;
   std::size_t bodyLimit() const;
 
   MessageKind kind_;
   ParserLimits limits_;
+  ResponseMode responseMode_;
+
+  std::array<char, 16384> bodyFragment_{};
+  std::size_t bodyFragmentSize_ = 0;
+  std::size_t decodedTotal_ = 0;
+  bool finalHeadersReady_ = false;
+  bool eventStream_ = false;
+
   llhttp_settings_t settings_{};
   llhttp_t parser_{};
   HttpMessage message_;

@@ -5,6 +5,7 @@
 #include "app/GatewayConfig.h"
 #include "gateway/SessionIo.h"
 #include "http/HttpParser.h"
+#include "http/StreamOutput.h"
 #include "net/Channel.h"
 #include "net/EventLoop.h"
 #include "net/Socket.h"
@@ -30,12 +31,14 @@ class ProxySession {
 
  private:
   friend struct ProxySessionTestAccess;
+  friend struct StreamingSessionTestAccess;
 
   enum class Phase {
     kReceiving,
     kConnecting,
     kUpstream,
     kDownstream,
+    kStreaming,
     kClosing,
     kFinished
   };
@@ -51,6 +54,11 @@ class ProxySession {
   void readUpstream();
   void writeUpstream();
   void writeDownstream();
+
+  // 流片段排队和发送。
+  void writeStream();
+  void acceptStreamResult(const http::ParseResult& result);
+  void beginStream();
 
   // 请求、响应及分阶段关闭。
   void beginUpstream();
@@ -81,6 +89,9 @@ class ProxySession {
 
   std::unique_ptr<http::HttpParser> requestParser_;
   std::unique_ptr<http::HttpParser> responseParser_;
+  std::unique_ptr<http::StreamOutput> streamOutput_;
+  std::size_t streamDecodedTotal_ = 0;
+  std::size_t streamWireTotal_ = 0;
   std::string upstreamOutput_;
   std::string downstreamOutput_;
   std::size_t upstreamOffset_ = 0;
@@ -95,6 +106,9 @@ class ProxySession {
   TimePoint outputCompletedAt_;
 
   Phase phase_ = Phase::kReceiving;
+  bool streamRequest_ = false;
+  bool responseStarted_ = false;
+  bool streamHttpComplete_ = false;
   bool requestWriteComplete_ = false;
   bool responseReusable_ = true;
   bool downstreamEof_ = false;
