@@ -1,0 +1,58 @@
+[
+  {
+    "source": "include/net/EventLoop.h",
+    "target": "src/net/EventLoop.h",
+    "commit": "2a93aa7f492640902386677c4d901b0fd193bb09",
+    "source_sha256": "8d4cd6b4300065579e2040a6cddbf74c6ff9b83e71fe8c8934fd9dea307aa3f3",
+    "target_sha256": "fbf2d4bc04e94faa725a58c3f2ee0f2b1f3fa4ed2c0b756f7cb0610c7c2e21b1"
+  },
+  {
+    "source": "src/net/EventLoop.cpp",
+    "target": "src/net/EventLoop.cpp",
+    "commit": "2a93aa7f492640902386677c4d901b0fd193bb09",
+    "source_sha256": "dccc5cd973435a915c8aed58b2963178b73bdd5e177a4a99d79f27be4fb5ffb2",
+    "target_sha256": "a7238be2e91f921727f53d7eb1cfd2ef6db631bb81eb9aa5bc8b981bebccb3a2"
+  },
+  {
+    "source": "include/net/Channel.h",
+    "target": "src/net/Channel.h",
+    "commit": "2a93aa7f492640902386677c4d901b0fd193bb09",
+    "source_sha256": "22bbc504ea43f6c3d074bf0afcee7e108ab134d318efc239160e70dd5484a25b",
+    "target_sha256": "497886547ba4ce5dd45b84b48fe939764bb4ff347a2082df2fa5b882b5a25141"
+  },
+  {
+    "source": "src/net/Channel.cpp",
+    "target": "src/net/Channel.cpp",
+    "commit": "2a93aa7f492640902386677c4d901b0fd193bb09",
+    "source_sha256": "9356546f008cce89f39a20a46165e25be5a5cf0aeba98951d2e1d69d465d1030",
+    "target_sha256": "8c6ceb4665a8d15a5996970dcd1c7cf26b0bccca387531a7e6673c3af5151340"
+  },
+  {
+    "source": "include/net/Epoller.h",
+    "target": "src/net/Epoller.h",
+    "commit": "2a93aa7f492640902386677c4d901b0fd193bb09",
+    "source_sha256": "6b24db9a1d6ea5c1cafcb4490727f0e6dca20a8c9f84b05eb00e8f9426bc6b06",
+    "target_sha256": "90bee1299ddfcaa3a661a4fe1773f3ddf612bae349b4a1dcc1b9a35ca879d820"
+  },
+  {
+    "source": "src/net/Epoller.cpp",
+    "target": "src/net/Epoller.cpp",
+    "commit": "2a93aa7f492640902386677c4d901b0fd193bb09",
+    "source_sha256": "0b9d9c9ea1128de5af525aac127627532ee1f78fbac3e18c643aba29fbbd200e",
+    "target_sha256": "7e1b4ccc4c5752d159a9de7108d38a7f88e5cb36001eab63e549a1f523757288"
+  },
+  {
+    "source": "src/http/HttpNormalization.h",
+    "target": "src/http/HttpNormalization.h",
+    "commit": "bb318d8c55f5851d27cd52e6cd3367f450a5d8dd",
+    "source_sha256": "d2fdc2aaab0a9157992f9eea93c9c36b885359f0c95911b5cc11c8cc55ea9f10",
+    "target_sha256": "de5d57755f36d8118dbc48f0fdc9bb3e30b0c7fdf9e998168c55259574620c7b"
+  },
+  {
+    "source": "src/http/HttpNormalization.cpp",
+    "target": "src/http/HttpNormalization.cpp",
+    "commit": "bb318d8c55f5851d27cd52e6cd3367f450a5d8dd",
+    "source_sha256": "8879acf4c4eefd908aa535ce6ad2c704bc341d23f1c4a87e962e693531cf3b89",
+    "target_sha256": "15815bfc7915df217c78bfc759e8aa3258e5f8632d7b0d5d508d73bbd4e0ceea"
+  }
+]
