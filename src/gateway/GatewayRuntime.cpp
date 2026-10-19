@@ -12,14 +12,16 @@
 
 namespace gateway::gateway_api {
 GatewayRuntime::GatewayRuntime(app::GatewayConfig config)
-    : config_(std::move(config)), pool_(loop_, config_.upstreamPool, io_) {
+    : config_(std::move(config)),
+      budget_(config_.maxReservedBytes, config_.streamBuffer.maxTotalBytes),
+      pool_(loop_, config_.upstreamPool, io_) {
   loop_.registerCleanupCallback([this] { onCleanup(); });
 }
 
 GatewayRuntime::~GatewayRuntime() {
-  for (auto& [id, session] : sessions_) session->finishSession();
+  for (auto& [id, session] : sessions_)
+    session->finishSession(FinishReason::kStopped);
   sessions_.clear();
-  reservedBytes_ = 0;
   if (shutdownTimer_) loop_.cancelTimer(shutdownTimer_);
   if (listenerChannel_) listenerChannel_->removeChannel();
   if (signalChannel_) signalChannel_->removeChannel();
@@ -58,8 +60,10 @@ RuntimeSnapshot GatewayRuntime::snapshot() const {
   std::size_t upstreams = 0;
   for (const auto& [id, session] : sessions_)
     if (session->hasUpstream()) ++upstreams;
-  return {sessions_.size(),   reservedBytes_, upstreams,
-          loop_.timerCount(), peakSessions_,  pool_.snapshot()};
+  return {sessions_.size(),  budget_.snapshot().reserved,
+          upstreams,         loop_.timerCount(),
+          peakSessions_,     pool_.snapshot(),
+          budget_.snapshot()};
 }
 
 void GatewayRuntime::onListenerEvent(std::uint32_t events) {
@@ -79,24 +83,21 @@ void GatewayRuntime::onListenerEvent(std::uint32_t events) {
 
     const auto acceptedAt = io_.now();
     net::Socket client(fd);
-    if (sessions_.size() >= config_.maxConnections ||
-        reservedBytes_ >
-            config_.maxReservedBytes - ProxySession::kReservationBytes)
-      continue;
+    if (sessions_.size() >= config_.maxConnections) continue;
+    auto reservation = budget_.acquireCapacity(CapacityKind::kSession);
+    if (!reservation.valid()) continue;
     if (!nextSessionId_) throw std::overflow_error("session ID exhausted");
     const auto id = nextSessionId_++;
-    reservedBytes_ += ProxySession::kReservationBytes;
     try {
       auto session = std::make_unique<ProxySession>(
-          loop_, config_, io_, pool_, std::move(client), acceptedAt);
+          loop_, config_, io_, pool_, std::move(client), acceptedAt, budget_,
+          std::move(reservation));
       session->startSession();
       sessions_.emplace(id, std::move(session));
       peakSessions_ = std::max(peakSessions_, sessions_.size());
     } catch (const std::bad_alloc&) {
-      reservedBytes_ -= ProxySession::kReservationBytes;
       // 新会话尚未发布；局部 RAII 回收，不损害其他会话。
     } catch (...) {
-      reservedBytes_ -= ProxySession::kReservationBytes;
       throw;
     }
   }
@@ -106,7 +107,6 @@ void GatewayRuntime::onCleanup() {
   for (auto iterator = sessions_.begin(); iterator != sessions_.end();) {
     if (iterator->second->finished()) {
       iterator = sessions_.erase(iterator);
-      reservedBytes_ -= ProxySession::kReservationBytes;
     } else
       ++iterator;
   }
@@ -158,7 +158,8 @@ void GatewayRuntime::onShutdownDeadline() {
 }
 
 void GatewayRuntime::forceShutdown() {
-  for (auto& [id, session] : sessions_) session->finishSession();
+  for (auto& [id, session] : sessions_)
+    session->finishSession(FinishReason::kStopped);
   pool_.closeAllConnections();
   loop_.requestLoopStop();
 }

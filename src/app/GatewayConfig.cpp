@@ -65,6 +65,8 @@ void readTimeouts(const Json& object, Timeouts& timeouts) {
       timeouts.upstreamWrite = milliseconds;
     else if (key == "response")
       timeouts.response = milliseconds;
+    else if (key == "stream_idle")
+      timeouts.streamIdle = milliseconds;
     else if (key == "downstream_write")
       timeouts.downstreamWrite = milliseconds;
     else if (key == "total")
@@ -74,6 +76,23 @@ void readTimeouts(const Json& object, Timeouts& timeouts) {
     else
       throw std::invalid_argument("unknown timeout key");
   }
+}
+
+void readStreamBuffer(const Json& object, StreamBufferConfig& buffer) {
+  if (!object.is_object())
+    throw std::invalid_argument("stream_buffer object required");
+  for (const auto& [key, value] : object.items()) {
+    if (key == "high_water_bytes")
+      buffer.highWaterBytes = integer(value, 32768, 229376);
+    else if (key == "low_water_bytes")
+      buffer.lowWaterBytes = integer(value, 0, 229375);
+    else if (key == "max_total_bytes")
+      buffer.maxTotalBytes = integer(value, 262144, 67108864);
+    else
+      throw std::invalid_argument("unknown stream_buffer key");
+  }
+  if (buffer.lowWaterBytes >= buffer.highWaterBytes)
+    throw std::invalid_argument("low water must be below high water");
 }
 
 void readPool(const Json& object, PoolConfig& pool) {
@@ -121,6 +140,8 @@ GatewayConfig parseConfig(std::string_view content) {
         config.maxReservedBytes = integer(value, 16777216, 4294967296ULL);
       else if (key == "upstream_pool")
         readPool(value, config.upstreamPool);
+      else if (key == "stream_buffer")
+        readStreamBuffer(value, config.streamBuffer);
       else if (key == "timeouts_ms")
         readTimeouts(value, config.timeouts);
       else

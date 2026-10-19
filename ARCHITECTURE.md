@@ -1,12 +1,12 @@
 # AI Inference L7 Gateway 架构大纲
 
-文档状态：`Approved`（总体架构基线；V0.1基础代理/上游复用及V0.2/S1增量流链路已验收，背压协同/调度等后续能力待实现）。创建日期：2026-10-17；采纳日期：2026-10-18。
+文档状态：`Approved`（总体架构基线；V0.1基础代理/上游复用及V0.2/S1流链路、S2背压协同已验收，真实后端/调度等后续能力未交付）。创建日期：2026-10-17；采纳日期：2026-10-18。
 
 ## 1. 依据与状态
 
 用户于 2026-10-17 确认“独立项目、按需复用、最后联调”，于 2026-10-18 授权“你来决策吧”。Leader 据此采纳总体架构，并制定 V0.1/S1 的详细技术基线；后续阶段仍须形成各自设计。授权不等于已实现或已通过 Reviewer 验收。
 
-2026-10-17 首次编写前，仓库仅有空 README 和 Git 初始提交。2026-10-18，V0.1/S1 已通过 [Reviewer 002 独立复验](docs/reviewer/reports/V0.1/S1-report-002.md)，由 Leader 003 收口，最新状态澄清见 [Leader 004](docs/leader/reports/V0.1/S1-report-004.md)。已验收实现为S1最小组件/协议基础、S2单上游非流式代理及S3有界上游连接复用；V0.2/S1增量流链路亦已接受，完整背压协同和调度仍为后续目标。S1已提交bb318d8c并推送至阶段分支（协调者核验），未合并main或发布。S2按[返工002](docs/leader/reworks/rework-002.md)修正后通过[Reviewer002](docs/reviewer/reports/V0.1/S2-report-002.md)，由[Leader003](docs/leader/reports/V0.1/S2-report-003.md)收口；S2已本地提交3cb65244312d2feef563c2fd755ae8447d4589c5，远端状态本轮未核验。用户于2026-10-19启动S3，已通过[Reviewer002 PASS](docs/reviewer/reports/V0.1/S3-report-002.md)并由[Leader002](docs/leader/reports/V0.1/S3-report-002.md)收口；S3及V0.1开发验收已完成，提交d653e9c400517783d5d33025a0b66a737c8256eb已推送阶段分支（协调者2026-10-19核验同SHA）；当前V0.2/S1已获[Reviewer002 PASS](docs/reviewer/reports/V0.2/S1-report-002.md)并由[Leader002](docs/leader/reports/V0.2/S1-report-002.md)收口，累计1/2；V0.2整体未完成，当前成果待协调者本地提交、不推送。版本顺序、阶段范围和完成条件由 [ROADMAP.md](ROADMAP.md) 维护。
+2026-10-17 首次编写前，仓库仅有空 README 和 Git 初始提交。2026-10-18，V0.1/S1 已通过 [Reviewer 002 独立复验](docs/reviewer/reports/V0.1/S1-report-002.md)，由 Leader 003 收口，最新状态澄清见 [Leader 004](docs/leader/reports/V0.1/S1-report-004.md)。已验收实现为S1最小组件/协议基础、S2单上游非流式代理及S3有界上游连接复用；V0.2/S1增量流链路及S2背压协同亦已接受，真实后端和调度仍为后续目标。S1已提交bb318d8c并推送至阶段分支（协调者核验），未合并main或发布。S2按[返工002](docs/leader/reworks/rework-002.md)修正后通过[Reviewer002](docs/reviewer/reports/V0.1/S2-report-002.md)，由[Leader003](docs/leader/reports/V0.1/S2-report-003.md)收口；S2已本地提交3cb65244312d2feef563c2fd755ae8447d4589c5，远端状态本轮未核验。用户于2026-10-19启动S3，已通过[Reviewer002 PASS](docs/reviewer/reports/V0.1/S3-report-002.md)并由[Leader002](docs/leader/reports/V0.1/S3-report-002.md)收口；S3及V0.1开发验收已完成，提交d653e9c400517783d5d33025a0b66a737c8256eb已推送阶段分支（协调者2026-10-19核验同SHA）；当前V0.2/S1已获[Reviewer002 PASS](docs/reviewer/reports/V0.2/S1-report-002.md)并由[Leader002](docs/leader/reports/V0.2/S1-report-002.md)收口，累计1/2；V0.2/S1已本地提交2f7cf831a302fc87717afcae510e777187c7d0ef，远端本轮未核验；V0.2整体未完成，当前S2经[Reviewer001 PASS](docs/reviewer/reports/V0.2/S2-report-001.md)和[Leader002](docs/leader/reports/V0.2/S2-report-002.md)收口，累计0/2、无债；S3未开始，待协调者本地提交、不推送。版本顺序、阶段范围和完成条件由 [ROADMAP.md](ROADMAP.md) 维护。
 
 ## 2. 项目目标与边界
 
@@ -186,8 +186,20 @@ ConnectionPool唯一拥有上游Socket/Channel，会话持有move-only租约；�
 
 [V0.2/S1设计](docs/leader/designs/V0.2/S1-design.md)按用户启动授权收敛首阶段：HttpParser提供已验证最终头/解码body片段/终态，ProxySession按stream请求与响应Content-Type选择流或有界缓冲回退；流体不累计于HttpMessage.body。流模式头规范化为chunked+close，按当前可用字节输出，HTTP完成才发送终止块，不解析SSE event或[DONE]。
 
-首个final字节被Socket接受才算响应已开始，入队头尚可在失败时撤回；开始后异常只中断，不生成第二状态行或正常终止块。流请求本阶段使用受限租约但结束不归池，原非流式复用保持。固定pending256KiB、总解码8MiB/wire16MiB及已有16MiB会话预约/绝对期限控制资源；满缓存结束，不提前实现S2高低水位恢复。上述已按V0.2/S1权威实现并独立接受；新增StreamOutput固定数组承载pending，HttpParser固定片段不累计body，ProxySession管理响应提交/完成与批次期限。流HTTP完成转换前重查response/total期限，不能先撤除过期期限再发零chunk。
+首个final字节被Socket接受才算响应已开始，入队头尚可在失败时撤回；开始后异常只中断，不生成第二状态行或正常终止块。流请求本阶段使用受限租约但结束不归池，原非流式复用保持。固定pending256KiB、总解码8MiB/wire16MiB及已有16MiB会话预约/绝对期限控制资源；S1历史版本满缓存结束，当前S2已替换为高低水位暂停恢复。上述已按V0.2/S1权威实现并独立接受；新增StreamOutput固定数组承载pending，HttpParser固定片段不累计body，ProxySession管理响应提交/完成；S1历史批次期限已由S2流写无进展期限替换，非流式保持。流HTTP完成转换前重查response/total期限，不能先撤除过期期限再发零chunk。
 
 - 2026-10-19：用户启动V0.2/S1，明确协议增量接口/不累计流body、发送commit point和有限S1边界；流实现/验收待完成，不改V0.1历史权威。
 
 - 2026-10-19：V0.2/S1独立PASS后同步实际流解析/固定输出/提交及完成期限边界；高低水位协同仍留S2，真实后端留S3，V0.2未完成。
+
+## V0.2/S2 已验收背压协同
+
+[S2设计](docs/leader/designs/V0.2/S2-design.md)在现有StreamOutput固定256KiB数组上引入默认192/64KiB高低水位。ProxySession管理暂停/恢复；ConnectionLease显式DEL上游channel，恢复重新注册token，避免仅interest=0无法屏蔽HUP/ERR导致LT忙转。暂停时上游关闭可延后到恢复观察，response/total和下游无进展期限持续有效，不保证即时取消发现。
+
+Runtime统一拥有所有会话16MiB保守预约及默认4MiB的SSE固定数组容量子账本；分配前取额度、销毁后退，pending为空也计完整容量，子预算属于总预约内而非额外可分配内存。请求/元数据/非流式字符串仍须以当前标准库实际capacity证明落在保守预约内；不把账本等同RSS或内核内存。
+
+流写deadline从S1连续非空批次绝对窗口改为有效send进展窗口，非流式及非SSE回退保持；新增stream_idle只按解码body进展刷新，主动暂停冻结剩余量。response/total绝对期限和完成转换前检查保持，强制停止/finished优先于任何恢复。普通SHUT_WR不是取消；GPU计算停止仍需S3后端证据。上述实现已独立验收；BufferBudget/CapacityLease在gateway内部维护唯一账本与幂等凭证，Runtime预算寿命覆盖会话，数组销毁后退容量、会话销毁后退预约。相关快照为内部验证接口，不扩展嵌入式SDK承诺。
+
+- 2026-10-19：用户启动V0.2/S2，按既有技术委托采纳背压/容量/取消与期限协同设计；未声明新能力已实现或V0.2完成。
+
+- 2026-10-19：V0.2/S2独立初审PASS，0/2、无债，实际可恢复背压/容量/分类期限与取消协同已验收；不据有限合成工作负载推导严格公平、RSS或GPU保证。V0.2仍待S3。

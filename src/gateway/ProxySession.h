@@ -3,6 +3,7 @@
 #include <string>
 
 #include "app/GatewayConfig.h"
+#include "gateway/BufferBudget.h"
 #include "gateway/SessionIo.h"
 #include "http/HttpParser.h"
 #include "http/StreamOutput.h"
@@ -19,11 +20,12 @@ class ProxySession {
 
   ProxySession(net::EventLoop& loop, const app::GatewayConfig& config,
                SessionIo& io, upstream::ConnectionPool& pool,
-               net::Socket client, SessionIo::Clock::time_point acceptedAt);
+               net::Socket client, SessionIo::Clock::time_point acceptedAt,
+               BufferBudget& budget, CapacityLease reservation);
   ~ProxySession();
 
   void startSession();
-  void finishSession() noexcept;
+  void finishSession(FinishReason reason = FinishReason::kCount) noexcept;
 
   bool finished() const { return phase_ == Phase::kFinished; }
   bool hasUpstream() const { return upstreamLease_.valid(); }
@@ -59,6 +61,9 @@ class ProxySession {
   void writeStream();
   void acceptStreamResult(const http::ParseResult& result);
   void beginStream();
+  void releaseStream() noexcept;
+  void pauseUpstream();
+  void resumeUpstream();
 
   // 请求、响应及分阶段关闭。
   void beginUpstream();
@@ -78,6 +83,9 @@ class ProxySession {
   void checkOutputBudget(const http::HttpMessage& message,
                          std::size_t limit) const;
 
+  CapacityLease reservation_;
+  BufferBudget& budget_;
+
   net::EventLoop& loop_;
   const app::GatewayConfig& config_;
   SessionIo& io_;
@@ -89,6 +97,7 @@ class ProxySession {
 
   std::unique_ptr<http::HttpParser> requestParser_;
   std::unique_ptr<http::HttpParser> responseParser_;
+  CapacityLease streamCapacity_;
   std::unique_ptr<http::StreamOutput> streamOutput_;
   std::size_t streamDecodedTotal_ = 0;
   std::size_t streamWireTotal_ = 0;
@@ -104,9 +113,15 @@ class ProxySession {
   TimePoint outputStarted_;
   TimePoint errorDeadline_;
   TimePoint outputCompletedAt_;
+  TimePoint idleDeadline_;
+  SessionIo::Clock::duration idleRemaining_{};
+  std::uint64_t upstreamReadCalls_ = 0;
+  std::uint64_t upstreamReadBytes_ = 0;
 
   Phase phase_ = Phase::kReceiving;
+  bool upstreamPaused_ = false;
   bool streamRequest_ = false;
+  FinishReason finishReason_ = FinishReason::kComplete;
   bool responseStarted_ = false;
   bool streamHttpComplete_ = false;
   bool requestWriteComplete_ = false;
