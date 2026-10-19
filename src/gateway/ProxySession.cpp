@@ -1,0 +1,496 @@
+#include "gateway/ProxySession.h"
+
+#include <arpa/inet.h>
+
+#include <algorithm>
+#include <array>
+#include <cerrno>
+#include <stdexcept>
+
+#include "gateway/TextRequest.h"
+#include "http/HttpNormalization.h"
+
+namespace gateway::gateway_api {
+namespace {
+constexpr std::size_t kEventBytes = 65536;
+constexpr std::size_t kRequestOutputLimit = 1048576 + 65536;
+constexpr std::size_t kResponseOutputLimit = 4194304 + 65536;
+using Milliseconds = std::chrono::milliseconds;
+void releaseString(std::string& value) { std::string().swap(value); }
+}  // namespace
+
+ProxySession::ProxySession(net::EventLoop& loop,
+                           const app::GatewayConfig& config, SessionIo& io,
+                           net::Socket client,
+                           SessionIo::Clock::time_point acceptedAt)
+    : loop_(loop),
+      config_(config),
+      io_(io),
+      downstreamSocket_(std::move(client)),
+      downstreamChannel_(
+          std::make_unique<net::Channel>(loop_, downstreamSocket_.fd())),
+      requestParser_(
+          std::make_unique<http::HttpParser>(http::MessageKind::kRequest)),
+      acceptedAt_(acceptedAt),
+      stageStarted_(acceptedAt_) {}
+
+ProxySession::~ProxySession() { finishSession(); }
+
+void ProxySession::startSession() {
+  downstreamChannel_->registerEventCallback(
+      [this](std::uint32_t events) { onDownstreamEvent(events); });
+  updateInterests();
+  armDeadline();
+}
+
+void ProxySession::closeUpstream() noexcept {
+  if (upstreamChannel_) upstreamChannel_->removeChannel();
+  upstreamSocket_.reset();
+  // Channel 对象保留到回调后整个 session 被清理，避免自析构。
+}
+
+void ProxySession::finishSession() noexcept {
+  if (finished()) return;
+  phase_ = Phase::kFinished;
+  if (timerId_) {
+    loop_.cancelTimer(timerId_);
+    timerId_ = 0;
+  }
+
+  if (downstreamChannel_) downstreamChannel_->removeChannel();
+  closeUpstream();
+  downstreamSocket_.reset();
+}
+
+void ProxySession::onDownstreamEvent(std::uint32_t events) noexcept {
+  try {
+    handleDownstreamEvent(events);
+  } catch (...) {
+    prepareError(500, "internal_error");
+  }
+}
+
+void ProxySession::onUpstreamEvent(std::uint32_t events) noexcept {
+  try {
+    handleUpstreamEvent(events);
+  } catch (...) {
+    prepareError(500, "internal_error");
+  }
+}
+
+void ProxySession::onDeadline() noexcept {
+  timerId_ = 0;
+  try {
+    if (!checkDeadline()) armDeadline();
+  } catch (...) {
+    prepareError(500, "internal_error");
+  }
+}
+
+ProxySession::TimePoint ProxySession::nextDeadline() const {
+  if (phase_ == Phase::kClosing)
+    return std::min(outputCompletedAt_ + Milliseconds(1000),
+                    errorDraining_
+                        ? errorDeadline_
+                        : acceptedAt_ + Milliseconds(config_.timeouts.total));
+  if (errorDraining_) return errorDeadline_;
+  auto deadline = acceptedAt_ + Milliseconds(config_.timeouts.total);
+  if (phase_ == Phase::kReceiving)
+    deadline = std::min(deadline,
+                        acceptedAt_ + Milliseconds(config_.timeouts.request));
+  if (phase_ == Phase::kConnecting)
+    deadline = std::min(deadline,
+                        stageStarted_ + Milliseconds(config_.timeouts.connect));
+  if (phase_ == Phase::kUpstream) {
+    deadline = std::min(deadline,
+                        connectedAt_ + Milliseconds(config_.timeouts.response));
+    if (upstreamOffset_ < upstreamOutput_.size())
+      deadline =
+          std::min(deadline,
+                   connectedAt_ + Milliseconds(config_.timeouts.upstreamWrite));
+  }
+
+  if (phase_ == Phase::kDownstream)
+    deadline =
+        std::min(deadline, outputStarted_ +
+                               Milliseconds(config_.timeouts.downstreamWrite));
+  return deadline;
+}
+
+void ProxySession::armDeadline() {
+  if (finished()) return;
+  const auto deadline = nextDeadline();
+  if (timerId_ && loop_.rescheduleTimer(timerId_, deadline)) return;
+  timerId_ = loop_.addTimer(deadline, [this] { onDeadline(); });
+}
+
+bool ProxySession::checkDeadline() {
+  if (finished()) return true;
+  const auto now = io_.now();
+  if (now < nextDeadline()) return false;
+  if (errorDraining_ || phase_ == Phase::kClosing) {
+    finishSession();
+    return true;
+  }
+
+  const auto earliest = nextDeadline();
+  if (earliest == acceptedAt_ + Milliseconds(config_.timeouts.total)) {
+    if (phase_ == Phase::kDownstream && downstreamOffset_ != 0)
+      finishSession();
+    else
+      prepareError(phase_ == Phase::kReceiving ? 408 : 504, "total_timeout");
+  } else if (phase_ == Phase::kDownstream)
+    finishSession();
+  else if (phase_ == Phase::kReceiving)
+    prepareError(408, "request_timeout");
+  else if (phase_ == Phase::kConnecting)
+    prepareError(504, "connect_timeout");
+  else if (upstreamOffset_ < upstreamOutput_.size() &&
+           earliest ==
+               connectedAt_ + Milliseconds(config_.timeouts.upstreamWrite))
+    prepareError(504, "upstream_write_timeout");
+  else
+    prepareError(504, "response_timeout");
+  return true;
+}
+
+void ProxySession::updateInterests() {
+  if (finished()) return;
+  std::uint32_t downstreamEvents = downstreamEof_ ? 0 : EPOLLIN | EPOLLRDHUP;
+  if (phase_ == Phase::kDownstream ||
+      (phase_ == Phase::kClosing && !writeShutdown_))
+    downstreamEvents |= EPOLLOUT;
+  downstreamChannel_->setInterest(downstreamEvents);
+  if (upstreamSocket_.valid()) {
+    std::uint32_t upstreamEvents = EPOLLIN | EPOLLRDHUP;
+    if (phase_ == Phase::kConnecting ||
+        upstreamOffset_ < upstreamOutput_.size())
+      upstreamEvents |= EPOLLOUT;
+    upstreamChannel_->setInterest(upstreamEvents);
+  }
+}
+
+void ProxySession::handleDownstreamEvent(std::uint32_t events) {
+  if (checkDeadline()) return;
+  if (events & (EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLERR)) readDownstream();
+  if (finished()) return;
+  if ((events & EPOLLERR) && io_.socketError(downstreamSocket_.fd())) {
+    finishSession();
+    return;
+  }
+
+  if (phase_ == Phase::kDownstream && (events & EPOLLOUT))
+    writeDownstream();
+  else if (phase_ == Phase::kClosing && !writeShutdown_ && (events & EPOLLOUT))
+    shutdownWrite();
+}
+
+void ProxySession::readDownstream() {
+  std::array<char, 16384> bytes{};
+  std::size_t handled = 0;
+  for (int attempt = 0;
+       attempt < 64 && handled < kEventBytes && !downstreamEof_; ++attempt) {
+    if (checkDeadline()) return;
+    const auto count =
+        io_.receiveBytes(downstreamSocket_.fd(), bytes.data(),
+                         std::min(bytes.size(), kEventBytes - handled));
+    if (count > 0) {
+      handled += count;
+      if (phase_ != Phase::kReceiving)
+        continue;  // 有界丢弃第二请求，不保留、不再次派发。
+      const auto result = requestParser_->parseBytes(
+          {bytes.data(), static_cast<std::size_t>(count)});
+      if (result.status == http::ParseStatus::kRejected) {
+        prepareError(result.errorStatus, result.errorCode);
+        return;
+      }
+      if (result.status == http::ParseStatus::kComplete) {
+        beginUpstream();
+        return;
+      }
+    } else if (count == 0) {
+      downstreamEof_ = true;
+      if (phase_ == Phase::kReceiving)
+        prepareError(400, "invalid_request");
+      else if (phase_ == Phase::kClosing && writeShutdown_)
+        finishSession();
+      else
+        updateInterests();
+      return;
+    } else if (errno == EINTR)
+      continue;
+    else if (errno == EAGAIN || errno == EWOULDBLOCK)
+      return;
+    else {
+      finishSession();
+      return;
+    }
+  }
+}
+
+void ProxySession::checkOutputBudget(const http::HttpMessage& message,
+                                     std::size_t limit) const {
+  // 最多 16KiB 解析头 + 合法配置/受控头远小于 64KiB；逐项先检查。
+  std::size_t bytes = 1024;
+  for (const auto& header : message.headers) {
+    const auto length = header.name.size() + header.value.size() + 4;
+    if (length > limit - bytes) throw std::length_error("output headers");
+    bytes += length;
+  }
+
+  if (message.body.size() > limit - bytes)
+    throw std::length_error("output body");
+}
+
+void ProxySession::beginUpstream() {
+  const auto validation = validateTextRequest(requestParser_->message());
+  if (!validation.accepted) {
+    prepareError(validation.errorStatus, validation.errorCode);
+    return;
+  }
+
+  checkOutputBudget(requestParser_->message(), kRequestOutputLimit);
+  upstreamOutput_ = http::normalizeMessage(
+      requestParser_->message(), http::MessageKind::kRequest,
+      config_.upstreamAddress + ":" + std::to_string(config_.upstreamPort),
+      true);
+  if (checkDeadline()) return;
+  requestParser_.reset();
+  responseParser_ =
+      std::make_unique<http::HttpParser>(http::MessageKind::kResponse);
+  upstreamSocket_ = net::Socket::createTcp();
+  upstreamChannel_ =
+      std::make_unique<net::Channel>(loop_, upstreamSocket_.fd());
+  upstreamChannel_->registerEventCallback(
+      [this](std::uint32_t events) { onUpstreamEvent(events); });
+  sockaddr_in destination{};
+  destination.sin_family = AF_INET;
+  destination.sin_port = htons(config_.upstreamPort);
+  inet_pton(AF_INET, config_.upstreamAddress.c_str(), &destination.sin_addr);
+  stageStarted_ = io_.now();
+  phase_ = Phase::kConnecting;
+  for (int attempt = 0; attempt < 32; ++attempt) {
+    if (checkDeadline()) return;
+    const int result = io_.connectSocket(
+        upstreamSocket_.fd(), reinterpret_cast<const sockaddr*>(&destination),
+        sizeof(destination));
+    if (result == 0) {
+      confirmConnected();
+      return;
+    }
+    if (errno == EINTR) continue;
+    if (errno == EINPROGRESS || errno == EALREADY) {
+      updateInterests();
+      armDeadline();
+      return;
+    }
+
+    prepareError(502, "upstream_error");
+    return;
+  }
+
+  updateInterests();
+  armDeadline();
+}
+
+void ProxySession::confirmConnected() {
+  if (io_.socketError(upstreamSocket_.fd()) != 0) {
+    prepareError(502, "upstream_error");
+    return;
+  }
+  phase_ = Phase::kUpstream;
+  connectedAt_ = io_.now();
+  updateInterests();
+  armDeadline();
+}
+
+void ProxySession::handleUpstreamEvent(std::uint32_t events) {
+  if (checkDeadline() || !upstreamSocket_.valid()) return;
+  if (phase_ == Phase::kConnecting) confirmConnected();
+  if (phase_ != Phase::kUpstream) return;
+  if (events & (EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLERR)) readUpstream();
+  if (phase_ != Phase::kUpstream) return;
+  if ((events & EPOLLERR) && io_.socketError(upstreamSocket_.fd())) {
+    prepareError(502, "upstream_error");
+    return;
+  }
+
+  if (events & EPOLLOUT) writeUpstream();
+}
+
+void ProxySession::readUpstream() {
+  std::array<char, 16384> bytes{};
+  std::size_t handled = 0;
+  for (int attempt = 0; attempt < 64 && handled < kEventBytes; ++attempt) {
+    if (checkDeadline()) return;
+    auto count =
+        io_.receiveBytes(upstreamSocket_.fd(), bytes.data(),
+                         std::min(bytes.size(), kEventBytes - handled));
+    if (count < 0) {
+      if (errno == EINTR) continue;
+      if (errno == EAGAIN || errno == EWOULDBLOCK) return;
+      prepareError(502, "upstream_error");
+      return;
+    }
+    const auto result =
+        count == 0 ? responseParser_->finishInput()
+                   : responseParser_->parseBytes(
+                         {bytes.data(), static_cast<std::size_t>(count)});
+    if (result.status == http::ParseStatus::kRejected) {
+      prepareError(502, "upstream_error");
+      return;
+    }
+    if (result.status == http::ParseStatus::kComplete) {
+      completeResponse();
+      return;
+    }
+    handled += count;
+    if (count == 0) {
+      prepareError(502, "upstream_error");
+      return;
+    }
+  }
+}
+
+void ProxySession::writeUpstream() {
+  std::size_t handled = 0;
+  for (int attempt = 0; attempt < 64 && handled < kEventBytes &&
+                        upstreamOffset_ < upstreamOutput_.size();
+       ++attempt) {
+    if (checkDeadline()) return;
+    const auto count = io_.sendBytes(
+        upstreamSocket_.fd(), upstreamOutput_.data() + upstreamOffset_,
+        std::min(kEventBytes - handled,
+                 upstreamOutput_.size() - upstreamOffset_));
+    if (count > 0) {
+      upstreamOffset_ += count;
+      handled += count;
+    } else if (count < 0 && errno == EINTR)
+      continue;
+    else if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+      break;
+    else {
+      // 写失败时也先读已到达的早期最终响应，避免 OUT/IN 同轮顺序误判。
+      readUpstream();
+      if (phase_ == Phase::kUpstream) prepareError(502, "upstream_error");
+      return;
+    }
+  }
+
+  if (upstreamOffset_ == upstreamOutput_.size()) {
+    releaseString(upstreamOutput_);
+    upstreamOffset_ = 0;
+  }
+
+  updateInterests();
+  armDeadline();
+}
+
+void ProxySession::completeResponse() {
+  if (checkDeadline()) return;
+  checkOutputBudget(responseParser_->message(), kResponseOutputLimit);
+  downstreamOutput_ = http::normalizeMessage(
+      responseParser_->message(), http::MessageKind::kResponse, {}, true);
+  if (checkDeadline()) return;
+  responseParser_.reset();
+  releaseString(upstreamOutput_);
+  upstreamOffset_ = 0;
+  closeUpstream();
+  phase_ = Phase::kDownstream;
+  outputStarted_ = io_.now();
+  updateInterests();
+  armDeadline();
+}
+
+void ProxySession::writeDownstream() {
+  std::size_t handled = 0;
+  int attempts = 0;
+  for (; attempts < 64 && handled < kEventBytes &&
+         downstreamOffset_ < downstreamOutput_.size();
+       ++attempts) {
+    if (checkDeadline()) return;
+    const auto count = io_.sendBytes(
+        downstreamSocket_.fd(), downstreamOutput_.data() + downstreamOffset_,
+        std::min(kEventBytes - handled,
+                 downstreamOutput_.size() - downstreamOffset_));
+    if (count > 0) {
+      downstreamOffset_ += count;
+      handled += count;
+    } else if (count < 0 && errno == EINTR)
+      continue;
+    else if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+      return;
+    else {
+      finishSession();
+      return;
+    }
+  }
+
+  if (downstreamOffset_ == downstreamOutput_.size())
+    beginClosing(64 - attempts);
+}
+
+void ProxySession::beginClosing(int remainingCalls) {
+  // 此时最后一个字节已提交内核；只记录一次，不代表客户端应用已消费。
+  outputCompletedAt_ = io_.now();
+  phase_ = Phase::kClosing;
+  releaseString(downstreamOutput_);
+  downstreamOffset_ = 0;
+  requestParser_.reset();
+  responseParser_.reset();
+  releaseString(upstreamOutput_);
+  closeUpstream();
+  shutdownWrite(remainingCalls);
+}
+
+void ProxySession::shutdownWrite(int remainingCalls) {
+  if (checkDeadline()) return;
+  for (int attempt = 0; attempt < remainingCalls && !writeShutdown_;
+       ++attempt) {
+    if (checkDeadline()) return;
+    if (io_.shutdownWrite(downstreamSocket_.fd()) == 0)
+      writeShutdown_ = true;
+    else if (errno != EINTR) {
+      finishSession();
+      return;
+    }
+  }
+
+  if (writeShutdown_ && downstreamEof_) {
+    finishSession();
+    return;
+  }
+  // EINTR预算用尽时仍保留OUT重试；成功后仅观察读侧，EAGAIN不终结。
+  updateInterests();
+  armDeadline();
+}
+
+void ProxySession::prepareError(unsigned status, const char* code) noexcept {
+  if (finished()) return;
+  if (phase_ == Phase::kClosing || errorDraining_ || downstreamOffset_ != 0) {
+    finishSession();
+    return;
+  }
+  try {
+    closeUpstream();
+    requestParser_.reset();
+    responseParser_.reset();
+    releaseString(upstreamOutput_);
+    downstreamOutput_ = http::serializeError(
+        status, errorBody({false, status, code, {}}), true);
+    if (downstreamOutput_.size() > 4096) {
+      finishSession();
+      return;
+    }
+    downstreamOffset_ = 0;
+    errorDraining_ = true;
+    phase_ = Phase::kDownstream;
+    errorDeadline_ = io_.now() + Milliseconds(std::min(
+                                     config_.timeouts.downstreamWrite, 1000));
+    updateInterests();
+    armDeadline();
+  } catch (...) {
+    finishSession();
+  }
+}
+}  // namespace gateway::gateway_api

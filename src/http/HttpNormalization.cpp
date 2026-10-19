@@ -38,7 +38,8 @@ std::set<std::string> hopHeaders(const HttpMessage& message) {
 }  // namespace
 
 std::string normalizeMessage(const HttpMessage& message, MessageKind kind,
-                             std::string_view upstreamAuthority) {
+                             std::string_view upstreamAuthority,
+                             bool closeConnection) {
   auto removed = hopHeaders(message);
   std::string output;
   if (kind == MessageKind::kRequest) {
@@ -61,19 +62,23 @@ std::string normalizeMessage(const HttpMessage& message, MessageKind kind,
     if (!removed.contains(lowerAscii(header.name)))
       output += header.name + ": " + header.value + "\r\n";
   }
+
   if (kind == MessageKind::kRequest ||
       (message.statusCode != 204 && message.statusCode != 304))
     output += "Content-Length: " + std::to_string(message.body.size()) + "\r\n";
+  if (closeConnection) output += "Connection: close\r\n";
   output += "Via: 1.1 ai-inference-gateway\r\n\r\n";
   output += message.body;
   return output;
 }
 
-std::string serializeError(unsigned status, std::string_view body) {
+std::string serializeError(unsigned status, std::string_view body,
+                           bool closeConnection) {
   std::string output = "HTTP/1.1 " + std::to_string(status) +
                        " Request Rejected\r\nContent-Type: "
                        "application/json\r\nContent-Length: " +
                        std::to_string(body.size()) + "\r\n";
+  if (closeConnection) output += "Connection: close\r\n";
   if (status == 405) output += "Allow: POST\r\n";
   output += "\r\n";
   output += body;
