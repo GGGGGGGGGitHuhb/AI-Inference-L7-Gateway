@@ -46,6 +46,13 @@ std::uint32_t ConnectionLease::interest() const noexcept {
   return entry ? entry->channel.interest() : 0;
 }
 
+void ConnectionLease::suspendEvents() noexcept {
+  if (pool_) {
+    if (auto* entry = pool_->findLease(id_, generation_))
+      entry->channel.removeChannel();
+  }
+}
+
 void ConnectionLease::setInterest(std::uint32_t events) {
   auto* entry = pool_ ? pool_->findLease(id_, generation_) : nullptr;
   if (entry) entry->channel.setInterest(events);

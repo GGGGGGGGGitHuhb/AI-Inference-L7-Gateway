@@ -33,6 +33,7 @@ class ConnectionLease {
   std::uint32_t interest() const noexcept;
 
   void setInterest(std::uint32_t events);
+  void suspendEvents() noexcept;
   void markConnected();
   void releaseReusable();
   void invalidate() noexcept;

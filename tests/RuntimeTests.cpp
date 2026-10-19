@@ -81,6 +81,24 @@ struct ProxySessionTestAccess {
   }
 };
 struct StreamingSessionTestAccess {
+  static void validateHeaders(ProxySession& session, std::string_view headers) {
+    GATEWAY_CHECK(session.responseParser_->parseBytes(headers).status ==
+                  http::ParseStatus::kNeedMore);
+  }
+
+  static bool paused(const ProxySession& session) {
+    return session.upstreamPaused_;
+  }
+
+  static void pause(ProxySession& session) { session.pauseUpstream(); }
+
+  static void resume(ProxySession& session) { session.resumeUpstream(); }
+
+  static SessionIo::Clock::time_point idleDeadline(
+      const ProxySession& session) {
+    return session.idleDeadline_;
+  }
+
   static bool started(const ProxySession& session) {
     return session.responseStarted_;
   }
@@ -159,6 +177,7 @@ class FakeIo final : public gateway_api::SessionIo {
   int connectInterrupts = 0;
   int readInterrupts = 0;
   int advanceUpstreamReadMs = 0;
+  int advanceClientSendMs = 0;
   int writeInterrupts = 0;
 
   bool blockUpstream = false;
@@ -234,6 +253,10 @@ ssize_t FakeIo::receiveBytes(int fd, void* data, std::size_t size) {
 }
 
 ssize_t FakeIo::sendBytes(int fd, const void* data, std::size_t size) {
+  if (fd == clientFd) {
+    time += std::chrono::milliseconds(advanceClientSendMs);
+    advanceClientSendMs = 0;
+  }
   if (writeInterrupts-- > 0) {
     errno = EINTR;
     return -1;
@@ -260,7 +283,8 @@ ssize_t FakeIo::sendBytes(int fd, const void* data, std::size_t size) {
 
 class SessionFixture {
  public:
-  explicit SessionFixture(app::Timeouts timeouts = {});
+  explicit SessionFixture(app::Timeouts timeouts = {},
+                          gateway_api::BufferBudget* sharedBudget = nullptr);
 
   void startRequest() {
     io.clientInput = kRequest;
@@ -283,6 +307,7 @@ class SessionFixture {
   }
 
   app::GatewayConfig config;
+  gateway_api::BufferBudget budget{268435456, 4194304};
   net::EventLoop loop;
   FakeIo io;
   std::unique_ptr<upstream::ConnectionPool> pool;
@@ -290,7 +315,8 @@ class SessionFixture {
   std::unique_ptr<gateway_api::ProxySession> session;
 };
 
-SessionFixture::SessionFixture(app::Timeouts timeouts)
+SessionFixture::SessionFixture(app::Timeouts timeouts,
+                               gateway_api::BufferBudget* sharedBudget)
     : config{}, loop{}, io{} {
   config.upstreamAddress = "127.0.0.1";
   config.upstreamPort = 1;
@@ -303,7 +329,10 @@ SessionFixture::SessionFixture(app::Timeouts timeouts)
   pool =
       std::make_unique<upstream::ConnectionPool>(loop, config.upstreamPool, io);
   session = std::make_unique<gateway_api::ProxySession>(
-      loop, config, io, *pool, net::Socket(pair[0]), io.now());
+      loop, config, io, *pool, net::Socket(pair[0]), io.now(),
+      sharedBudget ? *sharedBudget : budget,
+      (sharedBudget ? *sharedBudget : budget)
+          .acquireCapacity(gateway_api::CapacityKind::kSession));
   session->startSession();
 }
 
@@ -885,6 +914,223 @@ void testStreamingCompletionDeadlines() {
   }
 }
 
+void testStreamBudgetAndConfig() {
+  using namespace gateway_api;
+  const std::string base =
+      "{\"upstream_address\":\"127.0.0.1\",\"upstream_port\":9,";
+  for (const auto* fields :
+       {"\"stream_buffer\":{}",
+        "\"stream_buffer\":{\"high_water_bytes\":32768,\"low_water_bytes\":0,"
+        "\"max_total_bytes\":262144}",
+        "\"stream_buffer\":{\"high_water_bytes\":229376,\"low_water_bytes\":"
+        "229375,\"max_total_bytes\":67108864}",
+        "\"timeouts_ms\":{\"stream_idle\":10}",
+        "\"timeouts_ms\":{\"stream_idle\":300000}"})
+    GATEWAY_CHECK(
+        app::parseConfig(base + fields + "}").streamBuffer.maxTotalBytes >=
+        262144);
+  for (const auto* fields :
+       {"\"stream_buffer\":null",
+        "\"stream_buffer\":{\"high_water_bytes\":32767}",
+        "\"stream_buffer\":{\"high_water_bytes\":229377}",
+        "\"stream_buffer\":{\"high_water_bytes\":32768}",
+        "\"stream_buffer\":{\"low_water_bytes\":196608}",
+        "\"stream_buffer\":{\"low_water_bytes\":-1}",
+        "\"stream_buffer\":{\"max_total_bytes\":262143}",
+        "\"stream_buffer\":{\"max_total_bytes\":67108865}",
+        "\"stream_buffer\":{\"max_total_bytes\":18446744073709551616}",
+        "\"stream_buffer\":{\"max_total_bytes\":true}",
+        "\"stream_buffer\":{\"max_total_bytes\":262144.0}",
+        "\"stream_buffer\":{\"nope\":1}",
+        "\"stream_buffer\":{\"low_water_bytes\":0,\"low_water_bytes\":1}",
+        "\"timeouts_ms\":{\"stream_idle\":9}",
+        "\"timeouts_ms\":{\"stream_idle\":300001}"}) {
+    bool rejected = false;
+    try {
+      app::parseConfig(base + fields + "}");
+    } catch (const std::invalid_argument&) {
+      rejected = true;
+    }
+    GATEWAY_CHECK(rejected);
+  }
+
+  SessionFixture allocation;
+  startStreamRequest(allocation);
+  StreamingSessionTestAccess::validateHeaders(*allocation.session,
+                                              kStreamHeaders);
+  failNextAllocation = true;
+  feedStream(allocation, "1\r\nx\r\n");
+  failNextAllocation = false;
+  allocation.flushClient();
+  GATEWAY_CHECK(allocation.io.sentClient.starts_with("HTTP/1.1 500"));
+  GATEWAY_CHECK(allocation.budget.snapshot().streamCapacity == 0 &&
+                allocation.budget.snapshot().pending == 0);
+  GATEWAY_CHECK(allocation.budget.snapshot().reserved == 16777216);
+  allocation.session.reset();
+  GATEWAY_CHECK(allocation.budget.snapshot().reserved == 0);
+
+  for (std::uint64_t limit : {262144, 524288, 524289}) {
+    BufferBudget shared(4 * BufferBudget::kSessionBytes, limit);
+    SessionFixture first({}, &shared);
+    startStreamRequest(first);
+    feedStream(first, kStreamHeaders);
+    first.flushClient(false);
+    GATEWAY_CHECK(shared.snapshot().pending == 0 &&
+                  shared.snapshot().streamCapacity == 262144);
+    SessionFixture second({}, &shared);
+    startStreamRequest(second);
+    feedStream(second, kStreamHeaders);
+    if (limit < 524288) {
+      second.flushClient();
+      GATEWAY_CHECK(second.io.sentClient.starts_with("HTTP/1.1 503") &&
+                    second.io.sentClient.find("buffer_capacity") !=
+                        std::string::npos);
+    } else {
+      SessionFixture third({}, &shared);
+      startStreamRequest(third);
+      feedStream(third, kStreamHeaders);
+      third.flushClient();
+      GATEWAY_CHECK(third.io.sentClient.starts_with("HTTP/1.1 503"));
+    }
+    first.session->finishSession();
+    GATEWAY_CHECK(shared.snapshot().streamCapacity ==
+                  (limit < 524288 ? 0 : 262144));
+    SessionFixture recovered({}, &shared);
+    startStreamRequest(recovered);
+    feedStream(recovered, kStreamHeaders + "0\r\n\r\n");
+    recovered.flushClient();
+    GATEWAY_CHECK(recovered.io.sentClient.starts_with("HTTP/1.1 200"));
+    second.session->finishSession();
+    GATEWAY_CHECK(shared.snapshot().streamCapacity == 0 &&
+                  shared.snapshot().pending == 0);
+    first.session.reset();
+    second.session.reset();
+    recovered.session.reset();
+    GATEWAY_CHECK(shared.snapshot().reserved == 0 &&
+                  shared.snapshot().peakStreamCapacity <= limit);
+  }
+}
+
+void testStreamProgressDeadlines() {
+  using Access = gateway_api::StreamingSessionTestAccess;
+  for (int elapsed : {9, 10, 11}) {
+    app::Timeouts limits;
+    limits.streamIdle = 10;
+    SessionFixture fixture(limits);
+    startStreamRequest(fixture);
+    feedStream(fixture, kStreamHeaders + "100\r\nx");
+    fixture.io.advanceUpstreamReadMs = elapsed;
+    feedStream(fixture, "y");
+    if (elapsed < 10)
+      GATEWAY_CHECK(fixture.session->hasUpstream());
+    else {
+      fixture.flushClient();
+      GATEWAY_CHECK(fixture.io.sentClient.starts_with("HTTP/1.1 504") &&
+                    fixture.io.sentClient.find("stream_idle_timeout") !=
+                        std::string::npos);
+    }
+  }
+  for (int elapsed : {9, 10, 11}) {
+    app::Timeouts limits;
+    limits.downstreamWrite = 10;
+    SessionFixture fixture(limits);
+    startStreamRequest(fixture);
+    feedStream(fixture, kStreamHeaders + "100\r\nx");
+    fixture.io.clientSendBudget = 1;
+    fixture.io.advanceClientSendMs = elapsed;
+    ProxySessionTestAccess::downstream(*fixture.session, EPOLLOUT);
+    GATEWAY_CHECK(fixture.io.sentClient == "H");
+    GATEWAY_CHECK(fixture.session->finished() == (elapsed >= 10));
+  }
+  for (bool interrupted : {false, true}) {
+    for (int elapsed : {9, 10, 11}) {
+      app::Timeouts limits;
+      limits.downstreamWrite = 10;
+      SessionFixture fixture(limits);
+      startStreamRequest(fixture);
+      feedStream(fixture, kStreamHeaders);
+      fixture.io.blockClient = true;
+      fixture.io.writeInterrupts = interrupted ? 1 : 0;
+      fixture.io.advanceClientSendMs = elapsed;
+      ProxySessionTestAccess::downstream(*fixture.session, EPOLLOUT);
+      GATEWAY_CHECK(fixture.io.sentClient.empty() &&
+                    fixture.session->finished() == (elapsed >= 10));
+      if (elapsed < 10) {
+        fixture.io.time += std::chrono::milliseconds(1);
+        ProxySessionTestAccess::deadline(*fixture.session);
+        fixture.checkCleanup();
+      }
+    }
+  }
+  for (bool total : {false, true}) {
+    app::Timeouts limits;
+    limits.response = total ? 1000 : 10;
+    limits.total = total ? 10 : 1000;
+    SessionFixture fixture(limits);
+    startStreamRequest(fixture);
+    feedStream(fixture, kStreamHeaders);
+    Access::pause(*fixture.session);
+    fixture.io.time += std::chrono::milliseconds(10);
+    Access::resume(*fixture.session);
+    fixture.flushClient();
+    fixture.checkCleanup();
+    GATEWAY_CHECK(fixture.io.sentClient.starts_with("HTTP/1.1 504") &&
+                  fixture.budget.snapshot().paused == 0);
+  }
+  app::Timeouts limits;
+  limits.streamIdle = 10;
+  SessionFixture frozen(limits);
+  startStreamRequest(frozen);
+  feedStream(frozen, kStreamHeaders);
+  frozen.io.time += std::chrono::milliseconds(4);
+  Access::pause(*frozen.session);
+  for (int cycle = 0; cycle < 2; ++cycle) {
+    frozen.io.time += std::chrono::milliseconds(20);
+    Access::resume(*frozen.session);
+    GATEWAY_CHECK(Access::idleDeadline(*frozen.session) - frozen.io.time ==
+                  std::chrono::milliseconds(6));
+    Access::pause(*frozen.session);
+  }
+  Access::resume(*frozen.session);
+  frozen.io.time += std::chrono::milliseconds(5);
+  feedStream(frozen, "10\r\n");
+  GATEWAY_CHECK(frozen.session->hasUpstream());
+  frozen.io.time += std::chrono::milliseconds(1);
+  ProxySessionTestAccess::deadline(*frozen.session);
+  frozen.flushClient();
+  GATEWAY_CHECK(frozen.io.sentClient.find("stream_idle_timeout") !=
+                std::string::npos);
+
+  SessionFixture cancelled;
+  startStreamRequest(cancelled);
+  feedStream(cancelled, kStreamHeaders + "100\r\nx");
+  Access::pause(*cancelled.session);
+  cancelled.io.clientReset = true;
+  ProxySessionTestAccess::downstream(*cancelled.session, EPOLLIN | EPOLLERR);
+  cancelled.session->finishSession();
+  Access::resume(*cancelled.session);
+  ProxySessionTestAccess::deadline(*cancelled.session);
+  cancelled.checkCleanup();
+  const auto ended = cancelled.budget.snapshot();
+  GATEWAY_CHECK(ended.streamCapacity == 0 && ended.pending == 0 &&
+                ended.paused == 0);
+  GATEWAY_CHECK(ended.finished[static_cast<std::size_t>(
+                    gateway_api::FinishReason::kCancelled)] == 1);
+
+  SessionFixture registration;
+  startStreamRequest(registration);
+  feedStream(registration, kStreamHeaders + "100\r\nx");
+  Access::pause(*registration.session);
+  const auto token = net::EventLoopTestAccess::exchangeToken(0);
+  registration.io.sendLimit = 65536;
+  ProxySessionTestAccess::downstream(*registration.session, EPOLLOUT);
+  net::EventLoopTestAccess::exchangeToken(token);
+  registration.checkCleanup();
+  GATEWAY_CHECK(registration.budget.snapshot().streamCapacity == 0 &&
+                registration.budget.snapshot().paused == 0 &&
+                registration.budget.snapshot().pending == 0);
+}
+
 void testStreamingLimitsAndTime() {
   using gateway_api::StreamingSessionTestAccess;
   for (bool commit : {false, true}) {
@@ -896,16 +1142,13 @@ void testStreamingLimitsAndTime() {
     fixture.io.blockClient = true;
     for (int index = 0; index < 20 && fixture.session->hasUpstream(); ++index)
       feedStream(fixture, std::string(16384, 'x'));
-    GATEWAY_CHECK(!fixture.session->hasUpstream());
-    fixture.io.blockClient = false;
-    fixture.flushClient();
+    GATEWAY_CHECK(fixture.session->hasUpstream() &&
+                  StreamingSessionTestAccess::paused(*fixture.session));
+    GATEWAY_CHECK(StreamingSessionTestAccess::pending(*fixture.session) <=
+                  http::StreamOutput::kCapacity);
+    GATEWAY_CHECK(fixture.io.sentClient == prefix);
+    fixture.session->finishSession();
     fixture.checkCleanup();
-    if (commit)
-      GATEWAY_CHECK(fixture.io.sentClient == prefix);
-    else
-      GATEWAY_CHECK(fixture.io.sentClient.starts_with("HTTP/1.1 502") &&
-                    fixture.io.sentClient.find("stream_buffer_limit") !=
-                        std::string::npos);
   }
   for (const auto* kind : {"response", "total", "write"}) {
     app::Timeouts limits;
@@ -922,6 +1165,11 @@ void testStreamingLimitsAndTime() {
     ProxySessionTestAccess::downstream(*fixture.session, EPOLLOUT);
     fixture.io.time += std::chrono::milliseconds(10);
     ProxySessionTestAccess::deadline(*fixture.session);
+    if (std::string(kind) == "write") {
+      GATEWAY_CHECK(!fixture.session->finished());
+      fixture.io.time += std::chrono::milliseconds(20);
+      ProxySessionTestAccess::deadline(*fixture.session);
+    }
     fixture.checkCleanup();
     GATEWAY_CHECK(!fixture.io.sentClient.ends_with("0\r\n\r\n"));
   }
@@ -1391,6 +1639,8 @@ int main() {
     testStreamingCommitAndEarly();
     testStreamingLimitsAndTime();
     testStreamingCompletionDeadlines();
+    testStreamBudgetAndConfig();
+    testStreamProgressDeadlines();
     testPoolAllocationFailures();
     testRuntimePoolSnapshots();
     testRuntimeStreamSnapshots();

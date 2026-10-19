@@ -9,6 +9,7 @@ struct Timeouts {
   int connect = 3000;
   int upstreamWrite = 5000;
   int response = 30000;
+  int streamIdle = 10000;
   int downstreamWrite = 10000;
   int total = 60000;
   int shutdown = 3000;
@@ -18,6 +19,12 @@ struct PoolConfig {
   std::size_t maxConnections = 16;
   std::size_t maxIdle = 16;
   int idleTimeoutMs = 5000;
+};
+
+struct StreamBufferConfig {
+  std::size_t highWaterBytes = 196608;
+  std::size_t lowWaterBytes = 65536;
+  std::uint64_t maxTotalBytes = 4194304;
 };
 
 struct GatewayConfig {
@@ -31,6 +38,7 @@ struct GatewayConfig {
 
   Timeouts timeouts;
   PoolConfig upstreamPool;
+  StreamBufferConfig streamBuffer;
 };
 
 GatewayConfig parseConfig(std::string_view content);

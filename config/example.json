@@ -7,5 +7,13 @@
     "max_connections": 16,
     "max_idle": 16,
     "idle_timeout_ms": 5000
+  },
+  "stream_buffer": {
+    "high_water_bytes": 196608,
+    "low_water_bytes": 65536,
+    "max_total_bytes": 4194304
+  },
+  "timeouts_ms": {
+    "stream_idle": 10000
   }
 }

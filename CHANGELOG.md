@@ -4,7 +4,16 @@
 
 ## Unreleased
 
-### V0.2/S1 SSE字节增量链路 — 已验收，待本地提交
+### V0.2/S2 背压、容量与终结协同 — 已验收，待本地提交
+
+- 2026-10-19：固定256KiB流输出新增默认192/64KiB高低水位，暂停DEL上游channel、低水恢复新token，保持正文精确顺序；暂停上游关闭可能延后观察。
+- 新增BufferBudget/CapacityLease：原16MiB/会话总预约内增加默认4MiB固定数组容量子预算，分配前取额度、销毁后退，pending为空仍计容量；耗尽503 buffer_capacity，无等待队列。
+- SSE流写期限改为有效send刷新无进展窗口，新增stream_idle且暂停冻结剩余时长；response/total绝对期限和完成前重查保持，非流式写期限不变。SHUT_WR不误作取消，RST/停止/期限及迟到事件幂等释放。
+- [Reviewer001 PASS](docs/reviewer/reports/V0.2/S2-report-001.md)：独立三套12/12、原期限18+18、关闭窗口20/20、解析/容量16项及额外分配/边界探针通过。初审通过、累计返工0/2，无发现/债；[Leader002](docs/leader/reports/V0.2/S2-report-002.md)收口。
+- 当前S2待协调者本地提交、不推送；V0.2未完成，S3未开始。预算不等于RSS或内核内存，无严格公平、性能收益或GPU计算停止声明。
+- S1已本地提交2f7cf8，远端本轮未核验；以下S1硬限策略、S2尚未实现及提交状态保留为历史收口快照，当前能力以上述S2条目为准。
+
+### V0.2/S1 SSE字节增量链路 — 历史收口记录（当时待本地提交）
 
 - 2026-10-19：支持合法stream=true，200 SSE验证最终头后按解码字节转发，不等完整event/chunk/响应；非SSE结果完整缓冲回退，原nonstream复用保持，stream请求不归池。
 - 首个final字节send才提交；之后异常只截断，不生成第二状态行、假零chunk或[DONE]。固定pending256KiB、body总8MiB/wire16MiB，沿用16MiB会话预约；慢读可有限中断，高低水位暂停恢复尚未实现。

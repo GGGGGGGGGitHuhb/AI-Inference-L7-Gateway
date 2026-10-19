@@ -22,8 +22,11 @@ void releaseString(std::string& value) { std::string().swap(value); }
 ProxySession::ProxySession(net::EventLoop& loop,
                            const app::GatewayConfig& config, SessionIo& io,
                            upstream::ConnectionPool& pool, net::Socket client,
-                           SessionIo::Clock::time_point acceptedAt)
-    : loop_(loop),
+                           SessionIo::Clock::time_point acceptedAt,
+                           BufferBudget& budget, CapacityLease reservation)
+    : reservation_(std::move(reservation)),
+      budget_(budget),
+      loop_(loop),
       config_(config),
       io_(io),
       pool_(pool),
@@ -46,9 +49,12 @@ void ProxySession::startSession() {
 
 void ProxySession::closeUpstream() noexcept { upstreamLease_.invalidate(); }
 
-void ProxySession::finishSession() noexcept {
+void ProxySession::finishSession(FinishReason reason) noexcept {
   if (finished()) return;
+  if (reason != FinishReason::kCount) finishReason_ = reason;
+  budget_.recordFinish(finishReason_);
   phase_ = Phase::kFinished;
+  releaseStream();
   if (timerId_) {
     loop_.cancelTimer(timerId_);
     timerId_ = 0;
@@ -108,6 +114,8 @@ ProxySession::TimePoint ProxySession::nextDeadline() const {
   }
 
   if (phase_ == Phase::kStreaming) {
+    if (!streamHttpComplete_ && !upstreamPaused_)
+      deadline = std::min(deadline, idleDeadline_);
     if (!streamHttpComplete_)
       deadline = std::min(
           deadline, connectedAt_ + Milliseconds(config_.timeouts.response));
@@ -139,6 +147,7 @@ bool ProxySession::checkDeadline() {
     return true;
   }
 
+  finishReason_ = FinishReason::kTimeout;
   const auto earliest = nextDeadline();
   if (phase_ == Phase::kStreaming && streamOutput_->size() &&
       earliest != acceptedAt_ + Milliseconds(config_.timeouts.total) &&
@@ -162,6 +171,10 @@ bool ProxySession::checkDeadline() {
            earliest ==
                connectedAt_ + Milliseconds(config_.timeouts.upstreamWrite))
     prepareError(504, "upstream_write_timeout");
+  else if (phase_ == Phase::kStreaming && !upstreamPaused_ &&
+           earliest != connectedAt_ + Milliseconds(config_.timeouts.response) &&
+           earliest == idleDeadline_)
+    prepareError(504, "stream_idle_timeout");
   else
     prepareError(504, "response_timeout");
   return true;
@@ -175,7 +188,7 @@ void ProxySession::updateInterests() {
       (phase_ == Phase::kClosing && !writeShutdown_))
     downstreamEvents |= EPOLLOUT;
   downstreamChannel_->setInterest(downstreamEvents);
-  if (upstreamLease_.valid()) {
+  if (upstreamLease_.valid() && !upstreamPaused_) {
     std::uint32_t upstreamEvents = EPOLLIN | EPOLLRDHUP;
     if (phase_ == Phase::kConnecting ||
         upstreamOffset_ < upstreamOutput_.size())
@@ -189,7 +202,7 @@ void ProxySession::handleDownstreamEvent(std::uint32_t events) {
   if (events & (EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLERR)) readDownstream();
   if (finished()) return;
   if ((events & EPOLLERR) && io_.socketError(downstreamSocket_.fd())) {
-    finishSession();
+    finishSession(FinishReason::kCancelled);
     return;
   }
 
@@ -210,6 +223,7 @@ void ProxySession::readDownstream() {
     const auto count =
         io_.receiveBytes(downstreamSocket_.fd(), bytes.data(),
                          std::min(bytes.size(), kEventBytes - handled));
+    if (checkDeadline()) return;
     if (count > 0) {
       handled += count;
       if (phase_ != Phase::kReceiving)
@@ -238,7 +252,7 @@ void ProxySession::readDownstream() {
     else if (errno == EAGAIN || errno == EWOULDBLOCK)
       return;
     else {
-      finishSession();
+      finishSession(FinishReason::kCancelled);
       return;
     }
   }
@@ -331,6 +345,7 @@ void ProxySession::confirmConnected() {
 }
 
 void ProxySession::handleUpstreamEvent(std::uint32_t events) {
+  if (upstreamPaused_ || finished()) return;
   if (checkDeadline() || !upstreamLease_.valid()) return;
   if (events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) responseReusable_ = false;
   if (phase_ == Phase::kDownstream || phase_ == Phase::kClosing) {
@@ -355,10 +370,13 @@ void ProxySession::readUpstream() {
   std::array<char, 16384> bytes{};
   std::size_t handled = 0;
   for (int attempt = 0; attempt < 64 && handled < kEventBytes; ++attempt) {
-    if (checkDeadline()) return;
+    if (upstreamPaused_ || checkDeadline()) return;
+    ++upstreamReadCalls_;
     auto count =
         io_.receiveBytes(upstreamLease_.fd(), bytes.data(),
                          std::min(bytes.size(), kEventBytes - handled));
+    if (count > 0) upstreamReadBytes_ += static_cast<std::uint64_t>(count);
+    if (checkDeadline()) return;
     if (count < 0) {
       if (errno == EINTR) continue;
       if (errno == EAGAIN || errno == EWOULDBLOCK) return;
@@ -369,6 +387,7 @@ void ProxySession::readUpstream() {
         count == 0 ? responseParser_->finishInput()
                    : responseParser_->parseBytes(
                          {bytes.data(), static_cast<std::size_t>(count)});
+    if (checkDeadline()) return;
     if (result.status == http::ParseStatus::kRejected) {
       if (streamRequest_ &&
           std::string_view(result.errorCode) == "internal_error")
@@ -380,7 +399,8 @@ void ProxySession::readUpstream() {
     if (responseParser_->eventStream() &&
         responseParser_->finalHeadersReady()) {
       acceptStreamResult(result);
-      if (finished() || phase_ != Phase::kStreaming || streamHttpComplete_)
+      if (finished() || phase_ != Phase::kStreaming || streamHttpComplete_ ||
+          upstreamPaused_)
         return;
       handled += static_cast<std::size_t>(count);
       if (count == 0) return;
@@ -410,6 +430,7 @@ void ProxySession::writeUpstream() {
         upstreamLease_.fd(), upstreamOutput_.data() + upstreamOffset_,
         std::min(kEventBytes - handled,
                  upstreamOutput_.size() - upstreamOffset_));
+    if (checkDeadline()) return;
     if (count > 0) {
       upstreamOffset_ += count;
       handled += count;
@@ -467,47 +488,92 @@ void ProxySession::completeResponse() {
   armDeadline();
 }
 
+void ProxySession::releaseStream() noexcept {
+  if (upstreamPaused_) {
+    upstreamPaused_ = false;
+    budget_.clearPause(false);
+  }
+  if (streamOutput_) {
+    budget_.changePending(streamOutput_->size(), 0);
+    streamOutput_.reset();
+  }
+  streamCapacity_.release();
+}
+
+void ProxySession::pauseUpstream() {
+  if (upstreamPaused_ || streamHttpComplete_ || checkDeadline()) return;
+  idleRemaining_ = idleDeadline_ - io_.now();
+  upstreamPaused_ = true;
+  budget_.recordPause();
+  upstreamLease_.suspendEvents();
+}
+
+void ProxySession::resumeUpstream() {
+  if (!upstreamPaused_ || streamHttpComplete_ || checkDeadline()) return;
+  idleDeadline_ = io_.now() + idleRemaining_;
+  upstreamLease_.setInterest(EPOLLIN | EPOLLRDHUP);
+  upstreamPaused_ = false;
+  budget_.clearPause(true);
+}
+
 void ProxySession::beginStream() {
+  streamCapacity_ = budget_.acquireCapacity(CapacityKind::kStream);
+  if (!streamCapacity_.valid()) {
+    prepareError(503, "buffer_capacity");
+    return;
+  }
   streamOutput_ = std::make_unique<http::StreamOutput>();
   const auto headers = http::normalizeStreamHeaders(responseParser_->message());
   if (!streamOutput_->appendHeaders(headers)) {
     prepareError(502, "stream_buffer_limit");
     return;
   }
-
+  budget_.changePending(0, streamOutput_->size());
   phase_ = Phase::kStreaming;
   responseReusable_ = false;
   outputStarted_ = io_.now();
+  idleDeadline_ = io_.now() + Milliseconds(config_.timeouts.streamIdle);
   // early SSE最终头停止上传，不能把清空offset当作已发送完请求。
   releaseString(upstreamOutput_);
   upstreamOffset_ = 0;
 }
 
 void ProxySession::acceptStreamResult(const http::ParseResult& result) {
+  if (checkDeadline()) return;
   if (phase_ == Phase::kUpstream) beginStream();
-  if (phase_ != Phase::kStreaming) return;
-  const bool wasEmpty = streamOutput_->size() == 0;
+  if (phase_ != Phase::kStreaming || checkDeadline()) return;
+  const auto previousSize = streamOutput_->size();
+  const auto body = responseParser_->bodyFragment();
   streamDecodedTotal_ = responseParser_->decodedTotal();
   streamWireTotal_ = responseParser_->wireTotal();
-  if (!streamOutput_->appendChunk(responseParser_->bodyFragment())) {
+  if (!streamOutput_->appendChunk(body)) {
     prepareError(502, "stream_buffer_limit");
     return;
   }
+  budget_.changePending(previousSize, streamOutput_->size());
 
-  // 新批次先记录起点，完成复核不能误用上一个已排空批次的写期限。
-  if (wasEmpty) outputStarted_ = io_.now();
+  // 进展不能覆盖旧期限；空episode的写期限在添加前不生效。
+  // 先恢复旧size对应的期限判断，再允许本次body刷新idle。
+  if (!previousSize) outputStarted_ = io_.now();
+  if (checkDeadline()) return;
+  if (!body.empty())
+    idleDeadline_ = io_.now() + Milliseconds(config_.timeouts.streamIdle);
   if (result.status == http::ParseStatus::kComplete) {
-    // recv/解析及候选输出构造可能跨过截止；撤销response期限前再次判定。
+    // 仍保留response期限复核后才能标完整并排成功零块。
     if (checkDeadline()) return;
-    streamHttpComplete_ = true;
+    const auto beforeTerminator = streamOutput_->size();
     if (!streamOutput_->appendTerminator()) {
       prepareError(502, "stream_buffer_limit");
       return;
     }
+    budget_.changePending(beforeTerminator, streamOutput_->size());
+    streamHttpComplete_ = true;
     closeUpstream();
     responseParser_.reset();
+  } else if (streamOutput_->size() >= config_.streamBuffer.highWaterBytes) {
+    pauseUpstream();
   }
-
+  if (finished()) return;
   updateInterests();
   armDeadline();
 }
@@ -522,26 +588,33 @@ void ProxySession::writeStream() {
     const auto count =
         io_.sendBytes(downstreamSocket_.fd(), pending.data(),
                       std::min(kEventBytes - handled, pending.size()));
+    // 首字节已被内核接受，即使此系统调用跨过期限，也不能再生成错误头。
+    if (count > 0) responseStarted_ = true;
+    if (checkDeadline()) return;
     if (count > 0) {
-      responseStarted_ = true;
       handled += count;
+      const auto before = streamOutput_->size();
       streamOutput_->consumeBytes(static_cast<std::size_t>(count));
+      budget_.changePending(before, streamOutput_->size());
+      outputStarted_ = io_.now();
+      if (upstreamPaused_ &&
+          streamOutput_->size() <= config_.streamBuffer.lowWaterBytes)
+        resumeUpstream();
+      if (finished()) return;
     } else if (count < 0 && errno == EINTR)
       continue;
     else if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
       break;
     else {
-      finishSession();
+      finishSession(FinishReason::kCancelled);
       return;
     }
   }
-
   if (streamOutput_->size() == 0 && streamHttpComplete_) {
-    streamOutput_.reset();
+    releaseStream();
     beginClosing(64 - attempts);
     return;
   }
-
   updateInterests();
   armDeadline();
 }
@@ -615,13 +688,21 @@ void ProxySession::shutdownWrite(int remainingCalls) {
 
 void ProxySession::prepareError(unsigned status, const char* code) noexcept {
   if (finished()) return;
+  if (status == 504 || status == 408)
+    finishReason_ = FinishReason::kTimeout;
+  else if (status == 503)
+    finishReason_ = FinishReason::kCapacity;
+  else if (status == 500)
+    finishReason_ = FinishReason::kInternal;
+  else
+    finishReason_ = FinishReason::kUpstream;
   if (phase_ == Phase::kClosing || errorDraining_ || responseStarted_) {
     finishSession();
     return;
   }
   try {
     closeUpstream();
-    streamOutput_.reset();
+    releaseStream();
     requestParser_.reset();
     responseParser_.reset();
     releaseString(upstreamOutput_);
