@@ -21,6 +21,11 @@ ssize_t SessionIo::receiveBytes(int fd, void* data, std::size_t size) {
   return ::recv(fd, data, size, 0);
 }
 
+ssize_t SessionIo::peekByte(int fd) {
+  char byte;
+  return ::recv(fd, &byte, 1, MSG_PEEK | MSG_DONTWAIT);
+}
+
 int SessionIo::shutdownWrite(int fd) { return ::shutdown(fd, SHUT_WR); }
 
 ssize_t SessionIo::sendBytes(int fd, const void* data, std::size_t size) {

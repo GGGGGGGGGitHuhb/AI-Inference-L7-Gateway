@@ -68,7 +68,7 @@ struct ProxySessionTestAccess {
   }
 
   static std::uint32_t interest(ProxySession& session) {
-    return session.upstreamChannel_ ? session.upstreamChannel_->interest() : 0;
+    return session.upstreamLease_.interest();
   }
 
   static std::uint32_t downstreamInterest(ProxySession& session) {
@@ -98,12 +98,21 @@ class FakeIo final : public gateway_api::SessionIo {
   int connectSocket(int, const sockaddr*, socklen_t) override;
   int socketError(int) override { return connectError; }
 
+  ssize_t peekByte(int) override {
+    errno = peekError;
+    return peekResult;
+  }
+
   int shutdownWrite(int) override;
 
   ssize_t receiveBytes(int fd, void* data, std::size_t size) override;
   ssize_t sendBytes(int fd, const void* data, std::size_t size) override;
 
   std::vector<std::string> operations;
+  int peekError = EAGAIN;
+  ssize_t peekResult = -1;
+  int connectCalls = 0;
+  bool failUpstreamWrite = false;
   int shutdownAttempts = 0;
   int shutdownSuccesses = 0;
   int shutdownInterrupts = 0;
@@ -148,6 +157,7 @@ int FakeIo::shutdownWrite(int) {
 }
 
 int FakeIo::connectSocket(int, const sockaddr*, socklen_t) {
+  ++connectCalls;
   if (connectInterrupts-- > 0) {
     errno = EINTR;
     return -1;
@@ -194,6 +204,10 @@ ssize_t FakeIo::sendBytes(int fd, const void* data, std::size_t size) {
     return -1;
   }
   const bool client = fd == clientFd;
+  if (!client && failUpstreamWrite) {
+    errno = EPIPE;
+    return -1;
+  }
   if (client ? blockClient : blockUpstream) {
     errno = EAGAIN;
     return -1;
@@ -233,6 +247,7 @@ class SessionFixture {
   app::GatewayConfig config;
   net::EventLoop loop;
   FakeIo io;
+  std::unique_ptr<upstream::ConnectionPool> pool;
   net::Socket peer;
   std::unique_ptr<gateway_api::ProxySession> session;
 };
@@ -247,8 +262,10 @@ SessionFixture::SessionFixture(app::Timeouts timeouts)
                            0, pair) == 0);
   peer.reset(pair[1]);
   io.clientFd = pair[0];
+  pool =
+      std::make_unique<upstream::ConnectionPool>(loop, config.upstreamPool, io);
   session = std::make_unique<gateway_api::ProxySession>(
-      loop, config, io, net::Socket(pair[0]), io.now());
+      loop, config, io, *pool, net::Socket(pair[0]), io.now());
   session->startSession();
 }
 
@@ -535,6 +552,120 @@ void testClosing() {
   }
 }
 
+void testReuseSessionBoundaries() {
+  for (int scenario = 0; scenario < 11; ++scenario) {
+    SessionFixture fixture;
+    fixture.startRequest();
+    fixture.io.sendLimit = 65536;
+    ProxySessionTestAccess::upstream(*fixture.session, EPOLLOUT);
+    GATEWAY_CHECK(!fixture.io.sentUpstream.empty());
+    fixture.io.upstreamInput = kResponse;
+    if (scenario == 1) fixture.io.upstreamInput += "junk";
+    if (scenario == 2)
+      fixture.io.upstreamInput =
+          "HTTP/1.1 200 OK\r\nConnection: keep-alive\r\ncOnNeCtIoN: foo, "
+          "ClOsE\r\nContent-Length: 3\r\n\r\nabc";
+    ProxySessionTestAccess::upstream(
+        *fixture.session, EPOLLIN | (scenario == 3 ? EPOLLRDHUP : 0));
+    if (scenario == 0 || scenario >= 4) {
+      GATEWAY_CHECK(fixture.session->hasUpstream());
+      GATEWAY_CHECK(fixture.pool->snapshot().leased == 1 &&
+                    fixture.pool->snapshot().idle == 0);
+    }
+    if (scenario == 4) {  // 已完整响应、下游仍阻塞，迟到数据不覆盖首响应。
+      fixture.io.upstreamInput = "late";
+      ProxySessionTestAccess::upstream(*fixture.session, EPOLLIN);
+    }
+    if (scenario == 5) fixture.io.peekResult = 1;
+    if (scenario == 6) fixture.io.shutdownError = EIO;
+    if (scenario == 7) fixture.pool->stopAcquisition();
+    if (scenario == 8) {
+      fixture.io.clientReset = true;
+      ProxySessionTestAccess::downstream(*fixture.session, EPOLLIN | EPOLLERR);
+    }
+    if (scenario == 9) {
+      fixture.io.blockClient = true;
+      fixture.io.time += std::chrono::milliseconds(60001);
+      ProxySessionTestAccess::deadline(*fixture.session);
+    }
+    if (scenario == 10) {
+      fixture.io.shutdownInterrupts = 100;
+      ProxySessionTestAccess::downstream(*fixture.session, EPOLLOUT);
+      GATEWAY_CHECK(fixture.session->hasUpstream() &&
+                    fixture.pool->snapshot().idle == 0);
+      fixture.io.shutdownInterrupts = 0;
+    }
+    fixture.flushClient(false);
+    const bool reused = scenario == 0 || scenario == 10;
+    GATEWAY_CHECK(fixture.pool->snapshot().idle == (reused ? 1U : 0U));
+    GATEWAY_CHECK(!fixture.session->hasUpstream());
+    if (scenario != 8 && scenario != 9)
+      GATEWAY_CHECK(fixture.io.sentClient.ends_with("abc"));
+    if (reused) {
+      auto next = fixture.pool->acquireConnection({});
+      GATEWAY_CHECK(next.reused());
+      fixture.io.clientReset = true;
+      ProxySessionTestAccess::downstream(*fixture.session, EPOLLIN | EPOLLERR);
+      GATEWAY_CHECK(next.valid());  // 旧closing不得失效新租约。
+    }
+    fixture.session->finishSession();
+    fixture.pool->closeAllConnections();
+    fixture.pool->cleanupRetired();
+    fixture.checkCleanup();
+  }
+  SessionFixture noRetry;
+  noRetry.startRequest();
+  noRetry.io.failUpstreamWrite = true;
+  ProxySessionTestAccess::upstream(*noRetry.session, EPOLLOUT);
+  noRetry.flushClient();
+  GATEWAY_CHECK(noRetry.io.sentClient.starts_with("HTTP/1.1 502"));
+  GATEWAY_CHECK(noRetry.io.connectCalls == 1 &&
+                noRetry.pool->snapshot().created == 1);
+  noRetry.checkCleanup();
+}
+
+void testReusedFailureAndDeadlines() {
+  for (bool expireTotal : {false, true}) {
+    app::Timeouts limits;
+    limits.response = expireTotal ? 100 : 10;
+    limits.total = expireTotal ? 30 : 100;
+    SessionFixture fixture(limits);
+    auto seed = fixture.pool->acquireConnection({});
+    seed.markConnected();
+    seed.releaseReusable();
+    fixture.io.time += std::chrono::milliseconds(20);
+    fixture.startRequest();
+    GATEWAY_CHECK(fixture.io.connectCalls == 0 &&
+                  fixture.pool->snapshot().reused == 1);
+    fixture.io.sendLimit = 65536;
+    ProxySessionTestAccess::upstream(*fixture.session, EPOLLOUT);
+    fixture.io.time += std::chrono::milliseconds(9);
+    ProxySessionTestAccess::deadline(*fixture.session);
+    GATEWAY_CHECK(fixture.session->hasUpstream() &&
+                  fixture.io.sentClient.empty());
+    fixture.io.time += std::chrono::milliseconds(1);
+    ProxySessionTestAccess::deadline(*fixture.session);
+    fixture.flushClient();
+    GATEWAY_CHECK(fixture.io.sentClient.find(
+                      expireTotal ? "total_timeout" : "response_timeout") !=
+                  std::string::npos);
+    fixture.checkCleanup();
+  }
+  SessionFixture failure;
+  auto seed = failure.pool->acquireConnection({});
+  seed.markConnected();
+  seed.releaseReusable();
+  failure.startRequest();
+  failure.io.failUpstreamWrite = true;
+  ProxySessionTestAccess::upstream(*failure.session, EPOLLOUT);
+  failure.flushClient();
+  GATEWAY_CHECK(failure.io.connectCalls == 0 &&
+                failure.io.sentUpstream.empty());
+  GATEWAY_CHECK(failure.io.sentClient.starts_with("HTTP/1.1 502") &&
+                failure.pool->snapshot().created == 1);
+  failure.checkCleanup();
+}
+
 class EventFixture {
  public:
   net::EventLoop loop;
@@ -704,6 +835,105 @@ void testRuntimeBudgets() {
   }
 }
 
+void testRuntimePoolSnapshots() {
+  net::Socket backend = net::Socket::createTcp();
+  sockaddr_in address{};
+  address.sin_family = AF_INET;
+  address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+  GATEWAY_CHECK(::bind(backend.fd(), reinterpret_cast<sockaddr*>(&address),
+                       sizeof(address)) == 0);
+  backend.listen(8);
+  app::GatewayConfig config;
+  config.listenPort = 0;
+  config.upstreamAddress = "127.0.0.1";
+  config.upstreamPort = backend.localPort();
+  gateway_api::GatewayRuntime runtime(config);
+  const auto port = runtime.startListener();
+  net::Socket upstream;
+  for (int round = 0; round < 20; ++round) {
+    auto client = connectClient(port);
+    GATEWAY_CHECK(
+        ::send(client.fd(), kRequest.data(), kRequest.size(), MSG_NOSIGNAL) ==
+        static_cast<ssize_t>(kRequest.size()));
+    std::string request;
+    for (int step = 0;
+         step < 200 && request.find("\r\n\r\n") == std::string::npos; ++step) {
+      runtime.pollOnce(1);
+      if (!upstream.valid())
+        upstream.reset(::accept4(backend.fd(), nullptr, nullptr,
+                                 SOCK_NONBLOCK | SOCK_CLOEXEC));
+      if (upstream.valid()) {
+        char bytes[4096];
+        const auto count = ::recv(upstream.fd(), bytes, sizeof(bytes), 0);
+        if (count > 0) request.append(bytes, count);
+      }
+    }
+    GATEWAY_CHECK(request.starts_with("POST ") &&
+                  runtime.snapshot().pool.leased == 1);
+    GATEWAY_CHECK(::send(upstream.fd(), kResponse.data(), kResponse.size(),
+                         MSG_NOSIGNAL) ==
+                  static_cast<ssize_t>(kResponse.size()));
+    std::string response;
+    bool eof = false;
+    for (int step = 0; step < 200 && !eof; ++step) {
+      runtime.pollOnce(1);
+      char bytes[4096];
+      const auto count = ::recv(client.fd(), bytes, sizeof(bytes), 0);
+      if (count > 0) response.append(bytes, count);
+      if (count == 0) eof = true;
+    }
+    GATEWAY_CHECK(eof && response.ends_with("abc"));
+    const auto held = runtime.snapshot();
+    GATEWAY_CHECK(held.activeSessions == 1 && held.reservedBytes == 16777216);
+    GATEWAY_CHECK(held.pool.total == 1 && held.pool.idle == 1 &&
+                  held.activeUpstreams == 0 && held.activeTimers == 2);
+    client.reset();
+    for (int step = 0; step < 20 && runtime.snapshot().activeSessions; ++step)
+      runtime.pollOnce(1);
+    const auto idle = runtime.snapshot();
+    GATEWAY_CHECK(idle.activeSessions == 0 && idle.reservedBytes == 0 &&
+                  idle.activeTimers == 1 && idle.pool.idle == 1);
+    GATEWAY_CHECK(idle.pool.created == 1 &&
+                  idle.pool.reused == static_cast<std::uint64_t>(round));
+  }
+  GATEWAY_CHECK(::raise(SIGTERM) == 0);
+  runtime.pollOnce(0);
+  const auto stopped = runtime.snapshot();
+  GATEWAY_CHECK(stopped.activeSessions == 0 && stopped.reservedBytes == 0 &&
+                stopped.pool.total == 0 && stopped.pool.retired == 0 &&
+                stopped.activeTimers == 0);
+}
+
+void testPoolAllocationFailures() {
+  SessionFixture fixture;
+  auto baseline = fdCount();
+  failNextAllocation = true;
+  bool rejected = false;
+  try {
+    auto lease = fixture.pool->acquireConnection({});
+  } catch (const std::bad_alloc&) {
+    rejected = true;
+  }
+  failNextAllocation = false;
+  GATEWAY_CHECK(rejected && fixture.pool->snapshot().total == 0 &&
+                fdCount() == baseline);
+  auto lease = fixture.pool->acquireConnection({});
+  lease.markConnected();
+  const auto originalToken = net::EventLoopTestAccess::exchangeToken(0);
+  rejected = false;
+  try {
+    lease.releaseReusable();
+  } catch (const std::overflow_error&) {
+    rejected = true;
+  }
+  net::EventLoopTestAccess::exchangeToken(originalToken);
+  GATEWAY_CHECK(rejected && !lease.valid() &&
+                fixture.pool->snapshot().total == 0 &&
+                fixture.loop.timerCount() == 1);
+  fixture.pool->cleanupRetired();
+  GATEWAY_CHECK(fdCount() == baseline);
+}
+
 void testRuntimeClosingBudgets() {
   for (int stopMode : {0, 1, 2}) {
     app::GatewayConfig config;
@@ -787,6 +1017,10 @@ int main() {
     testSessionIo();
     testDeadlines();
     testClosing();
+    testReuseSessionBoundaries();
+    testReusedFailureAndDeadlines();
+    testPoolAllocationFailures();
+    testRuntimePoolSnapshots();
     testRuntimeBudgets();
     testRuntimeClosingBudgets();
     GATEWAY_CHECK(fdCount() == descriptors);

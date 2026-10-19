@@ -12,7 +12,7 @@
 
 namespace gateway::gateway_api {
 GatewayRuntime::GatewayRuntime(app::GatewayConfig config)
-    : config_(std::move(config)) {
+    : config_(std::move(config)), pool_(loop_, config_.upstreamPool, io_) {
   loop_.registerCleanupCallback([this] { onCleanup(); });
 }
 
@@ -58,8 +58,8 @@ RuntimeSnapshot GatewayRuntime::snapshot() const {
   std::size_t upstreams = 0;
   for (const auto& [id, session] : sessions_)
     if (session->hasUpstream()) ++upstreams;
-  return {sessions_.size(), reservedBytes_, upstreams, loop_.timerCount(),
-          peakSessions_};
+  return {sessions_.size(),   reservedBytes_, upstreams,
+          loop_.timerCount(), peakSessions_,  pool_.snapshot()};
 }
 
 void GatewayRuntime::onListenerEvent(std::uint32_t events) {
@@ -88,7 +88,7 @@ void GatewayRuntime::onListenerEvent(std::uint32_t events) {
     reservedBytes_ += ProxySession::kReservationBytes;
     try {
       auto session = std::make_unique<ProxySession>(
-          loop_, config_, io_, std::move(client), acceptedAt);
+          loop_, config_, io_, pool_, std::move(client), acceptedAt);
       session->startSession();
       sessions_.emplace(id, std::move(session));
       peakSessions_ = std::max(peakSessions_, sessions_.size());
@@ -111,6 +111,7 @@ void GatewayRuntime::onCleanup() {
       ++iterator;
   }
 
+  pool_.cleanupRetired();
   if (stopping_ && sessions_.empty()) {
     if (shutdownTimer_) {
       loop_.cancelTimer(shutdownTimer_);
@@ -141,6 +142,7 @@ void GatewayRuntime::requestShutdown() {
     return;
   }
   stopping_ = true;
+  pool_.stopAcquisition();
   if (listenerChannel_) listenerChannel_->removeChannel();
   listener_.reset();
   shutdownTimer_ = loop_.addTimer(
@@ -157,6 +159,7 @@ void GatewayRuntime::onShutdownDeadline() {
 
 void GatewayRuntime::forceShutdown() {
   for (auto& [id, session] : sessions_) session->finishSession();
+  pool_.closeAllConnections();
   loop_.requestLoopStop();
 }
 }  // namespace gateway::gateway_api

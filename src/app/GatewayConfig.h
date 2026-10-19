@@ -14,6 +14,12 @@ struct Timeouts {
   int shutdown = 3000;
 };
 
+struct PoolConfig {
+  std::size_t maxConnections = 16;
+  std::size_t maxIdle = 16;
+  int idleTimeoutMs = 5000;
+};
+
 struct GatewayConfig {
   std::string listenAddress = "127.0.0.1";
   std::uint16_t listenPort = 8080;
@@ -24,6 +30,7 @@ struct GatewayConfig {
   std::uint64_t maxReservedBytes = 268435456;
 
   Timeouts timeouts;
+  PoolConfig upstreamPool;
 };
 
 GatewayConfig parseConfig(std::string_view content);

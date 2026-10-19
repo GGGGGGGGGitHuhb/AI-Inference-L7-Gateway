@@ -75,6 +75,23 @@ void readTimeouts(const Json& object, Timeouts& timeouts) {
       throw std::invalid_argument("unknown timeout key");
   }
 }
+
+void readPool(const Json& object, PoolConfig& pool) {
+  if (!object.is_object())
+    throw std::invalid_argument("upstream_pool object required");
+  for (const auto& [key, value] : object.items()) {
+    if (key == "max_connections")
+      pool.maxConnections = integer(value, 1, 256);
+    else if (key == "max_idle")
+      pool.maxIdle = integer(value, 0, 256);
+    else if (key == "idle_timeout_ms")
+      pool.idleTimeoutMs = integer(value, 10, 300000);
+    else
+      throw std::invalid_argument("unknown upstream_pool key");
+  }
+  if (pool.maxIdle > pool.maxConnections)
+    throw std::invalid_argument("max_idle exceeds max_connections");
+}
 }  // namespace
 
 GatewayConfig parseConfig(std::string_view content) {
@@ -102,6 +119,8 @@ GatewayConfig parseConfig(std::string_view content) {
         config.maxConnections = integer(value, 1, 256);
       else if (key == "max_reserved_bytes")
         config.maxReservedBytes = integer(value, 16777216, 4294967296ULL);
+      else if (key == "upstream_pool")
+        readPool(value, config.upstreamPool);
       else if (key == "timeouts_ms")
         readTimeouts(value, config.timeouts);
       else
