@@ -72,6 +72,21 @@ std::string normalizeMessage(const HttpMessage& message, MessageKind kind,
   return output;
 }
 
+std::string normalizeStreamHeaders(const HttpMessage& message) {
+  const auto removed = hopHeaders(message);
+  std::string output = "HTTP/1.1 200 Gateway Response\r\n";
+  for (const auto& header : message.headers) {
+    requireSafeHeader(header.name);
+    requireSafeHeader(header.value);
+    if (!removed.contains(lowerAscii(header.name)))
+      output += header.name + ": " + header.value + "\r\n";
+  }
+  output +=
+      "Transfer-Encoding: chunked\r\nConnection: close\r\nVia: 1.1 "
+      "ai-inference-gateway\r\n\r\n";
+  return output;
+}
+
 std::string serializeError(unsigned status, std::string_view body,
                            bool closeConnection) {
   std::string output = "HTTP/1.1 " + std::to_string(status) +

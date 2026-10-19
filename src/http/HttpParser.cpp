@@ -4,6 +4,7 @@
 #include <array>
 #include <charconv>
 #include <cstdint>
+#include <cstring>
 #include <limits>
 #include <set>
 
@@ -24,8 +25,9 @@ std::string trimWhitespace(std::string_view input) {
   return std::string(input);
 }
 
-HttpParser::HttpParser(MessageKind kind, ParserLimits limits)
-    : kind_(kind), limits_(limits) {
+HttpParser::HttpParser(MessageKind kind, ParserLimits limits,
+                       ResponseMode responseMode)
+    : kind_(kind), limits_(limits), responseMode_(responseMode) {
   llhttp_settings_init(&settings_);
   settings_.on_url = onUrl;
   settings_.on_header_field = onHeaderField;
@@ -41,6 +43,8 @@ HttpParser::HttpParser(MessageKind kind, ParserLimits limits)
 
 void HttpParser::resetParser() noexcept {
   message_ = {};
+  bodyFragmentSize_ = decodedTotal_ = 0;
+  finalHeadersReady_ = eventStream_ = false;
   headerName_.clear();
   headerValue_.clear();
   chunkLine_.clear();
@@ -104,6 +108,7 @@ ParseResult HttpParser::result(std::size_t consumed) const noexcept {
 }
 
 std::size_t HttpParser::bodyLimit() const {
+  if (eventStream_) return limits_.streamBodyBytes;
   return kind_ == MessageKind::kRequest ? limits_.requestBodyBytes
                                         : limits_.responseBodyBytes;
 }
@@ -111,7 +116,8 @@ std::size_t HttpParser::bodyLimit() const {
 bool HttpParser::accountByte(char byte) {
   const auto wireLimit = kind_ == MessageKind::kRequest
                              ? limits_.requestWireBytes
-                             : limits_.responseWireBytes;
+                             : (eventStream_ ? limits_.streamWireBytes
+                                             : limits_.responseWireBytes);
   if (++wireBytes_ > wireLimit) {
     rejectMessage(413, "wire_limit");
     return false;
@@ -142,6 +148,7 @@ bool HttpParser::accountByte(char byte) {
 }
 
 ParseResult HttpParser::parseBytes(std::string_view input) noexcept {
+  bodyFragmentSize_ = 0;
   if (status_ != ParseStatus::kNeedMore) return result(0);
   std::size_t consumed = 0;
   // 逐字节喂入让预算与消息边界精确对应；S1 不作吞吐承诺。
@@ -164,6 +171,7 @@ ParseResult HttpParser::parseBytes(std::string_view input) noexcept {
 }
 
 ParseResult HttpParser::finishInput() noexcept {
+  bodyFragmentSize_ = 0;
   if (status_ != ParseStatus::kNeedMore) return result(0);
   const auto error = llhttp_finish(&parser_);
   if (error != HPE_OK && error != HPE_PAUSED) parserError_ = error;
@@ -252,7 +260,9 @@ bool HttpParser::validateHeaders() {
     }
     if (header.name == "content-encoding" && value != "identity")
       return rejectMessage(415, "unsupported_encoding"), false;
-    if (kind_ == MessageKind::kResponse && header.name == "content-type" &&
+    if (kind_ == MessageKind::kResponse &&
+        responseMode_ == ResponseMode::kBuffered &&
+        header.name == "content-type" &&
         trimWhitespace(std::string_view(value).substr(0, value.find(';'))) ==
             "text/event-stream")
       return rejectMessage(502, "unsupported_stream"), false;
@@ -290,14 +300,54 @@ int HttpParser::handleHeadersComplete() {
     return rejectMessage(502, "invalid_status");
   if (message_.statusCode == 101)
     return rejectMessage(502, "unsupported_upgrade");
-  if (!validateHeaders()) return HPE_USER;
+  if (!selectResponseMode() || !validateHeaders()) return HPE_USER;
+  if (kind_ == MessageKind::kResponse && message_.statusCode >= 200)
+    finalHeadersReady_ = true;
   return 0;
 }
 
+bool HttpParser::selectResponseMode() {
+  if (kind_ != MessageKind::kResponse || message_.statusCode < 200 ||
+      responseMode_ != ResponseMode::kAllowEventStream)
+    return true;
+  std::size_t count = 0;
+  for (const auto& header : message_.headers) {
+    if (header.name != "content-type") continue;
+    if (++count > 1) return rejectMessage(502, "invalid_content_type"), false;
+    const auto value = lowerAscii(header.value);
+    const auto semicolon = value.find(';');
+    if (trimWhitespace(std::string_view(value).substr(0, semicolon)) !=
+        "text/event-stream")
+      continue;
+    if (message_.statusCode != 200)
+      return rejectMessage(502, "invalid_stream_status"), false;
+    if (semicolon != std::string::npos) {
+      const auto parameter = std::string_view(value).substr(semicolon + 1);
+      const auto equals = parameter.find('=');
+      if (equals == std::string_view::npos ||
+          trimWhitespace(parameter.substr(0, equals)) != "charset")
+        return rejectMessage(502, "invalid_stream_charset"), false;
+      const auto charset = trimWhitespace(parameter.substr(equals + 1));
+      if (charset != "utf-8" && charset != "\"utf-8\"")
+        return rejectMessage(502, "invalid_stream_charset"), false;
+    }
+    eventStream_ = true;
+  }
+  return true;
+}
+
 int HttpParser::handleBody(std::string_view bytes) {
-  if (bytes.size() > bodyLimit() - message_.body.size())
+  if (bytes.size() > bodyLimit() - decodedTotal_)
     return rejectMessage(413, "body_limit");
-  message_.body.append(bytes);
+  if (eventStream_) {
+    if (bytes.size() > bodyFragment_.size() - bodyFragmentSize_)
+      return rejectMessage(502, "fragment_limit");
+    std::memcpy(bodyFragment_.data() + bodyFragmentSize_, bytes.data(),
+                bytes.size());
+    bodyFragmentSize_ += bytes.size();
+  } else
+    message_.body.append(bytes);
+  decodedTotal_ += bytes.size();
   return 0;
 }
 
@@ -418,7 +468,7 @@ llhttp_errno_t HttpParser::deliverByte(char byte) noexcept {
 int HttpParser::handleChunkHeader() {
   if (parser_.content_length != 0 && ++chunkCount_ > limits_.chunks)
     return rejectMessage(413, "chunk_count_limit");
-  if (parser_.content_length > bodyLimit() - message_.body.size())
+  if (parser_.content_length > bodyLimit() - decodedTotal_)
     return rejectMessage(413, "body_limit");
   phase_ = parser_.content_length == 0 ? WirePhase::kTrailers
                                        : WirePhase::kChunkData;

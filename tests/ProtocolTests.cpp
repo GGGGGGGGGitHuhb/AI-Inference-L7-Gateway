@@ -12,6 +12,7 @@
 namespace {
 bool failAllocation = false;
 }
+
 void* operator new(std::size_t size) {
   if (failAllocation) {
     failAllocation = false;
@@ -20,10 +21,15 @@ void* operator new(std::size_t size) {
   if (void* memory = std::malloc(size ? size : 1)) return memory;
   throw std::bad_alloc();
 }
+
 void operator delete(void* memory) noexcept { std::free(memory); }
+
 void operator delete(void* memory, std::size_t) noexcept { std::free(memory); }
+
 void* operator new[](std::size_t size) { return ::operator new(size); }
+
 void operator delete[](void* memory) noexcept { ::operator delete(memory); }
+
 void operator delete[](void* memory, std::size_t) noexcept {
   ::operator delete(memory);
 }
@@ -188,17 +194,22 @@ void testJson() {
   auto valid = validateBody(kBody);
   GATEWAY_CHECK(valid.accepted && valid.metadata.model == "demo" &&
                 valid.metadata.messageCount == 1);
-  for (const auto& field : {"\"stream\":false", "\"n\":1", "\"max_tokens\":1",
-                            "\"max_tokens\":8192", "\"temperature\":0",
-                            "\"temperature\":2", "\"temperature\":1.5"})
+  GATEWAY_CHECK(!valid.metadata.stream);
+  GATEWAY_CHECK(
+      validateBody(kBody.substr(0, kBody.size() - 1) + ",\"stream\":true}")
+          .metadata.stream);
+  for (const auto& field :
+       {"\"stream\":false", "\"stream\":true", "\"n\":1", "\"max_tokens\":1",
+        "\"max_tokens\":8192", "\"temperature\":0", "\"temperature\":2",
+        "\"temperature\":1.5"})
     GATEWAY_CHECK(
         validateBody(kBody.substr(0, kBody.size() - 1) + "," + field + "}")
             .accepted);
   for (const auto& field :
-       {"\"stream\":true", "\"stream\":0", "\"n\":2", "\"n\":0", "\"n\":1.0",
-        "\"max_tokens\":0", "\"max_tokens\":8193", "\"max_tokens\":1.0",
-        "\"temperature\":-1", "\"temperature\":2.1", "\"temperature\":\"1\"",
-        "\"tools\":[]", "\"n\":null", "\"n\":true", "\"n\":[]"})
+       {"\"stream\":0", "\"n\":2", "\"n\":0", "\"n\":1.0", "\"max_tokens\":0",
+        "\"max_tokens\":8193", "\"max_tokens\":1.0", "\"temperature\":-1",
+        "\"temperature\":2.1", "\"temperature\":\"1\"", "\"tools\":[]",
+        "\"n\":null", "\"n\":true", "\"n\":[]"})
     GATEWAY_CHECK(
         !validateBody(kBody.substr(0, kBody.size() - 1) + "," + field + "}")
              .accepted);
@@ -294,7 +305,8 @@ void testFieldTypes() {
       body += "\"" + std::string(field) + "\":" + value + "}";
       bool expected = false;
       if (std::string(field) == "model") expected = value == "\"x\"";
-      if (std::string(field) == "stream") expected = value == "false";
+      if (std::string(field) == "stream")
+        expected = value == "false" || value == "true";
       if (std::string(field) == "n" || std::string(field) == "max_tokens")
         expected = value == "1";
       if (std::string(field) == "temperature")

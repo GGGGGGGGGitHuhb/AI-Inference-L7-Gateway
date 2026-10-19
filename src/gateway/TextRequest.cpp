@@ -28,6 +28,7 @@ struct Frame {
 class TextSax final : public nlohmann::json_sax<Json> {
  public:
   explicit TextSax(JsonLimits limits) : limits_(limits) {}
+
   bool null() override;
   bool boolean(bool value) override;
   bool number_integer(number_integer_t value) override;
@@ -61,7 +62,6 @@ class TextSax final : public nlohmann::json_sax<Json> {
   bool rootSeen_ = false;
   bool invalid_ = false;
   bool unsupportedField_ = false;
-  bool unsupportedStream_ = false;
 };
 
 bool TextSax::null() { return acceptValue(ValueKind::kNull); }
@@ -110,8 +110,8 @@ void TextSax::validateRootValue(const std::string& key, ValueKind kind,
   } else if (key == "stream") {
     if (kind != ValueKind::kBoolean)
       invalid_ = true;
-    else if (flag)
-      unsupportedStream_ = true;
+    else
+      metadata_.stream = flag;
   } else if (key == "n") {
     if (kind != ValueKind::kInteger || number != 1) invalid_ = true;
   } else if (key == "max_tokens") {
@@ -213,7 +213,6 @@ ValidationResult TextSax::finish(bool parsed) {
   if (!parsed || invalid_ || !rootSeen_ || !frames_.empty())
     return {false, 400, "invalid_request", {}};
   if (unsupportedField_) return {false, 400, "unsupported_field", {}};
-  if (unsupportedStream_) return {false, 400, "unsupported_stream", {}};
   return {true, 0, "", std::move(metadata_)};
 }
 }  // namespace

@@ -1,12 +1,12 @@
 # AI Inference L7 Gateway 架构大纲
 
-文档状态：`Approved`（总体架构基线；V0.1基础代理与有界上游复用已验收，流式/调度等后续能力待实现）。创建日期：2026-10-17；采纳日期：2026-10-18。
+文档状态：`Approved`（总体架构基线；V0.1基础代理/上游复用及V0.2/S1增量流链路已验收，背压协同/调度等后续能力待实现）。创建日期：2026-10-17；采纳日期：2026-10-18。
 
 ## 1. 依据与状态
 
 用户于 2026-10-17 确认“独立项目、按需复用、最后联调”，于 2026-10-18 授权“你来决策吧”。Leader 据此采纳总体架构，并制定 V0.1/S1 的详细技术基线；后续阶段仍须形成各自设计。授权不等于已实现或已通过 Reviewer 验收。
 
-2026-10-17 首次编写前，仓库仅有空 README 和 Git 初始提交。2026-10-18，V0.1/S1 已通过 [Reviewer 002 独立复验](docs/reviewer/reports/V0.1/S1-report-002.md)，由 Leader 003 收口，最新状态澄清见 [Leader 004](docs/leader/reports/V0.1/S1-report-004.md)。已验收实现为S1最小组件/协议基础、S2单上游非流式代理及S3有界上游连接复用；流式和调度仍为后续目标。S1已提交bb318d8c并推送至阶段分支（协调者核验），未合并main或发布。S2按[返工002](docs/leader/reworks/rework-002.md)修正后通过[Reviewer002](docs/reviewer/reports/V0.1/S2-report-002.md)，由[Leader003](docs/leader/reports/V0.1/S2-report-003.md)收口；S2已本地提交3cb65244312d2feef563c2fd755ae8447d4589c5，远端状态本轮未核验。用户于2026-10-19启动S3，已通过[Reviewer002 PASS](docs/reviewer/reports/V0.1/S3-report-002.md)并由[Leader002](docs/leader/reports/V0.1/S3-report-002.md)收口；S3及V0.1开发验收已完成，S3尚未提交/推送。版本顺序、阶段范围和完成条件由 [ROADMAP.md](ROADMAP.md) 维护。
+2026-10-17 首次编写前，仓库仅有空 README 和 Git 初始提交。2026-10-18，V0.1/S1 已通过 [Reviewer 002 独立复验](docs/reviewer/reports/V0.1/S1-report-002.md)，由 Leader 003 收口，最新状态澄清见 [Leader 004](docs/leader/reports/V0.1/S1-report-004.md)。已验收实现为S1最小组件/协议基础、S2单上游非流式代理及S3有界上游连接复用；V0.2/S1增量流链路亦已接受，完整背压协同和调度仍为后续目标。S1已提交bb318d8c并推送至阶段分支（协调者核验），未合并main或发布。S2按[返工002](docs/leader/reworks/rework-002.md)修正后通过[Reviewer002](docs/reviewer/reports/V0.1/S2-report-002.md)，由[Leader003](docs/leader/reports/V0.1/S2-report-003.md)收口；S2已本地提交3cb65244312d2feef563c2fd755ae8447d4589c5，远端状态本轮未核验。用户于2026-10-19启动S3，已通过[Reviewer002 PASS](docs/reviewer/reports/V0.1/S3-report-002.md)并由[Leader002](docs/leader/reports/V0.1/S3-report-002.md)收口；S3及V0.1开发验收已完成，提交d653e9c400517783d5d33025a0b66a737c8256eb已推送阶段分支（协调者2026-10-19核验同SHA）；当前V0.2/S1已获[Reviewer002 PASS](docs/reviewer/reports/V0.2/S1-report-002.md)并由[Leader002](docs/leader/reports/V0.2/S1-report-002.md)收口，累计1/2；V0.2整体未完成，当前成果待协调者本地提交、不推送。版本顺序、阶段范围和完成条件由 [ROADMAP.md](ROADMAP.md) 维护。
 
 ## 2. 项目目标与边界
 
@@ -176,8 +176,18 @@ Reviewer独立复现：在owner线程但事件回调外连续调用两次request
 
 ## 已验收上游池边界
 
-ConnectionPool唯一拥有上游Socket/Channel，会话持有move-only租约；空闲/租用转换更新事件token和generation，回调返回后cleanup删除退休对象。总量/idle/期限由独立配置约束；idle不保存协议正文，默认16/16/5000ms，池满503且无队列。请求发送完整、响应明确定界且无关闭/污染/异常、下游成功SHUT_WR后才归池，旧下游closing不再持有租约。当前实现比长期流程第6步更保守，慢客户端发送期间保持上游槽。
+ConnectionPool唯一拥有上游Socket/Channel，会话持有move-only租约；空闲/租用转换更新事件token和generation，回调返回后cleanup删除退休对象。总量/idle/期限由独立配置约束；idle不保存协议正文，默认16/16/5000ms，池满503且无队列。请求发送完整、响应明确定界且无关闭/污染/异常、下游成功SHUT_WR后才归池，旧下游closing不再持有租约。此为非流式复用路径，比长期流程第6步更保守，慢客户端发送期间保持上游槽；V0.2/S1的stream=true路径结束一律失效租约，不归池。
 
 归还/租出前非阻塞peek与idle读事件淘汰当前可探测污染，借出后失败不重试；不保证未来存活或任意恶意后端未来响应的因果识别。首次停止关闭idle并阻止新派发，已有租约有限排空，第二信号/停止期限强制收口。完整资源/事件/停止边界见S3设计；上述内部Runtime SDK使用限制仍适用。
 
 - 2026-10-19：S3独立PASS后同步实际池模块、顺序复用和资格/资源边界；V0.1开发验收已完成，后续流式/调度未实现，未发布。
+
+## V0.2/S1 已验收流式链路
+
+[V0.2/S1设计](docs/leader/designs/V0.2/S1-design.md)按用户启动授权收敛首阶段：HttpParser提供已验证最终头/解码body片段/终态，ProxySession按stream请求与响应Content-Type选择流或有界缓冲回退；流体不累计于HttpMessage.body。流模式头规范化为chunked+close，按当前可用字节输出，HTTP完成才发送终止块，不解析SSE event或[DONE]。
+
+首个final字节被Socket接受才算响应已开始，入队头尚可在失败时撤回；开始后异常只中断，不生成第二状态行或正常终止块。流请求本阶段使用受限租约但结束不归池，原非流式复用保持。固定pending256KiB、总解码8MiB/wire16MiB及已有16MiB会话预约/绝对期限控制资源；满缓存结束，不提前实现S2高低水位恢复。上述已按V0.2/S1权威实现并独立接受；新增StreamOutput固定数组承载pending，HttpParser固定片段不累计body，ProxySession管理响应提交/完成与批次期限。流HTTP完成转换前重查response/total期限，不能先撤除过期期限再发零chunk。
+
+- 2026-10-19：用户启动V0.2/S1，明确协议增量接口/不累计流body、发送commit point和有限S1边界；流实现/验收待完成，不改V0.1历史权威。
+
+- 2026-10-19：V0.2/S1独立PASS后同步实际流解析/固定输出/提交及完成期限边界；高低水位协同仍留S2，真实后端留S3，V0.2未完成。
