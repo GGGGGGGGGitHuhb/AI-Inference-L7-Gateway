@@ -1,0 +1,5 @@
+{
+  "short": "Briefly explain what a gateway does.",
+  "long": "List the numbers from 1 to 200, one item per line, and briefly explain each number. Continue until all 200 items are written.",
+  "context_unit": "blue river mountain forest orange cloud silver garden "
+}
