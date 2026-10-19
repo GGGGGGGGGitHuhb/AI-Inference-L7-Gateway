@@ -104,7 +104,7 @@ def response_case(temporary,mode,expected=200,fragment=False,halfclose=False,chu
         if mode!="early":check(upstream_body==body,mode)
         check(b"unique-private-secret" not in upstream_headers,mode)
         check(b"Host: 127.0.0.1:"+str(backend.port).encode() in upstream_headers,mode)
-        check(b"Connection: close" in upstream_headers,mode)
+        check(b"Connection: close" not in upstream_headers,mode) # S3 upstream policy is independent of downstream close.
         check(b"x-keep: one\r\nx-keep: two" in upstream_headers.lower(),mode)
     finally:
         gateway.close();backend.close()

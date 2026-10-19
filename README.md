@@ -6,31 +6,29 @@
 
 ## 当前状态
 
-**V0.1/S2 已完成，累计返工 1/2。** 独立单上游非流式代理已通过 [Reviewer002 PASS](docs/reviewer/reports/V0.1/S2-report-002.md)，关闭窗口首响应丢失与排版发现均关闭，见 [Leader收口003](docs/leader/reports/V0.1/S2-report-003.md)。原设计及Approved返工002共同构成已验收基线，阶段历史状态不作为当前状态。
+**V0.1/S3 与 V0.1 基础代理开发验收已完成。** S3经一次有限规范纠正后取得[Reviewer002 PASS](docs/reviewer/reports/V0.1/S3-report-002.md)，唯一空行规范发现关闭，无未解决发现或债项；收口见[Leader002](docs/leader/reports/V0.1/S3-report-002.md)。累计返工：S1 2/2、S2 1/2、S3 1/2，各阶段独立记录。
 
-S2当前为 `codex/v0.1-s2-proxy` 上未提交、未推送的工作区成果；V0.1仍待S3连接复用，S3本轮未开始。没有正式发布。
+当前分支 `codex/v0.1-s3-connection-reuse`，S3成果尚未提交、未推送。S2已本地提交为 `3cb65244312d2feef563c2fd755ae8447d4589c5`，该提交远端状态本轮未核验。S1已提交bb318d8c并推送阶段分支（此前协调者核验）；没有正式发布，开发验收完成不等于发布。
 
-S1 协议与组件基础已完成，依据 [Reviewer PASS](docs/reviewer/reports/V0.1/S1-report-002.md)和[Leader 收口](docs/leader/reports/V0.1/S1-report-004.md)；历史返工 2/2、两项发现关闭、无债。S1 已提交为 `bb318d8c55f5851d27cd52e6cd3367f450a5d8dd` 并推送到 `origin/codex/v0.1-s1-foundation`（协调者远端核验），未合并 main、未发布。S2 从该提交的 `codex/v0.1-s2-proxy` 开始；V0.1 整体未完成，S3 未开始。
-
-当前可验证：Buffer/Socket/TimerQueue，受限 HTTP/1.1 增量解析、正文与编码预算、文本 JSON SAX 校验、报文规范化，以及五场景模拟后端。S2 已实现异步上游连接、完整响应缓冲、硬限额、deadline 和信号停止；SSE、连接池和调度仍属后续阶段。
+已验收：独立离线构建、最小复用组件、受限HTTP/1.1与文本JSON、单静态上游非流式代理、硬限额和分类deadline、信号停止，以及有界上游顺序复用与初始合成成本基线。下游继续每连接单请求；SSE、多后端、路由/队列、真实GPU和L4LB联调仍属后续阶段，V0.2尚未开始。S1与S2历史验收见[Leader S1-004](docs/leader/reports/V0.1/S1-report-004.md)、[Leader S2-003](docs/leader/reports/V0.1/S2-report-003.md)。
 
 ## 构建与验证
 
 环境：Linux、C++20 编译器、CMake >=3.24、Ninja、Python 3。Bash，工作目录为本仓库根目录。依赖已固定在 third_party，构建无需联网或同级项目。
 
 ```bash
-mkdir -p build-local/builder/s2/tmp build-local/builder/s2/cache
-export TMPDIR="$PWD/build-local/builder/s2/tmp"
+mkdir -p build-local/builder/s3/tmp build-local/builder/s3/cache
+export TMPDIR="$PWD/build-local/builder/s3/tmp"
 export TMP="$TMPDIR" TEMP="$TMPDIR"
-export XDG_CACHE_HOME="$PWD/build-local/builder/s2/cache"
-cmake --preset debug -B build-local/builder/s2/debug
-cmake --build build-local/builder/s2/debug
-ctest --test-dir build-local/builder/s2/debug --output-on-failure
+export XDG_CACHE_HOME="$PWD/build-local/builder/s3/cache"
+cmake --preset debug -B build-local/builder/s3/debug
+cmake --build build-local/builder/s3/debug
+ctest --test-dir build-local/builder/s3/debug --output-on-failure
 ```
 
-Release 与 AddressSanitizer/UndefinedBehaviorSanitizer：将上述三个命令的 `debug` 分别换为 `release`、`asan`。每个预设注册 7 项 CTest；AssertionFailure 使用预期失败验证 Release 下检查仍有效。Runtime、GatewayE2E 和 MockBackend 需要本机 loopback socket 权限，会自动申请临时端口并回收自己的子进程；权限不足即失败，不跳过。
+Release 与 AddressSanitizer/UndefinedBehaviorSanitizer：将上述三个命令的 `debug` 分别换为 `release`、`asan`。每个预设注册 9 项 CTest；AssertionFailure 使用预期失败验证 Release 下检查仍有效。Pool、ReuseE2E、Runtime、GatewayE2E 和 MockBackend 需要本机 loopback socket 权限，会自动申请临时端口并回收自己的子进程；权限不足即失败，不跳过。
 
-独立审查使用 `cmake --preset debug -B build-local/reviewer/s2/debug`（其他预设同理），随后通过 `cmake --build <目录>` 和 `ctest --test-dir <目录>` 操作；同时将 TMPDIR/TMP/TEMP/cache 指向 reviewer 自有目录。
+独立审查使用 `cmake --preset debug -B build-local/reviewer/s3/debug`（其他预设同理），随后通过 `cmake --build <目录>` 和 `ctest --test-dir <目录>` 操作；同时将 TMPDIR/TMP/TEMP/cache 指向 reviewer 自有目录。
 
 格式检查（仅自有和迁入 C++，不处理 third_party）：
 
@@ -40,10 +38,10 @@ find src tests -type f \( -name '*.h' -o -name '*.cpp' \) -print0 | xargs -0 cla
 
 测试使用合成输入，不需要 GPU、真实推理服务或 Python 第三方包。`tests/ParseResponse.cpp` 是将模拟器原始响应输入解析库的测试工具，不是网关产品入口。
 
-## 启动 S2 代理
+## 启动代理
 
 ```bash
-build-local/builder/s2/debug/ai-inference-gateway --config config/example.json
+build-local/builder/s3/debug/ai-inference-gateway --config config/example.json
 ```
 
 示例监听 `127.0.0.1:8080`，上游为 `127.0.0.1:8000`，需要自行启动符合文本接口的 HTTP 后端；无 GPU 的完整链路由 `GatewayE2E` 测试自动启动合成后端验证。成功输出 `READY 127.0.0.1:8080`；`listen_port: 0` 可获取临时端口。`--help` 退出 0，配置/参数错误退出 2，监听等运行错误退出 1。
@@ -80,9 +78,11 @@ Gateway 的构建和启动不应依赖同级 Server、L4LB 仓库的本地路径
 
 ## 文档入口
 
-- [S2收口003](docs/leader/reports/V0.1/S2-report-003.md)、[独立复验002](docs/reviewer/reports/V0.1/S2-report-002.md)：当前阶段结果与范围限制。
+- [S3决策报告001](docs/leader/reports/V0.1/S3-report-001.md)：上游顺序复用、容量/租约与初始成本基线；Approved规划；当前收口见[Leader002](docs/leader/reports/V0.1/S3-report-002.md)，实现与有限纠正见[Builder002](docs/builder/reports/V0.1/S3-report-002.md)，独立接受见[Reviewer002](docs/reviewer/reports/V0.1/S3-report-002.md)。
 
-- [当前 S2 设计](docs/leader/designs/V0.1/S2-design.md)、[审查计划](docs/reviewer/reviews/V0.1/S2-review.md)、[决策报告](docs/leader/reports/V0.1/S2-report-001.md)：独立单上游代理的 Approved 实现和审查基线。
+- [S2收口003](docs/leader/reports/V0.1/S2-report-003.md)、[独立复验002](docs/reviewer/reports/V0.1/S2-report-002.md)：S2历史阶段结果与范围限制。
+
+- [S2 设计](docs/leader/designs/V0.1/S2-design.md)、[审查计划](docs/reviewer/reviews/V0.1/S2-review.md)、[决策报告](docs/leader/reports/V0.1/S2-report-001.md)：独立单上游代理的 Approved 实现和审查基线。
 
 - [架构大纲](ARCHITECTURE.md)：模块职责、所有权、请求流程、协议与资源边界。
 - [分阶段开发路线](ROADMAP.md)：版本目标、阶段输出、验收条件和 MVP 边界。
@@ -99,10 +99,28 @@ Gateway 的构建和启动不应依赖同级 Server、L4LB 仓库的本地路径
 - [Builder 初次实现报告](docs/builder/reports/V0.1/S1-report-001.md)：初次命令、结果与证据。
 - [Builder 返工报告](docs/builder/reports/V0.1/S1-report-002.md)：严格状态范围与有界 chunk 大小行前置适配、最新回归证据。
 
-chunk 扩展先按完整原始大小行校验，再仅将大小与 CRLF 交给 llhttp；原始线缆/行预算和消费量保持独立计量。初次复用记录中的后置扩展校验描述属于旧实现，当前以 Approved 返工 001、Builder 002 和 Reviewer 002 的实现及验收说明为准。原设计/审查/返工中的阶段状态保留为历史快照，S1收口状态见Leader004；项目当前阶段以本页、ROADMAP和S2最新Leader报告为准。
+chunk 扩展先按完整原始大小行校验，再仅将大小与 CRLF 交给 llhttp；原始线缆/行预算和消费量保持独立计量。初次复用记录中的后置扩展校验描述属于旧实现，当前以 Approved 返工 001、Builder 002 和 Reviewer 002 的实现及验收说明为准。原设计/审查/返工中的阶段状态保留为历史快照，S1收口状态见Leader004；项目当前阶段以本页、ROADMAP和S3最新Leader报告为准。
 
 尚未提供项目自身的 `LICENSE` 文件；third_party 内保留各依赖许可证。
 
 ## Runtime 使用边界
 
 本阶段交付独立进程，停止接口为SIGINT/SIGTERM。内部GatewayRuntime不是嵌入式SDK：在事件回调外直接连续调用requestShutdown可能使已结束会话的对象和预约计数保留至Runtime析构，不能据此声称该调用方式立即清零。真实信号与定时停止路径已独立验证回收；若以后对外提供Runtime接口，须另行定义并验证事件外清理契约。
+
+## S3 上游连接复用（已独立验收）
+
+每条下游连接仍只处理一个请求并返回 `Connection: close`，上游按池配置独立复用。可选 `upstream_pool` 对象默认 `max_connections: 16`、`max_idle: 16`、`idle_timeout_ms: 5000`；范围分别1..256、0..max_connections、10..300000。省略字段仍用各自默认，因此将总量改为2时也需把max_idle设为0..2。`max_idle: 0`生成上游close请求，供每请求新建对照。示例配置已包含一致字段。
+
+池满立即503 `upstream_capacity`；停止后尚未取得租约的合法请求返回503 `gateway_stopping`。没有等待队列或自动重试。只有完整写完请求、明确响应边界、无close/尾随/传输故障且成功向下游SHUT_WR之后才归池；慢下游占用租约。归还/租出前peek、idle读事件和固定空闲期限淘汰失效连接。已借出的连接仍可能随后失败，当前请求502/504，不重发。
+
+`RuntimeSnapshot.activeUpstreams`为当前租用数（包括connecting和等待下游输出），不是所有上游FD。`snapshot.pool`提供total/leased/idle/retired/peakTotal及created/reused/discarded/capacityRejected；累计计数饱和不回绕。discarded包含策略关闭、正常max_idle=0、停止和故障的全部物理连接退休，不等同故障数。idle不持有正文；会话仍全额预约16MiB，closing保持预约。每个活动会话最多一个timer、每个idle最多一个timer，停止另一个；池条目和Channel含回调后退休对象最多2×池总量，业务/计时回调后cleanup清空退休集。
+
+初始成本实验（Release、合成loopback、闭环，不代表真实推理或性能收益）：
+
+```bash
+python3 tests/ProxyBaseline.py --gateway build-local/builder/s3/release/ai-inference-gateway --output build-local/builder/s3/evidence/baseline.json
+```
+
+固定18cell：direct-close/proxy-close/proxy-reuse × 并发1/4 × 三重复，每cell20次预热、200次测量，保留预热池、原始样本、进程配置与来源散列、后端连接计数和10ms采样RSS/FD。分位数用nearest-rank，观测峰不是真实极值。通过条件是精确响应、零失败及连接/资源边界，不设置速度收益阈值。
+
+独立成本矩阵18cell全部正确、零失败/拒绝；close模式每cell220次后端连接，reuse并发1为1次、并发4为4次（含预热）。原始分布包含direct并发4一次17.827ms P99，未选择性重跑；仅为合成WSL回环初始观察，不能代表真实推理或生产收益。完整数据及验证身份复用边界见[Reviewer001](docs/reviewer/reports/V0.1/S3-report-001.md)与[Reviewer002](docs/reviewer/reports/V0.1/S3-report-002.md)。

@@ -18,6 +18,7 @@ class SessionIo {
   virtual int socketError(int fd);
 
   virtual ssize_t receiveBytes(int fd, void* data, std::size_t size);
+  virtual ssize_t peekByte(int fd);
   virtual int shutdownWrite(int fd);
   virtual ssize_t sendBytes(int fd, const void* data, std::size_t size);
 };

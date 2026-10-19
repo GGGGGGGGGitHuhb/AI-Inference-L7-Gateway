@@ -11,6 +11,7 @@ struct RuntimeSnapshot {
   std::size_t activeUpstreams;
   std::size_t activeTimers;
   std::size_t peakSessions;
+  upstream::PoolSnapshot pool;
 };
 
 class GatewayRuntime {
@@ -37,6 +38,7 @@ class GatewayRuntime {
   SessionIo io_;
   net::EventLoop loop_;
   app::SignalSource signals_;
+  upstream::ConnectionPool pool_;
 
   net::Socket listener_;
   std::unique_ptr<net::Channel> listenerChannel_;

@@ -8,6 +8,7 @@
 #include "net/Channel.h"
 #include "net/EventLoop.h"
 #include "net/Socket.h"
+#include "upstream/ConnectionPool.h"
 
 namespace gateway::gateway_api {
 struct ProxySessionTestAccess;
@@ -16,15 +17,15 @@ class ProxySession {
   static constexpr std::uint64_t kReservationBytes = 16777216;
 
   ProxySession(net::EventLoop& loop, const app::GatewayConfig& config,
-               SessionIo& io, net::Socket client,
-               SessionIo::Clock::time_point acceptedAt);
+               SessionIo& io, upstream::ConnectionPool& pool,
+               net::Socket client, SessionIo::Clock::time_point acceptedAt);
   ~ProxySession();
 
   void startSession();
   void finishSession() noexcept;
 
   bool finished() const { return phase_ == Phase::kFinished; }
-  bool hasUpstream() const { return upstreamSocket_.valid(); }
+  bool hasUpstream() const { return upstreamLease_.valid(); }
   bool hasTimer() const { return timerId_ != 0; }
 
  private:
@@ -72,11 +73,11 @@ class ProxySession {
   net::EventLoop& loop_;
   const app::GatewayConfig& config_;
   SessionIo& io_;
+  upstream::ConnectionPool& pool_;
 
   net::Socket downstreamSocket_;
-  net::Socket upstreamSocket_;
+  upstream::ConnectionLease upstreamLease_;
   std::unique_ptr<net::Channel> downstreamChannel_;
-  std::unique_ptr<net::Channel> upstreamChannel_;
 
   std::unique_ptr<http::HttpParser> requestParser_;
   std::unique_ptr<http::HttpParser> responseParser_;
@@ -94,6 +95,8 @@ class ProxySession {
   TimePoint outputCompletedAt_;
 
   Phase phase_ = Phase::kReceiving;
+  bool requestWriteComplete_ = false;
+  bool responseReusable_ = true;
   bool downstreamEof_ = false;
   bool errorDraining_ = false;
   bool writeShutdown_ = false;
