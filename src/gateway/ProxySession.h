@@ -10,6 +10,7 @@
 #include "net/Channel.h"
 #include "net/EventLoop.h"
 #include "net/Socket.h"
+#include "routing/ModelRouter.h"
 #include "upstream/ConnectionPool.h"
 
 namespace gateway::gateway_api {
@@ -18,10 +19,12 @@ class ProxySession {
  public:
   static constexpr std::uint64_t kReservationBytes = 16777216;
 
-  ProxySession(net::EventLoop& loop, const app::GatewayConfig& config,
-               SessionIo& io, upstream::ConnectionPool& pool,
-               net::Socket client, SessionIo::Clock::time_point acceptedAt,
-               BufferBudget& budget, CapacityLease reservation);
+  ProxySession(
+      net::EventLoop& loop, const app::GatewayConfig& config, SessionIo& io,
+      upstream::ConnectionPool& pool, net::Socket client,
+      SessionIo::Clock::time_point acceptedAt, BufferBudget& budget,
+      CapacityLease reservation, routing::ModelRouter* router = nullptr,
+      std::vector<std::unique_ptr<upstream::ConnectionPool>>* pools = nullptr);
   ~ProxySession();
 
   void startSession();
@@ -71,7 +74,10 @@ class ProxySession {
   void completeResponse();
   void beginClosing(int remainingCalls);
   void shutdownWrite(int remainingCalls = 64);
-  void prepareError(unsigned status, const char* code) noexcept;
+  void prepareError(unsigned status, const char* code,
+                    routing::Observation observation =
+                        routing::Observation::kNeutral) noexcept;
+  void completeRouting(routing::Observation observation) noexcept;
 
   // 资源和绝对deadline。
   void updateInterests();
@@ -90,6 +96,10 @@ class ProxySession {
   const app::GatewayConfig& config_;
   SessionIo& io_;
   upstream::ConnectionPool& pool_;
+  upstream::ConnectionPool* selectedPool_ = nullptr;
+  routing::ModelRouter* router_ = nullptr;
+  std::vector<std::unique_ptr<upstream::ConnectionPool>>* pools_ = nullptr;
+  routing::RequestLease requestLease_;
 
   net::Socket downstreamSocket_;
   upstream::ConnectionLease upstreamLease_;

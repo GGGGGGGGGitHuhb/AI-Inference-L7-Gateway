@@ -50,6 +50,7 @@ void HttpParser::resetParser() noexcept {
   chunkLine_.clear();
   status_ = ParseStatus::kNeedMore;
   errorStatus_ = 0;
+  failure_ = ParseFailure::kNone;
   errorCode_ = "";
   parserError_ = HPE_OK;
   phase_ = WirePhase::kHeaders;
@@ -100,11 +101,14 @@ int HttpParser::rejectMessage(unsigned status, const char* code) noexcept {
   status_ = ParseStatus::kRejected;
   errorStatus_ = kind_ == MessageKind::kResponse ? 502 : status;
   errorCode_ = code;
+  failure_ = status == 500                      ? ParseFailure::kInternal
+             : (status == 413 || status == 431) ? ParseFailure::kResourceLimit
+                                                : ParseFailure::kProtocol;
   return HPE_USER;
 }
 
 ParseResult HttpParser::result(std::size_t consumed) const noexcept {
-  return {status_, consumed, errorStatus_, errorCode_, parserError_};
+  return {status_, consumed, errorStatus_, errorCode_, parserError_, failure_};
 }
 
 std::size_t HttpParser::bodyLimit() const {
@@ -341,7 +345,7 @@ int HttpParser::handleBody(std::string_view bytes) {
     return rejectMessage(413, "body_limit");
   if (eventStream_) {
     if (bytes.size() > bodyFragment_.size() - bodyFragmentSize_)
-      return rejectMessage(502, "fragment_limit");
+      return rejectMessage(413, "fragment_limit");
     std::memcpy(bodyFragment_.data() + bodyFragmentSize_, bytes.data(),
                 bytes.size());
     bodyFragmentSize_ += bytes.size();
@@ -356,7 +360,7 @@ int HttpParser::handleMessageComplete() {
     informationalBytes_ += headerBytes_;
     if (++informationalCount_ > limits_.informationalResponses ||
         informationalBytes_ > limits_.informationalBytes)
-      return rejectMessage(502, "informational_limit");
+      return rejectMessage(413, "informational_limit");
     message_ = {};
     headerName_.clear();
     headerValue_.clear();

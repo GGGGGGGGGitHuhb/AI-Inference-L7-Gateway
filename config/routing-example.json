@@ -1,0 +1,24 @@
+{
+  "listen_address": "127.0.0.1",
+  "listen_port": 8080,
+  "models": [
+    {
+      "name": "model-a",
+      "policy": "round_robin",
+      "backends": [
+        {"id": "a1", "address": "127.0.0.1", "port": 9001},
+        {"id": "a2", "address": "127.0.0.1", "port": 9002}
+      ]
+    },
+    {
+      "name": "model-b",
+      "policy": "least_inflight",
+      "backends": [
+        {"id": "b1", "address": "127.0.0.1", "port": 9003},
+        {"id": "b2", "address": "127.0.0.1", "port": 9004}
+      ]
+    }
+  ],
+  "health": {"failure_threshold": 2, "cooldown_ms": 1000},
+  "upstream_pool": {"max_connections": 16, "max_idle": 16, "idle_timeout_ms": 5000}
+}

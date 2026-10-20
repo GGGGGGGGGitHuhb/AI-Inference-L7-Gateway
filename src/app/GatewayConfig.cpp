@@ -21,7 +21,7 @@ class DuplicateGuard {
 
 bool DuplicateGuard::onParse(int depth, Json::parse_event_t event,
                              Json& value) {
-  if (depth > 2) throw std::invalid_argument("config nesting");
+  if (depth > 6) throw std::invalid_argument("config nesting");
   if (event == Json::parse_event_t::object_start) keys_.emplace_back();
   if (event == Json::parse_event_t::key &&
       !keys_.back().insert(value.get<std::string>()).second)
@@ -111,6 +111,83 @@ void readPool(const Json& object, PoolConfig& pool) {
   if (pool.maxIdle > pool.maxConnections)
     throw std::invalid_argument("max_idle exceeds max_connections");
 }
+
+void requireKeys(const Json& object, const std::set<std::string>& allowed,
+                 const std::set<std::string>& required) {
+  if (!object.is_object()) throw std::invalid_argument("object required");
+  for (const auto& key : required)
+    if (!object.contains(key)) throw std::invalid_argument("missing field");
+  for (const auto& [key, value] : object.items())
+    if (!allowed.contains(key)) throw std::invalid_argument("unknown field");
+}
+
+std::string boundedName(const Json& value, std::size_t maximum,
+                        bool identifier) {
+  if (!value.is_string()) throw std::invalid_argument("name string required");
+  const auto name = value.get<std::string>();
+  if (name.empty() || name.size() > maximum)
+    throw std::invalid_argument("name length");
+  for (unsigned char character : name) {
+    if (character < 32 || character == 127)
+      throw std::invalid_argument("name control byte");
+    if (identifier &&
+        !((character >= 'a' && character <= 'z') ||
+          (character >= 'A' && character <= 'Z') ||
+          (character >= '0' && character <= '9') || character == '_' ||
+          character == '.' || character == '-'))
+      throw std::invalid_argument("backend identifier");
+  }
+  return name;
+}
+
+void readModels(const Json& value, GatewayConfig& config) {
+  if (!value.is_array() || value.empty() || value.size() > 32)
+    throw std::invalid_argument("model count");
+  std::set<std::string> names;
+  std::size_t total = 0;
+  for (const auto& object : value) {
+    requireKeys(object, {"name", "policy", "backends"}, {"name", "backends"});
+    ModelConfig model;
+    model.name = boundedName(object.at("name"), 256, false);
+    if (!names.insert(model.name).second)
+      throw std::invalid_argument("duplicate model");
+    if (object.contains("policy")) {
+      if (object.at("policy") == "least_inflight")
+        model.policy = RoutingPolicy::kLeastInflight;
+      else if (object.at("policy") != "round_robin")
+        throw std::invalid_argument("routing policy");
+    }
+    const auto& backends = object.at("backends");
+    if (!backends.is_array() || backends.empty() ||
+        backends.size() > 64 - total)
+      throw std::invalid_argument("backend count");
+    std::set<std::string> ids;
+    std::set<std::pair<std::string, unsigned>> endpoints;
+    for (const auto& backend : backends) {
+      requireKeys(backend, {"id", "address", "port"},
+                  {"id", "address", "port"});
+      BackendConfig target{
+          boundedName(backend.at("id"), 64, true),
+          address(backend.at("address")),
+          static_cast<std::uint16_t>(integer(backend.at("port"), 1, 65535))};
+      if (target.address == "0.0.0.0" || !ids.insert(target.id).second ||
+          !endpoints.emplace(target.address, target.port).second)
+        throw std::invalid_argument("duplicate or unspecified backend");
+      model.backends.push_back(std::move(target));
+      ++total;
+    }
+    config.models.push_back(std::move(model));
+  }
+}
+
+void readHealth(const Json& object, HealthConfig& health) {
+  requireKeys(object, {"failure_threshold", "cooldown_ms"}, {});
+  if (object.contains("failure_threshold"))
+    health.failureThreshold = integer(object.at("failure_threshold"), 1, 16);
+  if (object.contains("cooldown_ms"))
+    health.cooldownMs = integer(object.at("cooldown_ms"), 10, 300000);
+}
+
 }  // namespace
 
 GatewayConfig parseConfig(std::string_view content) {
@@ -121,12 +198,22 @@ GatewayConfig parseConfig(std::string_view content) {
         content, [&guard](int depth, Json::parse_event_t event, Json& value) {
           return guard.onParse(depth, event, value);
         });
-    if (!document.is_object() || !document.contains("upstream_address") ||
-        !document.contains("upstream_port"))
+    if (!document.is_object() ||
+        (document.contains("models") &&
+         (document.contains("upstream_address") ||
+          document.contains("upstream_port"))) ||
+        (!document.contains("models") &&
+         (!document.contains("upstream_address") ||
+          !document.contains("upstream_port"))) ||
+        (!document.contains("models") && document.contains("health")))
       throw std::invalid_argument("required config fields");
     GatewayConfig config;
     for (const auto& [key, value] : document.items()) {
-      if (key == "listen_address")
+      if (key == "models")
+        readModels(value, config);
+      else if (key == "health")
+        readHealth(value, config.health);
+      else if (key == "listen_address")
         config.listenAddress = address(value);
       else if (key == "upstream_address")
         config.upstreamAddress = address(value);
@@ -149,10 +236,21 @@ GatewayConfig parseConfig(std::string_view content) {
     }
     if (config.upstreamAddress == "0.0.0.0")
       throw std::invalid_argument("unspecified upstream");
-    if (config.listenPort == config.upstreamPort &&
+    if (config.models.empty() && config.listenPort == config.upstreamPort &&
         (config.listenAddress == config.upstreamAddress ||
          config.listenAddress == "0.0.0.0"))
       throw std::invalid_argument("self upstream");
+    std::size_t backendCount = 0;
+    for (const auto& model : config.models) {
+      backendCount += model.backends.size();
+      for (const auto& backend : model.backends)
+        if (config.listenPort == backend.port &&
+            (config.listenAddress == backend.address ||
+             config.listenAddress == "0.0.0.0"))
+          throw std::invalid_argument("self upstream");
+    }
+    if (backendCount > 1024 / config.upstreamPool.maxConnections)
+      throw std::invalid_argument("aggregate pool capacity");
     return config;
   } catch (const Json::exception&) {
     throw std::invalid_argument("invalid config JSON");

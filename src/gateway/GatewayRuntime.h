@@ -5,6 +5,11 @@
 #include "app/SignalSource.h"
 #include "gateway/ProxySession.h"
 namespace gateway::gateway_api {
+struct InstanceSnapshot {
+  routing::BackendSnapshot routing;
+  upstream::PoolSnapshot pool;
+};
+
 struct RuntimeSnapshot {
   std::size_t activeSessions;
   std::uint64_t reservedBytes;
@@ -13,6 +18,7 @@ struct RuntimeSnapshot {
   std::size_t peakSessions;
   upstream::PoolSnapshot pool;
   BudgetSnapshot budget;
+  std::vector<InstanceSnapshot> instances;
 };
 
 class GatewayRuntime {
@@ -43,6 +49,8 @@ class GatewayRuntime {
   net::EventLoop loop_;
   app::SignalSource signals_;
   upstream::ConnectionPool pool_;
+  routing::ModelRouter router_;
+  std::vector<std::unique_ptr<upstream::ConnectionPool>> pools_;
 
   net::Socket listener_;
   std::unique_ptr<net::Channel> listenerChannel_;

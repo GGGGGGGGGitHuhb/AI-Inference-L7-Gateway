@@ -14,7 +14,11 @@ namespace gateway::gateway_api {
 GatewayRuntime::GatewayRuntime(app::GatewayConfig config)
     : config_(std::move(config)),
       budget_(config_.maxReservedBytes, config_.streamBuffer.maxTotalBytes),
-      pool_(loop_, config_.upstreamPool, io_) {
+      pool_(loop_, config_.upstreamPool, io_),
+      router_(config_) {
+  for (std::size_t index = 0; index < router_.size(); ++index)
+    pools_.push_back(std::make_unique<upstream::ConnectionPool>(
+        loop_, config_.upstreamPool, io_));
   loop_.registerCleanupCallback([this] { onCleanup(); });
 }
 
@@ -38,10 +42,17 @@ std::uint16_t GatewayRuntime::startListener() {
              sizeof(address)) < 0)
     throw std::system_error(errno, std::generic_category(), "bind");
   const auto actualPort = listener_.localPort();
-  if (actualPort == config_.upstreamPort &&
+  if (config_.models.empty() && actualPort == config_.upstreamPort &&
       (config_.listenAddress == config_.upstreamAddress ||
        config_.listenAddress == "0.0.0.0"))
     throw std::runtime_error("self upstream");
+  for (std::size_t index = 0; index < router_.size(); ++index) {
+    const auto& backend = router_.backend(index);
+    if (actualPort == backend.port &&
+        (config_.listenAddress == backend.address ||
+         config_.listenAddress == "0.0.0.0"))
+      throw std::runtime_error("self upstream");
+  }
   listener_.listen(128);
   listenerChannel_ = std::make_unique<net::Channel>(loop_, listener_.fd());
   signalChannel_ = std::make_unique<net::Channel>(loop_, signals_.fd());
@@ -60,10 +71,25 @@ RuntimeSnapshot GatewayRuntime::snapshot() const {
   std::size_t upstreams = 0;
   for (const auto& [id, session] : sessions_)
     if (session->hasUpstream()) ++upstreams;
-  return {sessions_.size(),  budget_.snapshot().reserved,
-          upstreams,         loop_.timerCount(),
-          peakSessions_,     pool_.snapshot(),
-          budget_.snapshot()};
+  auto pool = pool_.snapshot();
+  std::vector<InstanceSnapshot> instances;
+  for (std::size_t index = 0; index < pools_.size(); ++index) {
+    const auto counts = pools_[index]->snapshot();
+    instances.push_back({router_.snapshot(index), counts});
+    pool.total += counts.total;
+    pool.leased += counts.leased;
+    pool.idle += counts.idle;
+    pool.retired += counts.retired;
+    pool.peakTotal += counts.peakTotal;  // 各池峰值之和是同时峰值的上界。
+    pool.created += counts.created;
+    pool.reused += counts.reused;
+    pool.discarded += counts.discarded;
+    pool.capacityRejected += counts.capacityRejected;
+  }
+  return {sessions_.size(),   budget_.snapshot().reserved,
+          upstreams,          loop_.timerCount(),
+          peakSessions_,      pool,
+          budget_.snapshot(), std::move(instances)};
 }
 
 void GatewayRuntime::onListenerEvent(std::uint32_t events) {
@@ -91,7 +117,8 @@ void GatewayRuntime::onListenerEvent(std::uint32_t events) {
     try {
       auto session = std::make_unique<ProxySession>(
           loop_, config_, io_, pool_, std::move(client), acceptedAt, budget_,
-          std::move(reservation));
+          std::move(reservation), config_.models.empty() ? nullptr : &router_,
+          &pools_);
       session->startSession();
       sessions_.emplace(id, std::move(session));
       peakSessions_ = std::max(peakSessions_, sessions_.size());
@@ -112,6 +139,7 @@ void GatewayRuntime::onCleanup() {
   }
 
   pool_.cleanupRetired();
+  for (auto& pool : pools_) pool->cleanupRetired();
   if (stopping_ && sessions_.empty()) {
     if (shutdownTimer_) {
       loop_.cancelTimer(shutdownTimer_);
@@ -143,6 +171,8 @@ void GatewayRuntime::requestShutdown() {
   }
   stopping_ = true;
   pool_.stopAcquisition();
+  router_.stopRouting();
+  for (auto& pool : pools_) pool->stopAcquisition();
   if (listenerChannel_) listenerChannel_->removeChannel();
   listener_.reset();
   shutdownTimer_ = loop_.addTimer(
@@ -161,6 +191,7 @@ void GatewayRuntime::forceShutdown() {
   for (auto& [id, session] : sessions_)
     session->finishSession(FinishReason::kStopped);
   pool_.closeAllConnections();
+  for (auto& pool : pools_) pool->closeAllConnections();
   loop_.requestLoopStop();
 }
 }  // namespace gateway::gateway_api

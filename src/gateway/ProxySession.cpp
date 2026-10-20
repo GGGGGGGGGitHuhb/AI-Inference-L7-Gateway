@@ -6,6 +6,7 @@
 #include <array>
 #include <cerrno>
 #include <stdexcept>
+#include <system_error>
 
 #include "gateway/TextRequest.h"
 #include "http/HttpNormalization.h"
@@ -19,17 +20,21 @@ using Milliseconds = std::chrono::milliseconds;
 void releaseString(std::string& value) { std::string().swap(value); }
 }  // namespace
 
-ProxySession::ProxySession(net::EventLoop& loop,
-                           const app::GatewayConfig& config, SessionIo& io,
-                           upstream::ConnectionPool& pool, net::Socket client,
-                           SessionIo::Clock::time_point acceptedAt,
-                           BufferBudget& budget, CapacityLease reservation)
+ProxySession::ProxySession(
+    net::EventLoop& loop, const app::GatewayConfig& config, SessionIo& io,
+    upstream::ConnectionPool& pool, net::Socket client,
+    SessionIo::Clock::time_point acceptedAt, BufferBudget& budget,
+    CapacityLease reservation, routing::ModelRouter* router,
+    std::vector<std::unique_ptr<upstream::ConnectionPool>>* pools)
     : reservation_(std::move(reservation)),
       budget_(budget),
       loop_(loop),
       config_(config),
       io_(io),
       pool_(pool),
+      selectedPool_(&pool),
+      router_(router),
+      pools_(pools),
       downstreamSocket_(std::move(client)),
       downstreamChannel_(
           std::make_unique<net::Channel>(loop_, downstreamSocket_.fd())),
@@ -47,7 +52,20 @@ void ProxySession::startSession() {
   armDeadline();
 }
 
-void ProxySession::closeUpstream() noexcept { upstreamLease_.invalidate(); }
+void ProxySession::completeRouting(routing::Observation observation) noexcept {
+  if (!requestLease_.active()) return;
+  const auto index = requestLease_.index();
+  const auto epoch = requestLease_.epoch();
+  requestLease_.complete(observation, io_.now());
+  if (router_->snapshot(index).epoch != epoch ||
+      router_->snapshot(index).state == routing::HealthState::kExhausted)
+    selectedPool_->clearIdle();
+}
+
+void ProxySession::closeUpstream() noexcept {
+  completeRouting(routing::Observation::kNeutral);
+  upstreamLease_.invalidate();
+}
 
 void ProxySession::finishSession(FinishReason reason) noexcept {
   if (finished()) return;
@@ -166,17 +184,19 @@ bool ProxySession::checkDeadline() {
   else if (phase_ == Phase::kReceiving)
     prepareError(408, "request_timeout");
   else if (phase_ == Phase::kConnecting)
-    prepareError(504, "connect_timeout");
+    prepareError(504, "connect_timeout", routing::Observation::kFailure);
   else if (upstreamOffset_ < upstreamOutput_.size() &&
            earliest ==
                connectedAt_ + Milliseconds(config_.timeouts.upstreamWrite))
-    prepareError(504, "upstream_write_timeout");
+    prepareError(504, "upstream_write_timeout", routing::Observation::kFailure);
   else if (phase_ == Phase::kStreaming && !upstreamPaused_ &&
            earliest != connectedAt_ + Milliseconds(config_.timeouts.response) &&
            earliest == idleDeadline_)
-    prepareError(504, "stream_idle_timeout");
+    prepareError(504, "stream_idle_timeout", routing::Observation::kFailure);
   else
-    prepareError(504, "response_timeout");
+    prepareError(504, "response_timeout",
+                 upstreamPaused_ ? routing::Observation::kNeutral
+                                 : routing::Observation::kFailure);
   return true;
 }
 
@@ -279,11 +299,32 @@ void ProxySession::beginUpstream() {
     return;
   }
 
+  std::string targetAddress = config_.upstreamAddress;
+  std::uint16_t targetPort = config_.upstreamPort;
+  if (router_) {
+    auto selection =
+        router_->selectBackend(validation.metadata.model, io_.now());
+    if (selection.status != routing::SelectionStatus::kSelected) {
+      if (selection.status == routing::SelectionStatus::kUnknownModel)
+        prepareError(404, "model_not_found");
+      else
+        prepareError(503,
+                     selection.status == routing::SelectionStatus::kStopping
+                         ? "gateway_stopping"
+                         : "no_available_backend");
+      return;
+    }
+    requestLease_ = std::move(selection.lease);
+    const auto& backend = router_->backend(requestLease_.index());
+    targetAddress = backend.address;
+    targetPort = backend.port;
+    selectedPool_ = pools_->at(requestLease_.index()).get();
+  }
   streamRequest_ = validation.metadata.stream;
   checkOutputBudget(requestParser_->message(), kRequestOutputLimit);
   upstreamOutput_ = http::normalizeMessage(
       requestParser_->message(), http::MessageKind::kRequest,
-      config_.upstreamAddress + ":" + std::to_string(config_.upstreamPort),
+      targetAddress + ":" + std::to_string(targetPort),
       streamRequest_ || config_.upstreamPool.maxIdle == 0);
   if (checkDeadline()) return;
   requestParser_.reset();
@@ -291,11 +332,16 @@ void ProxySession::beginUpstream() {
       http::MessageKind::kResponse, http::ParserLimits{},
       streamRequest_ ? http::ResponseMode::kAllowEventStream
                      : http::ResponseMode::kBuffered);
-  upstreamLease_ = pool_.acquireConnection(
-      [this](std::uint32_t events) { onUpstreamEvent(events); });
+  try {
+    upstreamLease_ = selectedPool_->acquireConnection(
+        [this](std::uint32_t events) { onUpstreamEvent(events); });
+  } catch (const std::system_error&) {
+    prepareError(502, "upstream_error", routing::Observation::kFailure);
+    return;
+  }
   if (!upstreamLease_.valid()) {
-    prepareError(503,
-                 pool_.stopping() ? "gateway_stopping" : "upstream_capacity");
+    prepareError(503, selectedPool_->stopping() ? "gateway_stopping"
+                                                : "upstream_capacity");
     return;
   }
   if (upstreamLease_.reused()) {
@@ -304,8 +350,8 @@ void ProxySession::beginUpstream() {
   }
   sockaddr_in destination{};
   destination.sin_family = AF_INET;
-  destination.sin_port = htons(config_.upstreamPort);
-  inet_pton(AF_INET, config_.upstreamAddress.c_str(), &destination.sin_addr);
+  destination.sin_port = htons(targetPort);
+  inet_pton(AF_INET, targetAddress.c_str(), &destination.sin_addr);
   stageStarted_ = io_.now();
   phase_ = Phase::kConnecting;
   for (int attempt = 0; attempt < 32; ++attempt) {
@@ -324,7 +370,7 @@ void ProxySession::beginUpstream() {
       return;
     }
 
-    prepareError(502, "upstream_error");
+    prepareError(502, "upstream_error", routing::Observation::kFailure);
     return;
   }
 
@@ -334,7 +380,7 @@ void ProxySession::beginUpstream() {
 
 void ProxySession::confirmConnected() {
   if (io_.socketError(upstreamLease_.fd()) != 0) {
-    prepareError(502, "upstream_error");
+    prepareError(502, "upstream_error", routing::Observation::kFailure);
     return;
   }
   upstreamLease_.markConnected();
@@ -359,7 +405,7 @@ void ProxySession::handleUpstreamEvent(std::uint32_t events) {
   if (phase_ != Phase::kUpstream && phase_ != Phase::kStreaming) return;
   if (!upstreamLease_.valid()) return;
   if ((events & EPOLLERR) && io_.socketError(upstreamLease_.fd())) {
-    prepareError(502, "upstream_error");
+    prepareError(502, "upstream_error", routing::Observation::kFailure);
     return;
   }
 
@@ -380,7 +426,7 @@ void ProxySession::readUpstream() {
     if (count < 0) {
       if (errno == EINTR) continue;
       if (errno == EAGAIN || errno == EWOULDBLOCK) return;
-      prepareError(502, "upstream_error");
+      prepareError(502, "upstream_error", routing::Observation::kFailure);
       return;
     }
     const auto result =
@@ -389,11 +435,14 @@ void ProxySession::readUpstream() {
                          {bytes.data(), static_cast<std::size_t>(count)});
     if (checkDeadline()) return;
     if (result.status == http::ParseStatus::kRejected) {
-      if (streamRequest_ &&
-          std::string_view(result.errorCode) == "internal_error")
+      if (streamRequest_ && result.failure == http::ParseFailure::kInternal)
         prepareError(500, "internal_error");
       else
-        prepareError(502, "upstream_error");
+        prepareError(502, "upstream_error",
+                     (result.failure == http::ParseFailure::kInternal ||
+                      result.failure == http::ParseFailure::kResourceLimit)
+                         ? routing::Observation::kNeutral
+                         : routing::Observation::kFailure);
       return;
     }
     if (responseParser_->eventStream() &&
@@ -414,7 +463,7 @@ void ProxySession::readUpstream() {
     }
     handled += count;
     if (count == 0) {
-      prepareError(502, "upstream_error");
+      prepareError(502, "upstream_error", routing::Observation::kFailure);
       return;
     }
   }
@@ -442,7 +491,8 @@ void ProxySession::writeUpstream() {
       responseReusable_ = false;
       // 写失败时也先读已到达的早期最终响应，避免 OUT/IN 同轮顺序误判。
       readUpstream();
-      if (phase_ == Phase::kUpstream) prepareError(502, "upstream_error");
+      if (phase_ == Phase::kUpstream)
+        prepareError(502, "upstream_error", routing::Observation::kFailure);
       return;
     }
   }
@@ -478,6 +528,7 @@ void ProxySession::completeResponse() {
       tokens.remove_prefix(comma + 1);
     }
   }
+  completeRouting(routing::ModelRouter::classifyStatus(message.statusCode));
   responseParser_.reset();
   releaseString(upstreamOutput_);
   upstreamOffset_ = 0;
@@ -567,6 +618,8 @@ void ProxySession::acceptStreamResult(const http::ParseResult& result) {
       return;
     }
     budget_.changePending(beforeTerminator, streamOutput_->size());
+    completeRouting(routing::ModelRouter::classifyStatus(
+        responseParser_->message().statusCode));
     streamHttpComplete_ = true;
     closeUpstream();
     responseParser_.reset();
@@ -667,7 +720,9 @@ void ProxySession::shutdownWrite(int remainingCalls) {
     if (checkDeadline()) return;
     if (io_.shutdownWrite(downstreamSocket_.fd()) == 0) {
       writeShutdown_ = true;
-      if (responseReusable_ && !errorDraining_)
+      if (responseReusable_ && !errorDraining_ &&
+          (!router_ ||
+           router_->reusable(requestLease_.index(), requestLease_.epoch())))
         upstreamLease_.releaseReusable();
       else
         closeUpstream();
@@ -686,8 +741,10 @@ void ProxySession::shutdownWrite(int remainingCalls) {
   armDeadline();
 }
 
-void ProxySession::prepareError(unsigned status, const char* code) noexcept {
+void ProxySession::prepareError(unsigned status, const char* code,
+                                routing::Observation observation) noexcept {
   if (finished()) return;
+  completeRouting(observation);
   if (status == 504 || status == 408)
     finishReason_ = FinishReason::kTimeout;
   else if (status == 503)

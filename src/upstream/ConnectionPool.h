@@ -70,6 +70,7 @@ class ConnectionPool {
   ~ConnectionPool();
 
   ConnectionLease acquireConnection(LeaseEventCallback leaseEventCallback);
+  void clearIdle() noexcept;
   void stopAcquisition() noexcept;
   void closeAllConnections() noexcept;
   void cleanupRetired() noexcept;

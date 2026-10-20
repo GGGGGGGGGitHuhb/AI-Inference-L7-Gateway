@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace gateway::app {
 struct Timeouts {
@@ -27,6 +28,25 @@ struct StreamBufferConfig {
   std::uint64_t maxTotalBytes = 4194304;
 };
 
+enum class RoutingPolicy { kRoundRobin, kLeastInflight };
+
+struct BackendConfig {
+  std::string id;
+  std::string address;
+  std::uint16_t port = 0;
+};
+
+struct ModelConfig {
+  std::string name;
+  RoutingPolicy policy = RoutingPolicy::kRoundRobin;
+  std::vector<BackendConfig> backends;
+};
+
+struct HealthConfig {
+  unsigned failureThreshold = 2;
+  int cooldownMs = 1000;
+};
+
 struct GatewayConfig {
   std::string listenAddress = "127.0.0.1";
   std::uint16_t listenPort = 8080;
@@ -35,6 +55,9 @@ struct GatewayConfig {
 
   std::size_t maxConnections = 16;
   std::uint64_t maxReservedBytes = 268435456;
+
+  std::vector<ModelConfig> models;
+  HealthConfig health;
 
   Timeouts timeouts;
   PoolConfig upstreamPool;

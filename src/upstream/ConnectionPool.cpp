@@ -237,6 +237,10 @@ void ConnectionPool::onIdleDeadline(std::uint64_t id,
 
 void ConnectionPool::stopAcquisition() noexcept {
   stopping_ = true;
+  clearIdle();
+}
+
+void ConnectionPool::clearIdle() noexcept {
   for (auto iterator = connections_.begin(); iterator != connections_.end();) {
     auto current = iterator++;
     if (current->second->state == State::kIdle)
