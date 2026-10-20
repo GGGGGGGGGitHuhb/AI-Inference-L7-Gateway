@@ -6,11 +6,11 @@
 
 ## 当前状态
 
-**V0.2/S1流式链路已完成独立验收，累计返工1/2。** [Reviewer002 PASS](docs/reviewer/reports/V0.2/S1-report-002.md)关闭唯一response期限Major，无债；见[Leader002收口](docs/leader/reports/V0.2/S1-report-002.md)。V0.2整体未完成；S2背压/取消与超时协同已完成独立验收，累计返工0/2，无发现或债项，见[Reviewer001 PASS](docs/reviewer/reports/V0.2/S2-report-001.md)和[Leader002收口](docs/leader/reports/V0.2/S2-report-002.md)；S3未开始。
+**V0.2流式可靠性开发验收已完成。** S1/S2/S3均已独立接受，累计返工分别1/2、0/2、2/2；S3唯一失败attempt取证发现已关闭，无剩余发现或债项，见[Reviewer002 PASS](docs/reviewer/reports/V0.2/S3-report-002.md)与[Leader002收口](docs/leader/reports/V0.2/S3-report-002.md)。V0.3未开始，尚未正式发布。
 
 V0.1/S3与V0.1基础代理已完成开发验收。 S3经一次有限规范纠正后取得[Reviewer002 PASS](docs/reviewer/reports/V0.1/S3-report-002.md)，唯一空行规范发现关闭，无未解决发现或债项；收口见[Leader002](docs/leader/reports/V0.1/S3-report-002.md)。累计返工：S1 2/2、S2 1/2、S3 1/2，各阶段独立记录。
 
-当前开发分支 `codex/v0.2-s2-backpressure`，起点为V0.2/S1本地提交 `2f7cf831a302fc87717afcae510e777187c7d0ef`，S1远端状态本轮未核验。V0.1提交d653e9c已推送阶段分支（协调者此前核验）。当前S2已验收收口、待协调者按既有授权本地提交，不推送。没有正式发布，开发验收完成不等于发布。
+当前开发分支 `codex/v0.2-performance-baseline`，起点为V0.2/S3本地提交 `555b65d66a52d95791dba5445178e57a69b81d2c`，远端状态本轮未核验。V0.1提交d653e9c已推送阶段分支（协调者此前核验）。S2已本地提交；S3已本地提交；当前P1性能基线专项已验收收口，待协调者本地提交、不推送。没有正式发布，开发验收完成不等于发布。
 
 已验收：独立离线构建、最小复用组件、受限HTTP/1.1与文本JSON、单静态上游非流式代理、硬限额和分类deadline、信号停止，以及有界上游顺序复用与初始合成成本基线。下游继续每连接单请求；V0.2/S1新增SSE字节增量链路已独立验收；多后端、路由/队列、真实GPU和L4LB联调仍属后续阶段。S1与S2历史验收见[Leader S1-004](docs/leader/reports/V0.1/S1-report-004.md)、[Leader S2-003](docs/leader/reports/V0.1/S2-report-003.md)。
 
@@ -19,18 +19,18 @@ V0.1/S3与V0.1基础代理已完成开发验收。 S3经一次有限规范纠正
 环境：Linux、C++20 编译器、CMake >=3.24、Ninja、Python 3。Bash，工作目录为本仓库根目录。依赖已固定在 third_party，构建无需联网或同级项目。
 
 ```bash
-mkdir -p build-local/builder/v0.2-s2/tmp build-local/builder/v0.2-s2/cache
-export TMPDIR="$PWD/build-local/builder/v0.2-s2/tmp"
+mkdir -p build-local/builder/v0.2-s3/tmp build-local/builder/v0.2-s3/cache
+export TMPDIR="$PWD/build-local/builder/v0.2-s3/tmp"
 export TMP="$TMPDIR" TEMP="$TMPDIR"
-export XDG_CACHE_HOME="$PWD/build-local/builder/v0.2-s2/cache"
-cmake --preset debug -B build-local/builder/v0.2-s2/debug
-cmake --build build-local/builder/v0.2-s2/debug
-ctest --test-dir build-local/builder/v0.2-s2/debug --output-on-failure
+export XDG_CACHE_HOME="$PWD/build-local/builder/v0.2-s3/cache"
+cmake --preset debug -B build-local/builder/v0.2-s3/debug
+cmake --build build-local/builder/v0.2-s3/debug
+ctest --test-dir build-local/builder/v0.2-s3/debug --output-on-failure
 ```
 
-Release 与 AddressSanitizer/UndefinedBehaviorSanitizer：将上述三个命令的 `debug` 分别换为 `release`、`asan`。每个预设注册 12 项 CTest（含StreamingParser/StreamingE2E/Backpressure）；AssertionFailure 使用预期失败验证 Release 下检查仍有效。Pool、ReuseE2E、Runtime、GatewayE2E 和 MockBackend 需要本机 loopback socket 权限，会自动申请临时端口并回收自己的子进程；权限不足即失败，不跳过。
+Release 与 AddressSanitizer/UndefinedBehaviorSanitizer：将上述三个命令的 `debug` 分别换为 `release`、`asan`。每个预设当前注册14项CTest（含StreamingParser/StreamingE2E/Backpressure及IntegrationDetectors/IntegrationAttempts）；S3实际验证范围见文末，注册数量不等于本轮全量执行结果；AssertionFailure 使用预期失败验证 Release 下检查仍有效。Pool、ReuseE2E、Runtime、GatewayE2E 和 MockBackend 需要本机 loopback socket 权限，会自动申请临时端口并回收自己的子进程；权限不足即失败，不跳过。
 
-独立审查使用 `cmake --preset debug -B build-local/reviewer/v0.2-s2/debug`（其他预设同理），随后通过 `cmake --build <目录>` 和 `ctest --test-dir <目录>` 操作；同时将 TMPDIR/TMP/TEMP/cache 指向 reviewer 自有目录。
+独立审查使用 `cmake --preset debug -B build-local/reviewer/v0.2-s3/debug`（其他预设同理），随后通过 `cmake --build <目录>` 和 `ctest --test-dir <目录>` 操作；同时将 TMPDIR/TMP/TEMP/cache 指向 reviewer 自有目录。
 
 格式检查（仅自有和迁入 C++，不处理 third_party）：
 
@@ -43,7 +43,7 @@ find src tests -type f \( -name '*.h' -o -name '*.cpp' \) -print0 | xargs -0 cla
 ## 启动代理
 
 ```bash
-build-local/builder/v0.2-s2/debug/ai-inference-gateway --config config/example.json
+build-local/builder/v0.2-s3/debug/ai-inference-gateway --config config/example.json
 ```
 
 示例监听 `127.0.0.1:8080`，上游为 `127.0.0.1:8000`，需要自行启动符合文本接口的 HTTP 后端；无 GPU 的完整链路由 `GatewayE2E` 测试自动启动合成后端验证。成功输出 `READY 127.0.0.1:8080`；`listen_port: 0` 可获取临时端口。`--help` 退出 0，配置/参数错误退出 2，监听等运行错误退出 1。
@@ -131,7 +131,7 @@ python3 tests/ProxyBaseline.py --gateway build-local/builder/s3/release/ai-infer
 
 ## 当前提交规则
 
-按用户最新指令“以后每次工作完成都提交，不推送”，每次工作验收/收口后由协调者完成本地提交，禁止自动推送；历史报告中的未提交/禁止提交仅描述当时授权与快照。V0.2/S1已本地提交2f7cf8；当前S2已验收收口、待协调者本地提交，未推送；不推断S1远端状态或发布。
+按用户最新指令“以后每次工作完成都提交，不推送”，每次工作验收/收口后由协调者完成本地提交，禁止自动推送；历史报告中的未提交/禁止提交仅描述当时授权与快照。V0.2/S1已本地提交2f7cf8；S2已本地提交d933e88；S3已本地提交555b65d；当前P1已验收收口、待本地提交，不推送；不推断S1远端状态或发布。
 
 ## V0.2/S1 流式链路（已独立验收）
 
@@ -161,4 +161,22 @@ stream_idle只由实际解码正文刷新，暂停保存剩余时长，恢复不
 
 Backpressure测试通过真实控制门观察三种定界各至少两轮暂停/恢复、暂停无recv、DEL/新token、暂停FIN/RST/信号和精确正文；正常请求及超时会话可在慢流仍暂停时完成。RSS与Socket buffer仅诊断，不能替代容量账本或作为内存收益承诺。见[Builder001](docs/builder/reports/V0.2/S2-report-001.md)和[变化记录](docs/references/V0.2-S2-changes.md)。
 
-独立Debug/Release/ASan+UBSan各12/12，原response/total探针各18/18、关闭窗口20/20、解析/容量16项及分配/期限/水位附加探针通过，见[Reviewer001](docs/reviewer/reports/V0.2/S2-report-001.md)与[Leader002](docs/leader/reports/V0.2/S2-report-002.md)。本阶段初审通过、返工0/2；不承诺严格公平、RSS上限或真实GPU停止，V0.2仍待S3真实后端验证。
+独立Debug/Release/ASan+UBSan各12/12，原response/total探针各18/18、关闭窗口20/20、解析/容量16项及分配/期限/水位附加探针通过，见[Reviewer001](docs/reviewer/reports/V0.2/S2-report-001.md)与[Leader002](docs/leader/reports/V0.2/S2-report-002.md)。本阶段初审通过、返工0/2；不承诺严格公平、RSS上限或真实GPU停止，S3真实CPU后端验证亦已完成，见下节。
+
+## V0.2/S3 真实集成（已独立验收）
+
+固定CPU llama-server b7481与Qwen2.5-0.5B-Instruct Q4_K_M完成真实直接/代理、长流/慢读、取消与故障恢复验证。资产隔离于build-local，不成为网关产品依赖；普通CTest离线、无模型要求，长run显式执行。产品src、固定输入及原HTTP/SSE子集保持，测试host没有成为产品管理API。
+
+最终验收明确复用初审独立真实601.662秒/1270请求、模拟310.192秒/650请求、三构建各13/13以及原期限18+18、关闭窗口20/20。最后一轮只修异常attempt记录与必要包装，新增独立快测2/2、真实完整短校准87条、模拟50正式请求及13类异常/4个晚到失败对照；当前CTest注册14项，未作当前14/14全量执行声明。复用身份和边界见[Reviewer002](docs/reviewer/reports/V0.2/S3-report-002.md)，初审FAIL及原丢失反例保持。
+
+两次返工分别为二进制清单33→36计数文档纠正和异常attempt取证修复，累计2/2，无债。取消证据覆盖网关资源、连接和固定CPU后端slot观察，不保证GPU内核停止；容量账本不等于RSS/内核内存，固定负载结果不推导严格公平或性能收益。
+
+[运行说明](tests/integration/README.md)、[来源变化](docs/references/V0.2-S3-changes.md)与[Leader002](docs/leader/reports/V0.2/S3-report-002.md)提供复现及审计入口。自有模型/host/gateway均已回收。V0.2开发验收成果已本地提交555b65d，远端本轮未核验，未正式发布；不启动V0.3。
+
+## V0.2/P1 性能基线专项（已独立验收）
+
+用户确认在开发V0.3前先测性能基线；P1独立于已关闭S3，返工从0/2开始。[设计](docs/leader/designs/V0.2/P1-design.md)、[审查计划](docs/reviewer/reviews/V0.2/P1-review.md)和[Leader001](docs/leader/reports/V0.2/P1-report-001.md)冻结有限模拟成本/并发/慢读资源与真实CPU模型TTFT/E2E/闭环完成率对照。现已获[Reviewer001 PASS](docs/reviewer/reports/V0.2/P1-report-001.md)和[Leader002收口](docs/leader/reports/V0.2/P1-report-002.md)，累计0/2，无债；未修改产品/优化，未启动V0.3/V0.4。
+
+新计量区分HTTP终态、EOF和校验结束，使用正式Release程序测成本；测试host仅单列资源诊断。保留失败及全部重复，分位数差不称单请求额外开销，闭环完成率不称容量极限。完整结果见[性能结果报告](docs/performance/V0.2/P1-results.md)，普通CTest不自动执行完整性能矩阵。
+
+- 2026-10-20：接续2026-10-19的P1独立初审PASS，由Leader002收口，0/2、无债。两角色72单元各19,380含预热attempt均无失败；PR约44ms及工具控制限制保留，不声明容量/优化收益。待协调者本地提交、不推送，V0.3/V0.4未启动。
