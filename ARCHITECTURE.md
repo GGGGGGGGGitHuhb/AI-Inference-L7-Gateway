@@ -1,12 +1,14 @@
 # AI Inference L7 Gateway 架构大纲
 
-文档状态：`Approved`（总体架构基线；V0.1基础代理/上游复用及V0.2/S1流链路、S2背压协同已验收，V0.2/S3固定真实CPU后端验证已验收，V0.3/S1静态模型路由/RR/LI与被动健康已验收，准入排队仍未交付）。创建日期：2026-10-17；采纳日期：2026-10-18。
+> 当前状态（2026-10-20）：V0.3/S2 **已完成**，独立[Reviewer001 PASS](docs/reviewer/reports/V0.3/S2-report-001.md)，[Leader002收口](docs/leader/reports/V0.3/S2-report-002.md)，累计0/2、无债。当前分支 `codex/v0.3-s2-admission-queue`，起点为S1本地提交 `b704df268e2865bda146ba4c816dd105e6c8302c`；S1推送为用户报告，本轮未独立核验远端。S2待协调者本地提交、不推送；V0.3整体/MVP仍待S3，S3未启动。旧阶段日期条目及Approved待实现文字保留为历史快照。
+
+文档状态：`Approved`（总体架构基线；V0.1基础代理/上游复用及V0.2/S1流链路、S2背压协同已验收，V0.2/S3固定真实CPU后端验证已验收，V0.3/S1静态模型路由/RR/LI与被动健康已验收，V0.3/S2准入排队已验收）。创建日期：2026-10-17；采纳日期：2026-10-18。
 
 ## 1. 依据与状态
 
 用户于 2026-10-17 确认“独立项目、按需复用、最后联调”，于 2026-10-18 授权“你来决策吧”。Leader 据此采纳总体架构，并制定 V0.1/S1 的详细技术基线；后续阶段仍须形成各自设计。授权不等于已实现或已通过 Reviewer 验收。
 
-2026-10-17 首次编写前，仓库仅有空 README 和 Git 初始提交。2026-10-18，V0.1/S1 已通过 [Reviewer 002 独立复验](docs/reviewer/reports/V0.1/S1-report-002.md)，由 Leader 003 收口，最新状态澄清见 [Leader 004](docs/leader/reports/V0.1/S1-report-004.md)。已验收实现为S1最小组件/协议基础、S2单上游非流式代理及S3有界上游连接复用；V0.2/S1增量流链路及S2背压协同亦已接受，固定CPU真实后端亦完成验证，调度仍为后续目标。S1已提交bb318d8c并推送至阶段分支（协调者核验），未合并main或发布。S2按[返工002](docs/leader/reworks/rework-002.md)修正后通过[Reviewer002](docs/reviewer/reports/V0.1/S2-report-002.md)，由[Leader003](docs/leader/reports/V0.1/S2-report-003.md)收口；S2已本地提交3cb65244312d2feef563c2fd755ae8447d4589c5，远端状态本轮未核验。用户于2026-10-19启动S3，已通过[Reviewer002 PASS](docs/reviewer/reports/V0.1/S3-report-002.md)并由[Leader002](docs/leader/reports/V0.1/S3-report-002.md)收口；S3及V0.1开发验收已完成，提交d653e9c400517783d5d33025a0b66a737c8256eb已推送阶段分支（协调者2026-10-19核验同SHA）；当前V0.2/S1已获[Reviewer002 PASS](docs/reviewer/reports/V0.2/S1-report-002.md)并由[Leader002](docs/leader/reports/V0.2/S1-report-002.md)收口，累计1/2；V0.2/S1已本地提交2f7cf831a302fc87717afcae510e777187c7d0ef，远端本轮未核验；V0.2开发验收已完成；S2经[Reviewer001 PASS](docs/reviewer/reports/V0.2/S2-report-001.md)和[Leader002](docs/leader/reports/V0.2/S2-report-002.md)收口，累计0/2、无债；S2已本地提交d933e8892033a600b68ff5ac0db950dec5abea90、远端本轮未核验；S3经[Reviewer002 PASS](docs/reviewer/reports/V0.2/S3-report-002.md)和[Leader002](docs/leader/reports/V0.2/S3-report-002.md)收口，累计2/2、无债；S3已本地提交555b65d66a52d95791dba5445178e57a69b81d2c，远端未核验；P1已本地提交e231fda；当前V0.3/S1已验收收口、待本地提交，不推送，S2未开始。版本顺序、阶段范围和完成条件由 [ROADMAP.md](ROADMAP.md) 维护。
+2026-10-17 首次编写前，仓库仅有空 README 和 Git 初始提交。2026-10-18，V0.1/S1 已通过 [Reviewer 002 独立复验](docs/reviewer/reports/V0.1/S1-report-002.md)，由 Leader 003 收口，最新状态澄清见 [Leader 004](docs/leader/reports/V0.1/S1-report-004.md)。已验收实现为S1最小组件/协议基础、S2单上游非流式代理及S3有界上游连接复用；V0.2/S1增量流链路及S2背压协同亦已接受，固定CPU真实后端亦完成验证；V0.3/S1路由健康与S2准入排队已验收，综合MVP验收仍待S3。S1已提交bb318d8c并推送至阶段分支（协调者核验），未合并main或发布。S2按[返工002](docs/leader/reworks/rework-002.md)修正后通过[Reviewer002](docs/reviewer/reports/V0.1/S2-report-002.md)，由[Leader003](docs/leader/reports/V0.1/S2-report-003.md)收口；S2已本地提交3cb65244312d2feef563c2fd755ae8447d4589c5，远端状态本轮未核验。用户于2026-10-19启动S3，已通过[Reviewer002 PASS](docs/reviewer/reports/V0.1/S3-report-002.md)并由[Leader002](docs/leader/reports/V0.1/S3-report-002.md)收口；S3及V0.1开发验收已完成，提交d653e9c400517783d5d33025a0b66a737c8256eb已推送阶段分支（协调者2026-10-19核验同SHA）；当前V0.2/S1已获[Reviewer002 PASS](docs/reviewer/reports/V0.2/S1-report-002.md)并由[Leader002](docs/leader/reports/V0.2/S1-report-002.md)收口，累计1/2；V0.2/S1已本地提交2f7cf831a302fc87717afcae510e777187c7d0ef，远端本轮未核验；V0.2开发验收已完成；S2经[Reviewer001 PASS](docs/reviewer/reports/V0.2/S2-report-001.md)和[Leader002](docs/leader/reports/V0.2/S2-report-002.md)收口，累计0/2、无债；S2已本地提交d933e8892033a600b68ff5ac0db950dec5abea90、远端本轮未核验；S3经[Reviewer002 PASS](docs/reviewer/reports/V0.2/S3-report-002.md)和[Leader002](docs/leader/reports/V0.2/S3-report-002.md)收口，累计2/2、无债；S3已本地提交555b65d66a52d95791dba5445178e57a69b81d2c，远端未核验；P1已本地提交e231fda；V0.3/S1已本地提交b704df2；当前S2已验收收口、待本地提交，不推送，S3未开始。版本顺序、阶段范围和完成条件由 [ROADMAP.md](ROADMAP.md) 维护。
 
 ## 2. 项目目标与边界
 
@@ -47,7 +49,7 @@ flowchart LR
 
 ## 5. 模块职责与依赖
 
-以下为目标模块职责。S1 已创建 `src/base/`、`src/net/`（Socket）、`src/timer/`、`src/http/` 和 `src/gateway/`（文本请求校验），以及测试设施；S2已新增src/app配置/信号/main、src/net事件循环以及src/gateway的代理会话/运行时。S3新增src/upstream连接池/唯一租约，Runtime装配池、会话编排请求；V0.3/S1已新增src/routing/ModelRouter及请求租约，Runtime装配每实例隔离池；admission/observability独立模块尚未交付，表中健康/调度等长期目标职责不代表已全部交付。头文件与实现文件默认在模块内同目录组织。C++ 命名、回调、状态结果和排版统一引用用户技能目录中的 `personal-cpp-standards`，不在项目内复制规则。
+以下为目标模块职责。S1 已创建 `src/base/`、`src/net/`（Socket）、`src/timer/`、`src/http/` 和 `src/gateway/`（文本请求校验），以及测试设施；S2已新增src/app配置/信号/main、src/net事件循环以及src/gateway的代理会话/运行时。S3新增src/upstream连接池/唯一租约，Runtime装配池、会话编排请求；V0.3/S1已新增src/routing/ModelRouter及请求租约，Runtime装配每实例隔离池；S2已新增src/admission/AdmissionController，observability独立模块尚未交付，表中健康/调度等长期目标职责不代表已全部交付。头文件与实现文件默认在模块内同目录组织。C++ 命名、回调、状态结果和排版统一引用用户技能目录中的 `personal-cpp-standards`，不在项目内复制规则。
 
 | 建议模块 | 职责与状态归属 | 不承担的职责 |
 | --- | --- | --- |
@@ -224,10 +226,16 @@ Runtime统一拥有所有会话16MiB保守预约及默认4MiB的SSE固定数组�
 
 - 2026-10-20：接续2026-10-19的P1独立初审PASS，由Leader002收口，0/2、无债。两角色72单元各19,380含预热attempt均无失败；PR约44ms及工具控制限制保留，不声明容量/优化收益。待协调者本地提交、不推送，V0.3/V0.4未启动。
 
-## V0.3/S1 当前阶段（2026-10-20）
+## V0.3/S1 收口历史快照（2026-10-20）
 
 当前分支 `codex/v0.3-s1-routing-health`，起点为P1本地提交 `e231fda25879060fcd730f562982f06448f2ba11`，未推送。P1已本地提交；S1现已通过[Reviewer002 PASS](docs/reviewer/reports/V0.3/S1-report-002.md)，由[Leader002](docs/leader/reports/V0.3/S1-report-002.md)收口，**已完成**，累计返工1/2、无债。待协调者本地提交、不推送；V0.3整体/MVP未完成，S2尚未启动。
 
 [设计](docs/leader/designs/V0.3/S1-design.md)、[审查计划](docs/reviewer/reviews/V0.3/S1-review.md)与[Leader001](docs/leader/reports/V0.3/S1-report-001.md)固定静态模型映射、RR/Least Inflight、每实例隔离池和被动健康：失败阈值摘除、冷却后单真实请求试探，无自动重试。请求inflight在上游终结释放；旧单上游配置行为保留。
 
 Available初始仅为配置许可，恢复需完整HTTP成功，TCP可达不等于模型请求服务可用；不验证生成语义/GPU，空闲时不主动探测。S2排队/推理容量、S3综合验收及V0.4性能优化未开始，P1约44ms现象不在本阶段修复。完成后按用户规则本地提交、不推送。
+
+## V0.3/S2 已验收边界
+
+显式admission配置控制global/perbackend未完成上游请求和每模型count/逻辑byte FIFO；省略保持S1/legacy。Waiting仅保留原请求及Session预约，无上游租约；出队重查健康/容量/原total期限。Runtime在回调结束后32步有界轮转、合并续轮，RST退账而完整请求SHUT_WR保留响应。
+
+独立三预设各19/19、追加122断言与7条charge检查、FD4→4；Release固定24请求一次全部成功，22排队/2直派，FIFO一致，global峰2/perbackend峰1，终态全账归零。有限等待观察不证明长期无饥饿或性能收益；无真实模型/GPU新验收，不处理P1约44ms。见[Reviewer001](docs/reviewer/reports/V0.3/S2-report-001.md)及[Leader002](docs/leader/reports/V0.3/S2-report-002.md)。

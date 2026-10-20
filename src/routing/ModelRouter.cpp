@@ -70,8 +70,11 @@ bool ModelRouter::eligible(const Backend& backend,
 }
 
 Selection ModelRouter::selectBackend(std::string_view name,
-                                     Clock::time_point now) {
-  if (stopping_) return {SelectionStatus::kStopping, {}};
+                                     Clock::time_point now,
+                                     std::size_t globalLimit,
+                                     std::size_t backendLimit) {
+  const auto availability = inspectModel(name, now, globalLimit, backendLimit);
+  if (availability != SelectionStatus::kSelected) return {availability, {}};
   for (auto& model : models_) {
     if (model.name != name) continue;
     std::size_t selected = model.count;
@@ -79,7 +82,9 @@ Selection ModelRouter::selectBackend(std::string_view name,
     for (std::size_t offset = 0; offset < model.count; ++offset) {
       const auto candidate = (model.cursor + offset) % model.count;
       const auto& backend = backends_[model.begin + candidate];
-      if (!eligible(backend, now)) continue;
+      if (!eligible(backend, now) ||
+          (backendLimit && backend.snapshot.inflight >= backendLimit))
+        continue;
       if (selected == model.count || backend.snapshot.inflight < minimum) {
         selected = candidate;
         minimum = backend.snapshot.inflight;
@@ -95,6 +100,36 @@ Selection ModelRouter::selectBackend(std::string_view name,
             RequestLease(*this, model.begin + selected, state.epoch)};
   }
   return {SelectionStatus::kUnknownModel, {}};
+}
+
+std::size_t ModelRouter::activeRequests() const noexcept {
+  std::size_t total = 0;
+  for (const auto& backend : backends_) total += backend.snapshot.inflight;
+  return total;
+}
+
+SelectionStatus ModelRouter::inspectModel(std::string_view name,
+                                          Clock::time_point now,
+                                          std::size_t globalLimit,
+                                          std::size_t backendLimit) const {
+  if (stopping_) return SelectionStatus::kStopping;
+  for (const auto& model : models_) {
+    if (model.name != name) continue;
+    bool healthy = false;
+    bool capacity = false;
+    for (std::size_t index = model.begin; index < model.begin + model.count;
+         ++index) {
+      if (!eligible(backends_[index], now)) continue;
+      healthy = true;
+      if (!backendLimit || backends_[index].snapshot.inflight < backendLimit)
+        capacity = true;
+    }
+    if (!healthy) return SelectionStatus::kUnavailable;
+    if (!capacity || (globalLimit && activeRequests() >= globalLimit))
+      return SelectionStatus::kCapacity;
+    return SelectionStatus::kSelected;
+  }
+  return SelectionStatus::kUnknownModel;
 }
 
 Observation ModelRouter::classifyStatus(unsigned status) {

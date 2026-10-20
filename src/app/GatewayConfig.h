@@ -47,6 +47,15 @@ struct HealthConfig {
   int cooldownMs = 1000;
 };
 
+struct AdmissionConfig {
+  bool enabled = false;
+  std::size_t maxInflight = 16;
+  std::size_t maxInflightPerBackend = 4;
+  std::size_t maxQueueRequestsPerModel = 16;
+  std::uint64_t maxQueueBytesPerModel = 4194304;
+  int queueTimeoutMs = 1000;
+};
+
 struct GatewayConfig {
   std::string listenAddress = "127.0.0.1";
   std::uint16_t listenPort = 8080;
@@ -58,12 +67,14 @@ struct GatewayConfig {
 
   std::vector<ModelConfig> models;
   HealthConfig health;
+  AdmissionConfig admission;
 
   Timeouts timeouts;
   PoolConfig upstreamPool;
   StreamBufferConfig streamBuffer;
 };
 
+void validateAdmission(const GatewayConfig& config);
 GatewayConfig parseConfig(std::string_view content);
 GatewayConfig readConfig(const std::string& path);
 }  // namespace gateway::app
