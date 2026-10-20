@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### V0.3/S2 准入与有界排队 — 已验收，待本地提交
+
+- 显式opt-in全局/每实例请求限额与每模型FIFO/count/逻辑byte预算；Waiting不持上游租约，原Session预约和accept起总期限保持。队列取消、超时、健康重查、32步合并调度及有限停止已验证。
+- 独立Debug/Release/ASan+UBSan各19/19（35.03/30.75/48.31秒），另122+7断言、FD4→4；Release混合一次24/24成功，22排队/2直派、FIFO一致，限额峰2/1及末态归零。
+- [Reviewer001 PASS](docs/reviewer/reports/V0.3/S2-report-001.md)、[Leader002收口](docs/leader/reports/V0.3/S2-report-002.md)，初审通过0/2、无债。待协调者本地提交、不推送；S3未启动，V0.3整体/MVP未完成，无性能或长期公平承诺。下方旧待提交状态为历史快照，S1已提交b704df2。
+
 ### V0.3/S1 模型路由与被动健康 — 已验收，待本地提交
 
 - 新增静态模型组、RR/Least Inflight、每实例隔离池及请求租约；旧单上游模式兼容。请求inflight在上游终结释放，独立于idle连接和下游排空。

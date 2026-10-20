@@ -1,18 +1,20 @@
 # AI Inference L7 Gateway
 
+> 当前状态（2026-10-20）：V0.3/S2 **已完成**，独立[Reviewer001 PASS](docs/reviewer/reports/V0.3/S2-report-001.md)，[Leader002收口](docs/leader/reports/V0.3/S2-report-002.md)，累计0/2、无债。当前分支 `codex/v0.3-s2-admission-queue`，起点为S1本地提交 `b704df268e2865bda146ba4c816dd105e6c8302c`；S1推送为用户报告，本轮未独立核验远端。S2待协调者本地提交、不推送；V0.3整体/MVP仍待S3，S3未启动。旧阶段日期条目及Approved待实现文字保留为历史快照。
+
 面向在线文本推理服务的独立 C++ 七层网关项目，计划围绕流式代理、资源控制和请求调度建立可复现的工程实验。
 
 **项目定位：独立项目、按需复用、最后联调。** Gateway 独立接收客户端请求；按需复用已有 HTTP Server、L4LB 的合适组件和工程经验；完成独立能力后，再验证与 L4LB 的组合部署。
 
 ## 当前状态
 
-**V0.2流式可靠性开发验收已完成。** S1/S2/S3均已独立接受，累计返工分别1/2、0/2、2/2；S3唯一失败attempt取证发现已关闭，无剩余发现或债项，见[Reviewer002 PASS](docs/reviewer/reports/V0.2/S3-report-002.md)与[Leader002收口](docs/leader/reports/V0.2/S3-report-002.md)。V0.3/S1模型路由与健康亦已完成，S2未启动，尚未正式发布。
+**V0.2流式可靠性开发验收已完成。** S1/S2/S3均已独立接受，累计返工分别1/2、0/2、2/2；S3唯一失败attempt取证发现已关闭，无剩余发现或债项，见[Reviewer002 PASS](docs/reviewer/reports/V0.2/S3-report-002.md)与[Leader002收口](docs/leader/reports/V0.2/S3-report-002.md)。V0.3/S1模型路由与健康、S2准入与有界排队亦已完成，S3未启动，尚未正式发布。
 
 V0.1/S3与V0.1基础代理已完成开发验收。 S3经一次有限规范纠正后取得[Reviewer002 PASS](docs/reviewer/reports/V0.1/S3-report-002.md)，唯一空行规范发现关闭，无未解决发现或债项；收口见[Leader002](docs/leader/reports/V0.1/S3-report-002.md)。累计返工：S1 2/2、S2 1/2、S3 1/2，各阶段独立记录。
 
-当前开发分支 `codex/v0.3-s1-routing-health`，起点为P1本地提交 `e231fda25879060fcd730f562982f06448f2ba11`。S1已验收收口，累计1/2，无债；待协调者本地提交、不推送。V0.3整体/MVP未完成，远端本轮未核验，没有正式发布。
+当前开发分支 `codex/v0.3-s2-admission-queue`，起点为S1本地提交b704df2。S2已验收收口、0/2、无债，待协调者本地提交、不推送。V0.3整体/MVP仍待S3，没有正式发布。
 
-已验收：独立离线构建、最小复用组件、受限HTTP/1.1与文本JSON、单静态上游非流式代理、硬限额和分类deadline、信号停止，以及有界上游顺序复用与初始合成成本基线。下游继续每连接单请求；V0.2/S1新增SSE字节增量链路已独立验收；多后端、路由/队列、真实GPU和L4LB联调仍属后续阶段。S1与S2历史验收见[Leader S1-004](docs/leader/reports/V0.1/S1-report-004.md)、[Leader S2-003](docs/leader/reports/V0.1/S2-report-003.md)。
+已验收：独立离线构建、最小复用组件、受限HTTP/1.1与文本JSON、单静态上游非流式代理、硬限额和分类deadline、信号停止，以及有界上游顺序复用与初始合成成本基线。下游继续每连接单请求；V0.2/S1新增SSE字节增量链路已独立验收；V0.3/S1多实例路由与健康、S2准入排队已验收，真实GPU和L4LB联调仍属后续阶段。S1与S2历史验收见[Leader S1-004](docs/leader/reports/V0.1/S1-report-004.md)、[Leader S2-003](docs/leader/reports/V0.1/S2-report-003.md)。
 
 ## 构建与验证
 
@@ -28,7 +30,7 @@ cmake --build build-local/builder/v0.2-s3/debug
 ctest --test-dir build-local/builder/v0.2-s3/debug --output-on-failure
 ```
 
-Release 与 AddressSanitizer/UndefinedBehaviorSanitizer：将上述三个命令的 `debug` 分别换为 `release`、`asan`。每个预设当前注册17项CTest（含Routing、RoutingE2E及PerformanceDetectors）；S1独立初审三套各17/17，最后仅7处空行纠正按身份复用功能证据，详见文末；AssertionFailure 使用预期失败验证 Release 下检查仍有效。Pool、ReuseE2E、Runtime、GatewayE2E 和 MockBackend 需要本机 loopback socket 权限，会自动申请临时端口并回收自己的子进程；权限不足即失败，不跳过。
+Release 与 AddressSanitizer/UndefinedBehaviorSanitizer：将上述三个命令的 `debug` 分别换为 `release`、`asan`。每个预设当前注册19项CTest（新增Admission、AdmissionE2E）；S2独立三套各19/19，另有独立有限混合与生命周期补充，详见S2收口报告；AssertionFailure 使用预期失败验证 Release 下检查仍有效。Pool、ReuseE2E、Runtime、GatewayE2E 和 MockBackend 需要本机 loopback socket 权限，会自动申请临时端口并回收自己的子进程；权限不足即失败，不跳过。
 
 独立审查使用 `cmake --preset debug -B build-local/reviewer/v0.2-s3/debug`（其他预设同理），随后通过 `cmake --build <目录>` 和 `ctest --test-dir <目录>` 操作；同时将 TMPDIR/TMP/TEMP/cache 指向 reviewer 自有目录。
 
@@ -131,7 +133,7 @@ python3 tests/ProxyBaseline.py --gateway build-local/builder/s3/release/ai-infer
 
 ## 当前提交规则
 
-按用户最新指令“以后每次工作完成都提交，不推送”，每次工作验收/收口后由协调者完成本地提交，禁止自动推送；历史报告中的未提交/禁止提交仅描述当时授权与快照。V0.2/S1已本地提交2f7cf8；S2已本地提交d933e88；S3已本地提交555b65d；P1已本地提交e231fda；当前V0.3/S1已验收收口、待本地提交，不推送；不推断S1远端状态或发布。
+按用户最新指令“以后每次工作完成都提交，不推送”，每次工作验收/收口后由协调者完成本地提交，禁止自动推送；历史报告中的未提交/禁止提交仅描述当时授权与快照。V0.2/S1已本地提交2f7cf8；S2已本地提交d933e88；S3已本地提交555b65d；P1已本地提交e231fda；V0.3/S1已本地提交b704df2；当前S2已验收收口、待本地提交，不推送；不推断S1远端状态或发布。
 
 ## V0.2/S1 流式链路（已独立验收）
 
@@ -181,7 +183,7 @@ Backpressure测试通过真实控制门观察三种定界各至少两轮暂停/�
 
 - 2026-10-20：接续2026-10-19的P1独立初审PASS，由Leader002收口，0/2、无债。两角色72单元各19,380含预热attempt均无失败；PR约44ms及工具控制限制保留，不声明容量/优化收益。待协调者本地提交、不推送，V0.3/V0.4未启动。
 
-## V0.3/S1 当前阶段（2026-10-20）
+## V0.3/S1 收口历史快照（2026-10-20）
 
 当前分支 `codex/v0.3-s1-routing-health`，起点为P1本地提交 `e231fda25879060fcd730f562982f06448f2ba11`，未推送。P1已本地提交；S1现已通过[Reviewer002 PASS](docs/reviewer/reports/V0.3/S1-report-002.md)，由[Leader002](docs/leader/reports/V0.3/S1-report-002.md)收口，**已完成**，累计返工1/2、无债。待协调者本地提交、不推送；V0.3整体/MVP未完成，S2尚未启动。
 
@@ -204,3 +206,31 @@ Available初始仅为配置许可，恢复需完整HTTP成功，TCP可达不等�
 每实例沿用 `upstream_pool`：max_connections 1..256、max_idle 0..256且不超过前者；总实例数×max_connections≤1024。全局Session/内存预算不随实例数放大。配置≤65536字节、最大解析深度6；重复键、未知键、类型/范围错误和缺必填字段拒绝启动。Runtime内部测试快照含逐实例inflight/健康epoch及pool计数，无管理HTTP端点；聚合peakTotal为各池峰值之和的上界，不是同时峰值。
 
 新增快速测试 `Routing`（确定性时钟、租约和Session门控）及 `RoutingE2E`（受控四实例、配置负控、三轮恢复与停止）；普通CTest仍无真实模型或下载依赖。阶段最终验收以Leader/Reviewer报告为准。
+
+## V0.3/S2 准入与有界等待
+
+模型模式可使用 [admission-example.json](config/admission-example.json)。只有显式提供 `admission` 对象才启用；省略保持 S1 即时路由行为，legacy 单上游配置不接受该对象。对象中的字段均可省略：
+
+| 字段 | 默认值 | 范围与含义 |
+| --- | --- | --- |
+| `max_inflight` | 16 | 1..256，全进程未完成上游请求之和 |
+| `max_inflight_per_backend` | 4 | 1..max_inflight，每个模型实例独立限额 |
+| `max_queue_requests_per_model` | 16 | 0..256，每模型 FIFO 条数；0 禁止等待 |
+| `max_queue_bytes_per_model` | 4194304 | 0..268435456，每模型逻辑请求字节；0 禁止等待 |
+| `queue_timeout_ms` | 1000 | 10..300000，入队起等待期限 |
+
+`inflight` 在上游 HTTP 完成时释放；下游仍在排空的连接可能继续占用连接池。它与 `upstream_pool.max_connections`、客户端 `max_connections` 是三个不同限制。等待请求没有上游请求/连接租约，也不占 streamCapacity，仍保有原来的每会话 16MiB 内存预约。
+
+队列逻辑字节是已解析 method、target、body 的字节数，加各 header 的 name/value 字节数与4，再加固定1024；不是 RSS，不是新申请的一份正文预算，不与16MiB相加。队列按条数、字节顺序拒绝，分别返回503/queue_full、503/queue_bytes_exceeded。只有需要等待的请求受队列字节阈值限制，可立即派发时不会因该阈值过小被拒。
+
+所有模型队列非空时，新请求也先入本模型尾部；调度按模型游标逐个查看队头，单次至多处理32个，阻塞模型不会阻止其他有容量的模型。未知模型404/model_not_found，无健康候选503/no_available_backend；这是容量等待，不等待故障恢复。出队重新选当前健康实例，取连接池失败则503/upstream_capacity并中立释放请求租约，不重排、不改投、不重试。
+
+Waiting截止为 `min(accept + total, enqueue + queue_timeout)`，total从接收连接起不重置；相同时504/total_timeout优先，否则504/queue_timeout。RST/明确读写错误会取消，完整请求后的 `SHUT_WR` 保留等待并允许响应；TCP FIN不能证明用户完全离开。停止时等待者收到503/gateway_stopping并退出队列，活动请求按原停机期限收口。
+
+健康仍是 HTTP 协议级被动观察，不验证生成语义。没有优先级、后台健康探针或长期公平/SLO承诺。本阶段新增 Admission、AdmissionE2E（总计19项CTest），固定24条长短混合观察由 `tests/admission/RunAdmission.py <AdmissionRuntimeHost> --mixed <raw.json>` 显式运行；测试host记录实际入队和派发时间而非将线程编号当FIFO，并带原始样本/取消负控。它含观察写盘开销，不是性能基准；有限成功样本不能证明长期无饥饿或公平收益。
+
+## V0.3/S2 已验收边界
+
+显式admission配置控制global/perbackend未完成上游请求和每模型count/逻辑byte FIFO；省略保持S1/legacy。Waiting仅保留原请求及Session预约，无上游租约；出队重查健康/容量/原total期限。Runtime在回调结束后32步有界轮转、合并续轮，RST退账而完整请求SHUT_WR保留响应。
+
+独立三预设各19/19、追加122断言与7条charge检查、FD4→4；Release固定24请求一次全部成功，22排队/2直派，FIFO一致，global峰2/perbackend峰1，终态全账归零。有限等待观察不证明长期无饥饿或性能收益；无真实模型/GPU新验收，不处理P1约44ms。见[Reviewer001](docs/reviewer/reports/V0.3/S2-report-001.md)及[Leader002](docs/leader/reports/V0.3/S2-report-002.md)。

@@ -14,7 +14,8 @@ enum class SelectionStatus {
   kSelected,
   kUnknownModel,
   kUnavailable,
-  kStopping
+  kStopping,
+  kCapacity
 };
 
 struct BackendSnapshot {
@@ -63,7 +64,13 @@ class ModelRouter {
   ModelRouter(const ModelRouter&) = delete;
   ModelRouter& operator=(const ModelRouter&) = delete;
 
-  Selection selectBackend(std::string_view model, Clock::time_point now);
+  Selection selectBackend(std::string_view model, Clock::time_point now,
+                          std::size_t globalLimit = 0,
+                          std::size_t backendLimit = 0);
+  SelectionStatus inspectModel(std::string_view model, Clock::time_point now,
+                               std::size_t globalLimit = 0,
+                               std::size_t backendLimit = 0) const;
+  std::size_t activeRequests() const noexcept;
   void stopRouting() { stopping_ = true; }
 
   const app::BackendConfig& backend(std::size_t index) const;

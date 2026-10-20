@@ -16,6 +16,9 @@ GatewayRuntime::GatewayRuntime(app::GatewayConfig config)
       budget_(config_.maxReservedBytes, config_.streamBuffer.maxTotalBytes),
       pool_(loop_, config_.upstreamPool, io_),
       router_(config_) {
+  app::validateAdmission(config_);
+  if (config_.admission.enabled)
+    admission_ = std::make_unique<admission::AdmissionController>(config_);
   for (std::size_t index = 0; index < router_.size(); ++index)
     pools_.push_back(std::make_unique<upstream::ConnectionPool>(
         loop_, config_.upstreamPool, io_));
@@ -23,6 +26,7 @@ GatewayRuntime::GatewayRuntime(app::GatewayConfig config)
 }
 
 GatewayRuntime::~GatewayRuntime() {
+  admissionLifetime_.reset();
   for (auto& [id, session] : sessions_)
     session->finishSession(FinishReason::kStopped);
   sessions_.clear();
@@ -118,7 +122,7 @@ void GatewayRuntime::onListenerEvent(std::uint32_t events) {
       auto session = std::make_unique<ProxySession>(
           loop_, config_, io_, pool_, std::move(client), acceptedAt, budget_,
           std::move(reservation), config_.models.empty() ? nullptr : &router_,
-          &pools_);
+          &pools_, admission_.get(), id);
       session->startSession();
       sessions_.emplace(id, std::move(session));
       peakSessions_ = std::max(peakSessions_, sessions_.size());
@@ -131,6 +135,7 @@ void GatewayRuntime::onListenerEvent(std::uint32_t events) {
 }
 
 void GatewayRuntime::onCleanup() {
+  scheduleWaiting();
   for (auto iterator = sessions_.begin(); iterator != sessions_.end();) {
     if (iterator->second->finished()) {
       iterator = sessions_.erase(iterator);
@@ -148,6 +153,73 @@ void GatewayRuntime::onCleanup() {
 
     loop_.requestLoopStop();
   }
+}
+
+bool GatewayRuntime::waitingCanProgress() const {
+  for (std::size_t model = 0; model < admission_->modelCount(); ++model) {
+    const auto id = admission_->head(model);
+    if (!id) continue;
+    const auto found = sessions_.find(id);
+    if (found == sessions_.end()) return true;
+    const auto& session = *found->second;
+    if (!session.queued_ || session.phase_ != ProxySession::Phase::kWaiting ||
+        io_.now() >= session.nextDeadline())
+      return true;
+    if (router_.inspectModel(session.requestModel_, io_.now(),
+                             config_.admission.maxInflight,
+                             config_.admission.maxInflightPerBackend) !=
+        routing::SelectionStatus::kCapacity)
+      return true;
+  }
+  return false;
+}
+
+void GatewayRuntime::scheduleWaiting() {
+  if (!admission_ || stopping_ || scheduling_ || !admission_->dirty()) return;
+  scheduling_ = true;
+  admission_->clearDirty();
+  std::size_t processed = 0;
+  bool progress = true;
+  while (processed < 32 && progress) {
+    progress = false;
+    const auto start = admission_->cursor();
+    for (std::size_t offset = 0;
+         offset < admission_->modelCount() && processed < 32; ++offset) {
+      const auto model = (start + offset) % admission_->modelCount();
+      const auto id = admission_->head(model);
+      if (!id) continue;
+      const auto found = sessions_.find(id);
+      if (found != sessions_.end() && !found->second->dispatchWaiting())
+        continue;
+      admission_->removeRequest(id);
+      admission_->advanceCursor(model);
+      ++processed;
+      progress = true;
+    }
+  }
+  admission_->clearDirty();
+  scheduling_ = false;
+  if (processed == 32 && waitingCanProgress()) {
+    admission_->markDirty();
+    if (!admissionTaskPending_) {
+      admissionTaskPending_ = loop_.queueTaskInEventLoop(
+          [this, lifetime = std::weak_ptr<int>(admissionLifetime_)] {
+            dispatchAdmissionTask(this, lifetime);
+          });
+      if (!admissionTaskPending_)
+        throw std::runtime_error("admission scheduling unavailable");
+    }
+  }
+}
+
+void GatewayRuntime::dispatchAdmissionTask(GatewayRuntime* owner,
+                                           const std::weak_ptr<int>& lifetime) {
+  if (!lifetime.expired()) owner->onAdmissionTask();
+}
+
+void GatewayRuntime::onAdmissionTask() {
+  admissionTaskPending_ = false;
+  if (!stopping_) onCleanup();
 }
 
 void GatewayRuntime::onSignalEvent(std::uint32_t) {
@@ -170,9 +242,12 @@ void GatewayRuntime::requestShutdown() {
     return;
   }
   stopping_ = true;
+  if (admission_) admission_->stopAdmission();
   pool_.stopAcquisition();
   router_.stopRouting();
   for (auto& pool : pools_) pool->stopAcquisition();
+  for (auto& [id, session] : sessions_)
+    if (session->queued_) session->prepareError(503, "gateway_stopping");
   if (listenerChannel_) listenerChannel_->removeChannel();
   listener_.reset();
   shutdownTimer_ = loop_.addTimer(

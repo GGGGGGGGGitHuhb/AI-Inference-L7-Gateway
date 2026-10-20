@@ -40,6 +40,12 @@ class GatewayRuntime {
   void onSignalEvent(std::uint32_t events);
   void onCleanup();
 
+  void scheduleWaiting();
+  void onAdmissionTask();
+  static void dispatchAdmissionTask(GatewayRuntime* owner,
+                                    const std::weak_ptr<int>& lifetime);
+  bool waitingCanProgress() const;
+
   void onShutdownDeadline();
   void forceShutdown();
 
@@ -51,6 +57,7 @@ class GatewayRuntime {
   upstream::ConnectionPool pool_;
   routing::ModelRouter router_;
   std::vector<std::unique_ptr<upstream::ConnectionPool>> pools_;
+  std::unique_ptr<admission::AdmissionController> admission_;
 
   net::Socket listener_;
   std::unique_ptr<net::Channel> listenerChannel_;
@@ -62,5 +69,9 @@ class GatewayRuntime {
 
   net::EventLoop::TimerId shutdownTimer_ = 0;
   bool stopping_ = false;
+
+  bool admissionTaskPending_ = false;
+  bool scheduling_ = false;
+  std::shared_ptr<int> admissionLifetime_ = std::make_shared<int>(0);
 };
 }  // namespace gateway::gateway_api

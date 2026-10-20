@@ -25,7 +25,8 @@ ProxySession::ProxySession(
     upstream::ConnectionPool& pool, net::Socket client,
     SessionIo::Clock::time_point acceptedAt, BufferBudget& budget,
     CapacityLease reservation, routing::ModelRouter* router,
-    std::vector<std::unique_ptr<upstream::ConnectionPool>>* pools)
+    std::vector<std::unique_ptr<upstream::ConnectionPool>>* pools,
+    admission::AdmissionController* admission, std::uint64_t sessionId)
     : reservation_(std::move(reservation)),
       budget_(budget),
       loop_(loop),
@@ -35,6 +36,8 @@ ProxySession::ProxySession(
       selectedPool_(&pool),
       router_(router),
       pools_(pools),
+      admission_(admission),
+      sessionId_(sessionId),
       downstreamSocket_(std::move(client)),
       downstreamChannel_(
           std::make_unique<net::Channel>(loop_, downstreamSocket_.fd())),
@@ -56,7 +59,9 @@ void ProxySession::completeRouting(routing::Observation observation) noexcept {
   if (!requestLease_.active()) return;
   const auto index = requestLease_.index();
   const auto epoch = requestLease_.epoch();
-  requestLease_.complete(observation, io_.now());
+  upstreamCompletedAt_ = io_.now();
+  requestLease_.complete(observation, upstreamCompletedAt_);
+  if (admission_) admission_->markDirty();
   if (router_->snapshot(index).epoch != epoch ||
       router_->snapshot(index).state == routing::HealthState::kExhausted)
     selectedPool_->clearIdle();
@@ -69,6 +74,10 @@ void ProxySession::closeUpstream() noexcept {
 
 void ProxySession::finishSession(FinishReason reason) noexcept {
   if (finished()) return;
+  releaseWaiting();
+  finishedAt_ = io_.now();
+  if (reason == FinishReason::kCancelled) outcomeCode_ = "cancelled";
+  if (reason == FinishReason::kStopped) outcomeCode_ = "gateway_stopping";
   if (reason != FinishReason::kCount) finishReason_ = reason;
   budget_.recordFinish(finishReason_);
   phase_ = Phase::kFinished;
@@ -116,6 +125,9 @@ ProxySession::TimePoint ProxySession::nextDeadline() const {
                         : acceptedAt_ + Milliseconds(config_.timeouts.total));
   if (errorDraining_) return errorDeadline_;
   auto deadline = acceptedAt_ + Milliseconds(config_.timeouts.total);
+  if (phase_ == Phase::kWaiting)
+    return std::min(
+        deadline, enqueuedAt_ + Milliseconds(config_.admission.queueTimeoutMs));
   if (phase_ == Phase::kReceiving)
     deadline = std::min(deadline,
                         acceptedAt_ + Milliseconds(config_.timeouts.request));
@@ -183,6 +195,8 @@ bool ProxySession::checkDeadline() {
     finishSession();
   else if (phase_ == Phase::kReceiving)
     prepareError(408, "request_timeout");
+  else if (phase_ == Phase::kWaiting)
+    prepareError(504, "queue_timeout");
   else if (phase_ == Phase::kConnecting)
     prepareError(504, "connect_timeout", routing::Observation::kFailure);
   else if (upstreamOffset_ < upstreamOutput_.size() &&
@@ -299,19 +313,92 @@ void ProxySession::beginUpstream() {
     return;
   }
 
+  requestModel_ = validation.metadata.model;
+  streamRequest_ = validation.metadata.stream;
+  if (checkDeadline()) return;
+  if (admission_) {
+    if (admission_->stopping()) {
+      prepareError(503, "gateway_stopping");
+      return;
+    }
+    const auto state = router_->inspectModel(
+        requestModel_, io_.now(), config_.admission.maxInflight,
+        config_.admission.maxInflightPerBackend);
+    if (state != routing::SelectionStatus::kSelected &&
+        state != routing::SelectionStatus::kCapacity) {
+      rejectSelection(state);
+      return;
+    }
+    if (state == routing::SelectionStatus::kCapacity || !admission_->empty()) {
+      queueCharge_ = admission::AdmissionController::requestCharge(
+          requestParser_->message());
+      const auto queued = admission_->enqueueRequest(
+          admission_->modelIndex(requestModel_), sessionId_, queueCharge_);
+      if (queued != admission::EnqueueStatus::kQueued) {
+        prepareError(503, queued == admission::EnqueueStatus::kCountLimit
+                              ? "queue_full"
+                          : queued == admission::EnqueueStatus::kByteLimit
+                              ? "queue_bytes_exceeded"
+                              : "gateway_stopping");
+        return;
+      }
+      queued_ = true;
+      enqueuedAt_ = io_.now();
+      phase_ = Phase::kWaiting;
+      updateInterests();
+      armDeadline();
+      return;
+    }
+  }
+  dispatchUpstream();
+}
+
+void ProxySession::releaseWaiting() noexcept {
+  if (!queued_) return;
+  queued_ = false;
+  admission_->removeRequest(sessionId_);
+}
+
+void ProxySession::rejectSelection(routing::SelectionStatus status) noexcept {
+  if (status == routing::SelectionStatus::kUnknownModel)
+    prepareError(404, "model_not_found");
+  else
+    prepareError(503, status == routing::SelectionStatus::kStopping
+                          ? "gateway_stopping"
+                          : "no_available_backend");
+}
+
+bool ProxySession::dispatchWaiting() noexcept {
+  if (!queued_ || phase_ != Phase::kWaiting) return true;
+  try {
+    if (checkDeadline()) return true;
+    const auto state = router_->inspectModel(
+        requestModel_, io_.now(), config_.admission.maxInflight,
+        config_.admission.maxInflightPerBackend);
+    if (state == routing::SelectionStatus::kCapacity) return false;
+    if (state != routing::SelectionStatus::kSelected)
+      rejectSelection(state);
+    else {
+      releaseWaiting();
+      dispatchUpstream();
+    }
+  } catch (...) {
+    prepareError(500, "internal_error");
+  }
+  return true;
+}
+
+void ProxySession::dispatchUpstream() {
+  if (checkDeadline()) return;
   std::string targetAddress = config_.upstreamAddress;
   std::uint16_t targetPort = config_.upstreamPort;
   if (router_) {
-    auto selection =
-        router_->selectBackend(validation.metadata.model, io_.now());
+    auto selection = router_->selectBackend(
+        requestModel_, io_.now(),
+        admission_ ? config_.admission.maxInflight : 0,
+        admission_ ? config_.admission.maxInflightPerBackend : 0);
     if (selection.status != routing::SelectionStatus::kSelected) {
-      if (selection.status == routing::SelectionStatus::kUnknownModel)
-        prepareError(404, "model_not_found");
-      else
-        prepareError(503,
-                     selection.status == routing::SelectionStatus::kStopping
-                         ? "gateway_stopping"
-                         : "no_available_backend");
+      rejectSelection(selection.status);
       return;
     }
     requestLease_ = std::move(selection.lease);
@@ -320,7 +407,11 @@ void ProxySession::beginUpstream() {
     targetPort = backend.port;
     selectedPool_ = pools_->at(requestLease_.index()).get();
   }
-  streamRequest_ = validation.metadata.stream;
+  dispatchedAt_ = io_.now();
+  if (admission_) {
+    stageStarted_ = dispatchedAt_;
+    phase_ = Phase::kConnecting;
+  }
   checkOutputBudget(requestParser_->message(), kRequestOutputLimit);
   upstreamOutput_ = http::normalizeMessage(
       requestParser_->message(), http::MessageKind::kRequest,
@@ -744,6 +835,8 @@ void ProxySession::shutdownWrite(int remainingCalls) {
 void ProxySession::prepareError(unsigned status, const char* code,
                                 routing::Observation observation) noexcept {
   if (finished()) return;
+  outcomeCode_ = code;
+  releaseWaiting();
   completeRouting(observation);
   if (status == 504 || status == 408)
     finishReason_ = FinishReason::kTimeout;

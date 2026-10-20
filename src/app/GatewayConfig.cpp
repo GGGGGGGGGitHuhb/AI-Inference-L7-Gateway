@@ -188,7 +188,39 @@ void readHealth(const Json& object, HealthConfig& health) {
     health.cooldownMs = integer(object.at("cooldown_ms"), 10, 300000);
 }
 
+void readAdmission(const Json& object, AdmissionConfig& admission) {
+  requireKeys(object,
+              {"max_inflight", "max_inflight_per_backend",
+               "max_queue_requests_per_model", "max_queue_bytes_per_model",
+               "queue_timeout_ms"},
+              {});
+  admission.enabled = true;
+  for (const auto& [key, value] : object.items()) {
+    if (key == "max_inflight")
+      admission.maxInflight = integer(value, 1, 256);
+    else if (key == "max_inflight_per_backend")
+      admission.maxInflightPerBackend = integer(value, 1, 256);
+    else if (key == "max_queue_requests_per_model")
+      admission.maxQueueRequestsPerModel = integer(value, 0, 256);
+    else if (key == "max_queue_bytes_per_model")
+      admission.maxQueueBytesPerModel = integer(value, 0, 268435456);
+    else
+      admission.queueTimeoutMs = integer(value, 10, 300000);
+  }
+}
 }  // namespace
+
+void validateAdmission(const GatewayConfig& config) {
+  const auto& limits = config.admission;
+  if (!limits.enabled) return;
+  if (config.models.empty() || limits.maxInflight < 1 ||
+      limits.maxInflight > 256 || limits.maxInflightPerBackend < 1 ||
+      limits.maxInflightPerBackend > limits.maxInflight ||
+      limits.maxQueueRequestsPerModel > 256 ||
+      limits.maxQueueBytesPerModel > 268435456 || limits.queueTimeoutMs < 10 ||
+      limits.queueTimeoutMs > 300000)
+    throw std::invalid_argument("invalid admission limits");
+}
 
 GatewayConfig parseConfig(std::string_view content) {
   if (content.size() > 65536) throw std::invalid_argument("config size");
@@ -209,7 +241,9 @@ GatewayConfig parseConfig(std::string_view content) {
       throw std::invalid_argument("required config fields");
     GatewayConfig config;
     for (const auto& [key, value] : document.items()) {
-      if (key == "models")
+      if (key == "admission")
+        readAdmission(value, config.admission);
+      else if (key == "models")
         readModels(value, config);
       else if (key == "health")
         readHealth(value, config.health);
@@ -251,6 +285,7 @@ GatewayConfig parseConfig(std::string_view content) {
     }
     if (backendCount > 1024 / config.upstreamPool.maxConnections)
       throw std::invalid_argument("aggregate pool capacity");
+    validateAdmission(config);
     return config;
   } catch (const Json::exception&) {
     throw std::invalid_argument("invalid config JSON");

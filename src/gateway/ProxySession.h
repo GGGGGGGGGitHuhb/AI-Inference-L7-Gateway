@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 
+#include "admission/AdmissionController.h"
 #include "app/GatewayConfig.h"
 #include "gateway/BufferBudget.h"
 #include "gateway/SessionIo.h"
@@ -24,7 +25,9 @@ class ProxySession {
       upstream::ConnectionPool& pool, net::Socket client,
       SessionIo::Clock::time_point acceptedAt, BufferBudget& budget,
       CapacityLease reservation, routing::ModelRouter* router = nullptr,
-      std::vector<std::unique_ptr<upstream::ConnectionPool>>* pools = nullptr);
+      std::vector<std::unique_ptr<upstream::ConnectionPool>>* pools = nullptr,
+      admission::AdmissionController* admission = nullptr,
+      std::uint64_t sessionId = 0);
   ~ProxySession();
 
   void startSession();
@@ -36,10 +39,13 @@ class ProxySession {
 
  private:
   friend struct ProxySessionTestAccess;
+  friend struct AdmissionSessionTestAccess;
+  friend class GatewayRuntime;
   friend struct StreamingSessionTestAccess;
 
   enum class Phase {
     kReceiving,
+    kWaiting,
     kConnecting,
     kUpstream,
     kDownstream,
@@ -70,6 +76,10 @@ class ProxySession {
 
   // 请求、响应及分阶段关闭。
   void beginUpstream();
+  void dispatchUpstream();
+  bool dispatchWaiting() noexcept;
+  void releaseWaiting() noexcept;
+  void rejectSelection(routing::SelectionStatus status) noexcept;
   void confirmConnected();
   void completeResponse();
   void beginClosing(int remainingCalls);
@@ -100,6 +110,17 @@ class ProxySession {
   routing::ModelRouter* router_ = nullptr;
   std::vector<std::unique_ptr<upstream::ConnectionPool>>* pools_ = nullptr;
   routing::RequestLease requestLease_;
+
+  admission::AdmissionController* admission_ = nullptr;
+  std::uint64_t sessionId_ = 0;
+  bool queued_ = false;
+  std::string requestModel_;
+  std::uint64_t queueCharge_ = 0;
+  TimePoint enqueuedAt_{};
+  TimePoint dispatchedAt_{};
+  TimePoint upstreamCompletedAt_{};
+  TimePoint finishedAt_{};
+  const char* outcomeCode_ = "complete";
 
   net::Socket downstreamSocket_;
   upstream::ConnectionLease upstreamLease_;
