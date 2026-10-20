@@ -1,6 +1,6 @@
 # AI Inference L7 Gateway
 
-> 当前状态（2026-10-20）：V0.3/S2 **已完成**，独立[Reviewer001 PASS](docs/reviewer/reports/V0.3/S2-report-001.md)，[Leader002收口](docs/leader/reports/V0.3/S2-report-002.md)，累计0/2、无债。当前分支 `codex/v0.3-s2-admission-queue`，起点为S1本地提交 `b704df268e2865bda146ba4c816dd105e6c8302c`；S1推送为用户报告，本轮未独立核验远端。S2待协调者本地提交、不推送；V0.3整体/MVP仍待S3，S3未启动。旧阶段日期条目及Approved待实现文字保留为历史快照。
+> 当前状态（2026-10-20）：V0.3/S3及V0.3/MVP **开发验收完成**，独立[Reviewer002 PASS](docs/reviewer/reports/V0.3/S3-report-002.md)，[Leader003收口](docs/leader/reports/V0.3/S3-report-003.md)，累计返工2/2，无残余发现或债务。当前分支 `codex/v0.3-s3-mvp-acceptance`，起点S2提交 `d89de57eb6be0106bccd24432b2559d342ed8b79`；S3待协调者本地提交、不推送。尚未发布，不声明生产能力，V0.4/L4LB联调未启动；旧日期条目及Approved待实现文字是历史快照。
 
 面向在线文本推理服务的独立 C++ 七层网关项目，计划围绕流式代理、资源控制和请求调度建立可复现的工程实验。
 
@@ -8,11 +8,11 @@
 
 ## 当前状态
 
-**V0.2流式可靠性开发验收已完成。** S1/S2/S3均已独立接受，累计返工分别1/2、0/2、2/2；S3唯一失败attempt取证发现已关闭，无剩余发现或债项，见[Reviewer002 PASS](docs/reviewer/reports/V0.2/S3-report-002.md)与[Leader002收口](docs/leader/reports/V0.2/S3-report-002.md)。V0.3/S1模型路由与健康、S2准入与有界排队亦已完成，S3未启动，尚未正式发布。
+**V0.2流式可靠性开发验收已完成。** S1/S2/S3均已独立接受，累计返工分别1/2、0/2、2/2；S3唯一失败attempt取证发现已关闭，无剩余发现或债项，见[Reviewer002 PASS](docs/reviewer/reports/V0.2/S3-report-002.md)与[Leader002收口](docs/leader/reports/V0.2/S3-report-002.md)。V0.3/S1模型路由与健康、S2准入与有界排队亦已完成，S3已完成开发验收，尚未正式发布。
 
 V0.1/S3与V0.1基础代理已完成开发验收。 S3经一次有限规范纠正后取得[Reviewer002 PASS](docs/reviewer/reports/V0.1/S3-report-002.md)，唯一空行规范发现关闭，无未解决发现或债项；收口见[Leader002](docs/leader/reports/V0.1/S3-report-002.md)。累计返工：S1 2/2、S2 1/2、S3 1/2，各阶段独立记录。
 
-当前开发分支 `codex/v0.3-s2-admission-queue`，起点为S1本地提交b704df2。S2已验收收口、0/2、无债，待协调者本地提交、不推送。V0.3整体/MVP仍待S3，没有正式发布。
+当前开发分支 `codex/v0.3-s3-mvp-acceptance`，起点为S2本地提交d89de57。S2已验收并本地提交d89de57、0/2、无债，未核验推送。V0.3整体/MVP开发验收已完成，没有正式发布。
 
 已验收：独立离线构建、最小复用组件、受限HTTP/1.1与文本JSON、单静态上游非流式代理、硬限额和分类deadline、信号停止，以及有界上游顺序复用与初始合成成本基线。下游继续每连接单请求；V0.2/S1新增SSE字节增量链路已独立验收；V0.3/S1多实例路由与健康、S2准入排队已验收，真实GPU和L4LB联调仍属后续阶段。S1与S2历史验收见[Leader S1-004](docs/leader/reports/V0.1/S1-report-004.md)、[Leader S2-003](docs/leader/reports/V0.1/S2-report-003.md)。
 
@@ -133,7 +133,7 @@ python3 tests/ProxyBaseline.py --gateway build-local/builder/s3/release/ai-infer
 
 ## 当前提交规则
 
-按用户最新指令“以后每次工作完成都提交，不推送”，每次工作验收/收口后由协调者完成本地提交，禁止自动推送；历史报告中的未提交/禁止提交仅描述当时授权与快照。V0.2/S1已本地提交2f7cf8；S2已本地提交d933e88；S3已本地提交555b65d；P1已本地提交e231fda；V0.3/S1已本地提交b704df2；当前S2已验收收口、待本地提交，不推送；不推断S1远端状态或发布。
+按用户最新指令“以后每次工作完成都提交，不推送”，每次工作验收/收口后由协调者完成本地提交，禁止自动推送；历史报告中的未提交/禁止提交仅描述当时授权与快照。V0.2/S1已本地提交2f7cf8；S2已本地提交d933e88；S3已本地提交555b65d；P1已本地提交e231fda；V0.3/S1已本地提交b704df2；V0.3/S2已本地提交d89de57，当前S3已验收、待本地提交不推送；不推断S1远端状态或发布。
 
 ## V0.2/S1 流式链路（已独立验收）
 
@@ -234,3 +234,9 @@ Waiting截止为 `min(accept + total, enqueue + queue_timeout)`，total从接收
 显式admission配置控制global/perbackend未完成上游请求和每模型count/逻辑byte FIFO；省略保持S1/legacy。Waiting仅保留原请求及Session预约，无上游租约；出队重查健康/容量/原total期限。Runtime在回调结束后32步有界轮转、合并续轮，RST退账而完整请求SHUT_WR保留响应。
 
 独立三预设各19/19、追加122断言与7条charge检查、FD4→4；Release固定24请求一次全部成功，22排队/2直派，FIFO一致，global峰2/perbackend峰1，终态全账归零。有限等待观察不证明长期无饥饿或性能收益；无真实模型/GPU新验收，不处理P1约44ms。见[Reviewer001](docs/reviewer/reports/V0.3/S2-report-001.md)及[Leader002](docs/leader/reports/V0.3/S2-report-002.md)。
+
+## V0.3/S3 最终开发验收
+
+独立Reviewer002 PASS，累计2/2：第1轮纠正文档歧义，第2轮修复新验收工具运行期128MiB存储预算。复用修复前独立debug/release/asan各20/20及真实28条（26成功含2预热、2取消）、模拟29条（19成功、2取消、2后端失败、1队列超时、5拒绝）作为产品/矩阵功能证据。新预算经7类负控、正常host、三套MvpDetectors及Reviewer自写3负控验证；没有在新预算下重跑正式矩阵。
+
+账本100ms、资源1s为采样目标周期，含调度/轮询/写盘开销，非硬实时“至少每100ms”；峰值观察不独立证明瞬时上界。真实慢读未触高水，CPU双实例共享资源，小样本不证明容量/SLO/长期公平或性能收益；P1约44ms现象未修。见[验收记录](docs/acceptance/V0.3/S3-results.md)和[操作说明](tests/mvp/README.md)。V0.3/MVP开发验收完成、未发布，后续阶段未启动。
