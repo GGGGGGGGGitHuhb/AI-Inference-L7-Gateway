@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### V0.3/S1 模型路由与被动健康 — 已验收，待本地提交
+
+- 新增静态模型组、RR/Least Inflight、每实例隔离池及请求租约；旧单上游模式兼容。请求inflight在上游终结释放，独立于idle连接和下游排空。
+- 失败阈值摘除、冷却后唯一真实请求试探；epoch防迟到结果复活/旧连接归池。取消和本地容量不足中立，无主动探针、重试或队列；协议级健康不保证模型语义/GPU。
+- 独立初审Debug/Release/ASan+UBSan各17/17（35.34/30.97/50.05秒），另38断言FD4→4及双模型8并发通过。最后仅7处空行纠正，按精确源差异和不变binary复用功能证据，未重跑。
+- [Reviewer002 PASS](docs/reviewer/reports/V0.3/S1-report-002.md)关闭唯一F-001 Minor；[Leader002](docs/leader/reports/V0.3/S1-report-002.md)收口，累计1/2、无债。待本地提交、不推送；S2未启动，V0.3/MVP未完成，无性能收益声明。P1已提交e231fda，以下历史待提交状态保留。
+
 ### V0.2/P1 独立性能基线 — 已验收，待本地提交
 
 - 新增隔离性能工具、固定69cell+3控制、HTTP终态/EOF/TTFT分开计量、失败及中断attempt留存和结构化汇总，产品src与旧S3工具不变。

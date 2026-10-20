@@ -6,11 +6,11 @@
 
 ## 当前状态
 
-**V0.2流式可靠性开发验收已完成。** S1/S2/S3均已独立接受，累计返工分别1/2、0/2、2/2；S3唯一失败attempt取证发现已关闭，无剩余发现或债项，见[Reviewer002 PASS](docs/reviewer/reports/V0.2/S3-report-002.md)与[Leader002收口](docs/leader/reports/V0.2/S3-report-002.md)。V0.3未开始，尚未正式发布。
+**V0.2流式可靠性开发验收已完成。** S1/S2/S3均已独立接受，累计返工分别1/2、0/2、2/2；S3唯一失败attempt取证发现已关闭，无剩余发现或债项，见[Reviewer002 PASS](docs/reviewer/reports/V0.2/S3-report-002.md)与[Leader002收口](docs/leader/reports/V0.2/S3-report-002.md)。V0.3/S1模型路由与健康亦已完成，S2未启动，尚未正式发布。
 
 V0.1/S3与V0.1基础代理已完成开发验收。 S3经一次有限规范纠正后取得[Reviewer002 PASS](docs/reviewer/reports/V0.1/S3-report-002.md)，唯一空行规范发现关闭，无未解决发现或债项；收口见[Leader002](docs/leader/reports/V0.1/S3-report-002.md)。累计返工：S1 2/2、S2 1/2、S3 1/2，各阶段独立记录。
 
-当前开发分支 `codex/v0.2-performance-baseline`，起点为V0.2/S3本地提交 `555b65d66a52d95791dba5445178e57a69b81d2c`，远端状态本轮未核验。V0.1提交d653e9c已推送阶段分支（协调者此前核验）。S2已本地提交；S3已本地提交；当前P1性能基线专项已验收收口，待协调者本地提交、不推送。没有正式发布，开发验收完成不等于发布。
+当前开发分支 `codex/v0.3-s1-routing-health`，起点为P1本地提交 `e231fda25879060fcd730f562982f06448f2ba11`。S1已验收收口，累计1/2，无债；待协调者本地提交、不推送。V0.3整体/MVP未完成，远端本轮未核验，没有正式发布。
 
 已验收：独立离线构建、最小复用组件、受限HTTP/1.1与文本JSON、单静态上游非流式代理、硬限额和分类deadline、信号停止，以及有界上游顺序复用与初始合成成本基线。下游继续每连接单请求；V0.2/S1新增SSE字节增量链路已独立验收；多后端、路由/队列、真实GPU和L4LB联调仍属后续阶段。S1与S2历史验收见[Leader S1-004](docs/leader/reports/V0.1/S1-report-004.md)、[Leader S2-003](docs/leader/reports/V0.1/S2-report-003.md)。
 
@@ -28,7 +28,7 @@ cmake --build build-local/builder/v0.2-s3/debug
 ctest --test-dir build-local/builder/v0.2-s3/debug --output-on-failure
 ```
 
-Release 与 AddressSanitizer/UndefinedBehaviorSanitizer：将上述三个命令的 `debug` 分别换为 `release`、`asan`。每个预设当前注册14项CTest（含StreamingParser/StreamingE2E/Backpressure及IntegrationDetectors/IntegrationAttempts）；S3实际验证范围见文末，注册数量不等于本轮全量执行结果；AssertionFailure 使用预期失败验证 Release 下检查仍有效。Pool、ReuseE2E、Runtime、GatewayE2E 和 MockBackend 需要本机 loopback socket 权限，会自动申请临时端口并回收自己的子进程；权限不足即失败，不跳过。
+Release 与 AddressSanitizer/UndefinedBehaviorSanitizer：将上述三个命令的 `debug` 分别换为 `release`、`asan`。每个预设当前注册17项CTest（含Routing、RoutingE2E及PerformanceDetectors）；S1独立初审三套各17/17，最后仅7处空行纠正按身份复用功能证据，详见文末；AssertionFailure 使用预期失败验证 Release 下检查仍有效。Pool、ReuseE2E、Runtime、GatewayE2E 和 MockBackend 需要本机 loopback socket 权限，会自动申请临时端口并回收自己的子进程；权限不足即失败，不跳过。
 
 独立审查使用 `cmake --preset debug -B build-local/reviewer/v0.2-s3/debug`（其他预设同理），随后通过 `cmake --build <目录>` 和 `ctest --test-dir <目录>` 操作；同时将 TMPDIR/TMP/TEMP/cache 指向 reviewer 自有目录。
 
@@ -103,7 +103,7 @@ Gateway 的构建和启动不应依赖同级 Server、L4LB 仓库的本地路径
 - [Builder 初次实现报告](docs/builder/reports/V0.1/S1-report-001.md)：初次命令、结果与证据。
 - [Builder 返工报告](docs/builder/reports/V0.1/S1-report-002.md)：严格状态范围与有界 chunk 大小行前置适配、最新回归证据。
 
-chunk 扩展先按完整原始大小行校验，再仅将大小与 CRLF 交给 llhttp；原始线缆/行预算和消费量保持独立计量。初次复用记录中的后置扩展校验描述属于旧实现，当前以 Approved 返工 001、Builder 002 和 Reviewer 002 的实现及验收说明为准。原设计/审查/返工中的阶段状态保留为历史快照，S1收口状态见Leader004；项目当前阶段以本页、ROADMAP和V0.2/S2最新Leader报告为准。
+chunk 扩展先按完整原始大小行校验，再仅将大小与 CRLF 交给 llhttp；原始线缆/行预算和消费量保持独立计量。初次复用记录中的后置扩展校验描述属于旧实现，当前以 Approved 返工 001、Builder 002 和 Reviewer 002 的实现及验收说明为准。原设计/审查/返工中的阶段状态保留为历史快照，S1收口状态见Leader004；项目当前阶段以本页、ROADMAP和V0.3/S1最新Leader报告为准。
 
 尚未提供项目自身的 `LICENSE` 文件；third_party 内保留各依赖许可证。
 
@@ -131,7 +131,7 @@ python3 tests/ProxyBaseline.py --gateway build-local/builder/s3/release/ai-infer
 
 ## 当前提交规则
 
-按用户最新指令“以后每次工作完成都提交，不推送”，每次工作验收/收口后由协调者完成本地提交，禁止自动推送；历史报告中的未提交/禁止提交仅描述当时授权与快照。V0.2/S1已本地提交2f7cf8；S2已本地提交d933e88；S3已本地提交555b65d；当前P1已验收收口、待本地提交，不推送；不推断S1远端状态或发布。
+按用户最新指令“以后每次工作完成都提交，不推送”，每次工作验收/收口后由协调者完成本地提交，禁止自动推送；历史报告中的未提交/禁止提交仅描述当时授权与快照。V0.2/S1已本地提交2f7cf8；S2已本地提交d933e88；S3已本地提交555b65d；P1已本地提交e231fda；当前V0.3/S1已验收收口、待本地提交，不推送；不推断S1远端状态或发布。
 
 ## V0.2/S1 流式链路（已独立验收）
 
@@ -167,7 +167,7 @@ Backpressure测试通过真实控制门观察三种定界各至少两轮暂停/�
 
 固定CPU llama-server b7481与Qwen2.5-0.5B-Instruct Q4_K_M完成真实直接/代理、长流/慢读、取消与故障恢复验证。资产隔离于build-local，不成为网关产品依赖；普通CTest离线、无模型要求，长run显式执行。产品src、固定输入及原HTTP/SSE子集保持，测试host没有成为产品管理API。
 
-最终验收明确复用初审独立真实601.662秒/1270请求、模拟310.192秒/650请求、三构建各13/13以及原期限18+18、关闭窗口20/20。最后一轮只修异常attempt记录与必要包装，新增独立快测2/2、真实完整短校准87条、模拟50正式请求及13类异常/4个晚到失败对照；当前CTest注册14项，未作当前14/14全量执行声明。复用身份和边界见[Reviewer002](docs/reviewer/reports/V0.2/S3-report-002.md)，初审FAIL及原丢失反例保持。
+最终验收明确复用初审独立真实601.662秒/1270请求、模拟310.192秒/650请求、三构建各13/13以及原期限18+18、关闭窗口20/20。最后一轮只修异常attempt记录与必要包装，新增独立快测2/2、真实完整短校准87条、模拟50正式请求及13类异常/4个晚到失败对照；当时CTest注册14项，未作当时14/14全量执行声明。复用身份和边界见[Reviewer002](docs/reviewer/reports/V0.2/S3-report-002.md)，初审FAIL及原丢失反例保持。
 
 两次返工分别为二进制清单33→36计数文档纠正和异常attempt取证修复，累计2/2，无债。取消证据覆盖网关资源、连接和固定CPU后端slot观察，不保证GPU内核停止；容量账本不等于RSS/内核内存，固定负载结果不推导严格公平或性能收益。
 
@@ -180,3 +180,27 @@ Backpressure测试通过真实控制门观察三种定界各至少两轮暂停/�
 新计量区分HTTP终态、EOF和校验结束，使用正式Release程序测成本；测试host仅单列资源诊断。保留失败及全部重复，分位数差不称单请求额外开销，闭环完成率不称容量极限。完整结果见[性能结果报告](docs/performance/V0.2/P1-results.md)，普通CTest不自动执行完整性能矩阵。
 
 - 2026-10-20：接续2026-10-19的P1独立初审PASS，由Leader002收口，0/2、无债。两角色72单元各19,380含预热attempt均无失败；PR约44ms及工具控制限制保留，不声明容量/优化收益。待协调者本地提交、不推送，V0.3/V0.4未启动。
+
+## V0.3/S1 当前阶段（2026-10-20）
+
+当前分支 `codex/v0.3-s1-routing-health`，起点为P1本地提交 `e231fda25879060fcd730f562982f06448f2ba11`，未推送。P1已本地提交；S1现已通过[Reviewer002 PASS](docs/reviewer/reports/V0.3/S1-report-002.md)，由[Leader002](docs/leader/reports/V0.3/S1-report-002.md)收口，**已完成**，累计返工1/2、无债。待协调者本地提交、不推送；V0.3整体/MVP未完成，S2尚未启动。
+
+[设计](docs/leader/designs/V0.3/S1-design.md)、[审查计划](docs/reviewer/reviews/V0.3/S1-review.md)与[Leader001](docs/leader/reports/V0.3/S1-report-001.md)固定静态模型映射、RR/Least Inflight、每实例隔离池和被动健康：失败阈值摘除、冷却后单真实请求试探，无自动重试。请求inflight在上游终结释放；旧单上游配置行为保留。
+
+Available初始仅为配置许可，恢复需完整HTTP成功，TCP可达不等于模型请求服务可用；不验证生成语义/GPU，空闲时不主动探测。S2排队/推理容量、S3综合验收及V0.4性能优化未开始，P1约44ms现象不在本阶段修复。完成后按用户规则本地提交、不推送。
+
+## V0.3/S1 模型路由配置与被动健康
+
+新配置见 [routing-example.json](config/routing-example.json)，使用原 `--config` 启动入口；示例端口需对应你自己的推理实例，静态 `model` 名必须与后端实际服务能力一致。`models` 与旧 `upstream_address`/`upstream_port` 互斥。旧JSON和程序内只填旧地址的配置继续单上游透传任意合法model，不启用摘除；原默认样例不变。
+
+`models` 为1..32组，总实例1..64，每组至少一个。组名为1..256个UTF-8字节，无ASCII控制字符；精确匹配请求model（不折叠大小写或空格、不重写别名），组名唯一。实例 `id` 组内唯一，为1..64字节ASCII字母/数字/`_.-`；`address` 是非0.0.0.0的数值IPv4，`port` 为1..65535，禁止自指（包括实际绑定端口复查）。组内地址端口不能重复，跨组可重复，但各组池和健康独立，不代表物理服务器容量隔离。
+
+`policy` 默认 `round_robin`，也可为 `least_inflight`。RR按配置顺序轮转；LI取尚未完成上游请求数最少的实例，平局轮转。请求数包括连接/上传/等待/未完成流，不包含idle连接，也不包含上游已完成后的下游排空。未知model返回404/`model_not_found`，无可选实例返回503/`no_available_backend`，均不访问后端。选中实例的连接池满返回503/`upstream_capacity`；本阶段无改选、重试、请求排队或推理准入额度。
+
+`health` 仅用于新模式，默认 `failure_threshold=2`（1..16）、`cooldown_ms=1000`（10..300000）。Available仅表示配置允许运行，启动时未验证模型加载。当前epoch完整合法HTTP 2xx清失败计数；3xx、401/403/404、5xx及明确上游传输/协议/上游deadline失败计数；其他4xx（含400/429）、客户端取消、本地预算/输出上限、池满、总deadline及背压暂停时response deadline中立。状态码只在完整HTTP终结后观察，不把TCP连接、响应头或流首片当成功。
+
+达到阈值后实例Ejected并清idle，旧在途请求可自然完成但不能恢复新epoch或重新归池。冷却到期且旧请求归零后，下一次普通请求可占唯一Trial资格；成功恢复Available，失败或中立（含取消/停止）重新冷却。没有后台探针/健康定时器，无流量就不恢复；试探请求自身可能失败，也不会自动重试。**健康只验证既有HTTP协议，不验证生成内容或SSE业务错误、模型权重、GPU/模型质量；完整2xx中的应用错误不在S1识别范围。**
+
+每实例沿用 `upstream_pool`：max_connections 1..256、max_idle 0..256且不超过前者；总实例数×max_connections≤1024。全局Session/内存预算不随实例数放大。配置≤65536字节、最大解析深度6；重复键、未知键、类型/范围错误和缺必填字段拒绝启动。Runtime内部测试快照含逐实例inflight/健康epoch及pool计数，无管理HTTP端点；聚合peakTotal为各池峰值之和的上界，不是同时峰值。
+
+新增快速测试 `Routing`（确定性时钟、租约和Session门控）及 `RoutingE2E`（受控四实例、配置负控、三轮恢复与停止）；普通CTest仍无真实模型或下载依赖。阶段最终验收以Leader/Reviewer报告为准。

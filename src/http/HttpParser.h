@@ -24,12 +24,15 @@ struct HttpMessage {
   std::string body;
   bool eofDelimited = false;
 };
+enum class ParseFailure { kNone, kProtocol, kResourceLimit, kInternal };
+
 struct ParseResult {
   ParseStatus status;
   std::size_t consumedBytes;
   unsigned errorStatus;
   const char* errorCode;
   llhttp_errno_t parserError;
+  ParseFailure failure = ParseFailure::kNone;
 };
 struct ParserLimits {
   std::size_t startLineBytes = 4096;
@@ -118,6 +121,7 @@ class HttpParser {
 
   ParseStatus status_ = ParseStatus::kNeedMore;
   unsigned errorStatus_ = 0;
+  ParseFailure failure_ = ParseFailure::kNone;
   const char* errorCode_ = "";
   llhttp_errno_t parserError_ = HPE_OK;
   WirePhase phase_ = WirePhase::kHeaders;
