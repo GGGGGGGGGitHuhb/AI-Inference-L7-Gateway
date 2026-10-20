@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### V0.2/P1 独立性能基线 — 已验收，待本地提交
+
+- 新增隔离性能工具、固定69cell+3控制、HTTP终态/EOF/TTFT分开计量、失败及中断attempt留存和结构化汇总，产品src与旧S3工具不变。
+- Builder最终698.969s、Reviewer独立751.520s，各72/72、19,380唯一含预热attempt、0失败；独立Release15/15、27.53s，两套数据各40,498项复算一致。
+- 两角色PR约44ms的负面观察保持；真实TTFT/E2E有运行波动，工具控制触发>15%差异/高CPU或>20%漂移，不支持网关容量极限或优化收益声明。
+- [结果报告](docs/performance/V0.2/P1-results.md)、[Reviewer001 PASS](docs/reviewer/reports/V0.2/P1-report-001.md)及[Leader002](docs/leader/reports/V0.2/P1-report-002.md)收口，P1初审通过、0/2、无债。S3已提交555b65d，以下旧待提交为历史快照；P1待协调者本地提交，不推送或发布，不启动V0.3/V0.4。
+
 ### V0.2/S3 真实集成与稳定性 — 已验收，待本地提交
 
 - 固定CPU llama-server b7481/Qwen0.5B Q4_K_M完成真实流/非流、取消分层、后端故障恢复与有限停止；新增隔离集成host/驱动、固定输入及检测器，产品src不变，普通CTest无模型依赖。

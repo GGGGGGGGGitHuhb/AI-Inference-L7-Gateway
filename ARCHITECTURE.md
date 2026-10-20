@@ -6,7 +6,7 @@
 
 用户于 2026-10-17 确认“独立项目、按需复用、最后联调”，于 2026-10-18 授权“你来决策吧”。Leader 据此采纳总体架构，并制定 V0.1/S1 的详细技术基线；后续阶段仍须形成各自设计。授权不等于已实现或已通过 Reviewer 验收。
 
-2026-10-17 首次编写前，仓库仅有空 README 和 Git 初始提交。2026-10-18，V0.1/S1 已通过 [Reviewer 002 独立复验](docs/reviewer/reports/V0.1/S1-report-002.md)，由 Leader 003 收口，最新状态澄清见 [Leader 004](docs/leader/reports/V0.1/S1-report-004.md)。已验收实现为S1最小组件/协议基础、S2单上游非流式代理及S3有界上游连接复用；V0.2/S1增量流链路及S2背压协同亦已接受，固定CPU真实后端亦完成验证，调度仍为后续目标。S1已提交bb318d8c并推送至阶段分支（协调者核验），未合并main或发布。S2按[返工002](docs/leader/reworks/rework-002.md)修正后通过[Reviewer002](docs/reviewer/reports/V0.1/S2-report-002.md)，由[Leader003](docs/leader/reports/V0.1/S2-report-003.md)收口；S2已本地提交3cb65244312d2feef563c2fd755ae8447d4589c5，远端状态本轮未核验。用户于2026-10-19启动S3，已通过[Reviewer002 PASS](docs/reviewer/reports/V0.1/S3-report-002.md)并由[Leader002](docs/leader/reports/V0.1/S3-report-002.md)收口；S3及V0.1开发验收已完成，提交d653e9c400517783d5d33025a0b66a737c8256eb已推送阶段分支（协调者2026-10-19核验同SHA）；当前V0.2/S1已获[Reviewer002 PASS](docs/reviewer/reports/V0.2/S1-report-002.md)并由[Leader002](docs/leader/reports/V0.2/S1-report-002.md)收口，累计1/2；V0.2/S1已本地提交2f7cf831a302fc87717afcae510e777187c7d0ef，远端本轮未核验；V0.2开发验收已完成；S2经[Reviewer001 PASS](docs/reviewer/reports/V0.2/S2-report-001.md)和[Leader002](docs/leader/reports/V0.2/S2-report-002.md)收口，累计0/2、无债；S2已本地提交d933e8892033a600b68ff5ac0db950dec5abea90、远端本轮未核验；S3经[Reviewer002 PASS](docs/reviewer/reports/V0.2/S3-report-002.md)和[Leader002](docs/leader/reports/V0.2/S3-report-002.md)收口，累计2/2、无债；待协调者本地提交、不推送，V0.3未开始。版本顺序、阶段范围和完成条件由 [ROADMAP.md](ROADMAP.md) 维护。
+2026-10-17 首次编写前，仓库仅有空 README 和 Git 初始提交。2026-10-18，V0.1/S1 已通过 [Reviewer 002 独立复验](docs/reviewer/reports/V0.1/S1-report-002.md)，由 Leader 003 收口，最新状态澄清见 [Leader 004](docs/leader/reports/V0.1/S1-report-004.md)。已验收实现为S1最小组件/协议基础、S2单上游非流式代理及S3有界上游连接复用；V0.2/S1增量流链路及S2背压协同亦已接受，固定CPU真实后端亦完成验证，调度仍为后续目标。S1已提交bb318d8c并推送至阶段分支（协调者核验），未合并main或发布。S2按[返工002](docs/leader/reworks/rework-002.md)修正后通过[Reviewer002](docs/reviewer/reports/V0.1/S2-report-002.md)，由[Leader003](docs/leader/reports/V0.1/S2-report-003.md)收口；S2已本地提交3cb65244312d2feef563c2fd755ae8447d4589c5，远端状态本轮未核验。用户于2026-10-19启动S3，已通过[Reviewer002 PASS](docs/reviewer/reports/V0.1/S3-report-002.md)并由[Leader002](docs/leader/reports/V0.1/S3-report-002.md)收口；S3及V0.1开发验收已完成，提交d653e9c400517783d5d33025a0b66a737c8256eb已推送阶段分支（协调者2026-10-19核验同SHA）；当前V0.2/S1已获[Reviewer002 PASS](docs/reviewer/reports/V0.2/S1-report-002.md)并由[Leader002](docs/leader/reports/V0.2/S1-report-002.md)收口，累计1/2；V0.2/S1已本地提交2f7cf831a302fc87717afcae510e777187c7d0ef，远端本轮未核验；V0.2开发验收已完成；S2经[Reviewer001 PASS](docs/reviewer/reports/V0.2/S2-report-001.md)和[Leader002](docs/leader/reports/V0.2/S2-report-002.md)收口，累计0/2、无债；S2已本地提交d933e8892033a600b68ff5ac0db950dec5abea90、远端本轮未核验；S3经[Reviewer002 PASS](docs/reviewer/reports/V0.2/S3-report-002.md)和[Leader002](docs/leader/reports/V0.2/S3-report-002.md)收口，累计2/2、无债；S3已本地提交555b65d66a52d95791dba5445178e57a69b81d2c，远端未核验；当前P1独立测量专项已验收收口、待本地提交，不推送，V0.3未开始。版本顺序、阶段范围和完成条件由 [ROADMAP.md](ROADMAP.md) 维护。
 
 ## 2. 项目目标与边界
 
@@ -213,3 +213,13 @@ Runtime统一拥有所有会话16MiB保守预约及默认4MiB的SSE固定数组�
 - 2026-10-19：用户启动S3并授权选择最小真实后端，采纳固定CPU小模型与分离稳定性矩阵；当前仅资产准备，不提前验收或发布。
 
 - 2026-10-19：S3最终独立PASS关闭异常attempt取证缺口，累计2/2。按身份复用独立真实601.662s/1270和模拟310.192s/650及三套13/13；最后一轮仅快测2/2与真实87/模拟50短校准。当前14入口不冒称全量实跑；V0.2开发验收完成，未发布，不启动V0.3。
+
+## V0.2/P1 已验收测量边界
+
+[P1设计](docs/leader/designs/V0.2/P1-design.md)只增加隔离性能测试工具和结果，不改变产品模块/协议。正式Release Gateway用于成本对照；同库RuntimeHost仅用于另列慢读资源诊断，不将100ms快照退休门混入发压。新客户端区分connect、send、首wire/body/content、HTTP终态、EOF和校验时刻，保留已知测量/工具开销。
+
+模拟确定正文做严格完整性比较；真实固定CPU推理保留后端单slot和prompt缓存等约束。三次重复与发压器控制用于描述波动和限制，不能把分布差当单请求因果成本或把闭环完成率当开放负载容量。已有S3持续可靠性证据不自动转成性能数字；P1已完成独立测量与复算，结果见[报告](docs/performance/V0.2/P1-results.md)。
+
+- 2026-10-19：依据用户先测基线授权采纳P1测量方案，无产品优化/新依赖/版本范围扩大，S3保持已完成。
+
+- 2026-10-20：接续2026-10-19的P1独立初审PASS，由Leader002收口，0/2、无债。两角色72单元各19,380含预热attempt均无失败；PR约44ms及工具控制限制保留，不声明容量/优化收益。待协调者本地提交、不推送，V0.3/V0.4未启动。

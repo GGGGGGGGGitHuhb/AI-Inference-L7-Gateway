@@ -10,7 +10,7 @@
 
 V0.1/S3与V0.1基础代理已完成开发验收。 S3经一次有限规范纠正后取得[Reviewer002 PASS](docs/reviewer/reports/V0.1/S3-report-002.md)，唯一空行规范发现关闭，无未解决发现或债项；收口见[Leader002](docs/leader/reports/V0.1/S3-report-002.md)。累计返工：S1 2/2、S2 1/2、S3 1/2，各阶段独立记录。
 
-当前开发分支 `codex/v0.2-s3-integration`，起点为V0.2/S2本地提交 `d933e8892033a600b68ff5ac0db950dec5abea90`，远端状态本轮未核验。V0.1提交d653e9c已推送阶段分支（协调者此前核验）。S2已本地提交；S3已验收收口、待协调者按既有授权本地提交，不推送。没有正式发布，开发验收完成不等于发布。
+当前开发分支 `codex/v0.2-performance-baseline`，起点为V0.2/S3本地提交 `555b65d66a52d95791dba5445178e57a69b81d2c`，远端状态本轮未核验。V0.1提交d653e9c已推送阶段分支（协调者此前核验）。S2已本地提交；S3已本地提交；当前P1性能基线专项已验收收口，待协调者本地提交、不推送。没有正式发布，开发验收完成不等于发布。
 
 已验收：独立离线构建、最小复用组件、受限HTTP/1.1与文本JSON、单静态上游非流式代理、硬限额和分类deadline、信号停止，以及有界上游顺序复用与初始合成成本基线。下游继续每连接单请求；V0.2/S1新增SSE字节增量链路已独立验收；多后端、路由/队列、真实GPU和L4LB联调仍属后续阶段。S1与S2历史验收见[Leader S1-004](docs/leader/reports/V0.1/S1-report-004.md)、[Leader S2-003](docs/leader/reports/V0.1/S2-report-003.md)。
 
@@ -131,7 +131,7 @@ python3 tests/ProxyBaseline.py --gateway build-local/builder/s3/release/ai-infer
 
 ## 当前提交规则
 
-按用户最新指令“以后每次工作完成都提交，不推送”，每次工作验收/收口后由协调者完成本地提交，禁止自动推送；历史报告中的未提交/禁止提交仅描述当时授权与快照。V0.2/S1已本地提交2f7cf8；S2已本地提交d933e88；当前S3已验收收口、待协调者本地提交，不推送；不推断S1远端状态或发布。
+按用户最新指令“以后每次工作完成都提交，不推送”，每次工作验收/收口后由协调者完成本地提交，禁止自动推送；历史报告中的未提交/禁止提交仅描述当时授权与快照。V0.2/S1已本地提交2f7cf8；S2已本地提交d933e88；S3已本地提交555b65d；当前P1已验收收口、待本地提交，不推送；不推断S1远端状态或发布。
 
 ## V0.2/S1 流式链路（已独立验收）
 
@@ -171,4 +171,12 @@ Backpressure测试通过真实控制门观察三种定界各至少两轮暂停/�
 
 两次返工分别为二进制清单33→36计数文档纠正和异常attempt取证修复，累计2/2，无债。取消证据覆盖网关资源、连接和固定CPU后端slot观察，不保证GPU内核停止；容量账本不等于RSS/内核内存，固定负载结果不推导严格公平或性能收益。
 
-[运行说明](tests/integration/README.md)、[来源变化](docs/references/V0.2-S3-changes.md)与[Leader002](docs/leader/reports/V0.2/S3-report-002.md)提供复现及审计入口。自有模型/host/gateway均已回收。V0.2开发验收完成、待本地提交，未推送或正式发布，不启动V0.3。
+[运行说明](tests/integration/README.md)、[来源变化](docs/references/V0.2-S3-changes.md)与[Leader002](docs/leader/reports/V0.2/S3-report-002.md)提供复现及审计入口。自有模型/host/gateway均已回收。V0.2开发验收成果已本地提交555b65d，远端本轮未核验，未正式发布；不启动V0.3。
+
+## V0.2/P1 性能基线专项（已独立验收）
+
+用户确认在开发V0.3前先测性能基线；P1独立于已关闭S3，返工从0/2开始。[设计](docs/leader/designs/V0.2/P1-design.md)、[审查计划](docs/reviewer/reviews/V0.2/P1-review.md)和[Leader001](docs/leader/reports/V0.2/P1-report-001.md)冻结有限模拟成本/并发/慢读资源与真实CPU模型TTFT/E2E/闭环完成率对照。现已获[Reviewer001 PASS](docs/reviewer/reports/V0.2/P1-report-001.md)和[Leader002收口](docs/leader/reports/V0.2/P1-report-002.md)，累计0/2，无债；未修改产品/优化，未启动V0.3/V0.4。
+
+新计量区分HTTP终态、EOF和校验结束，使用正式Release程序测成本；测试host仅单列资源诊断。保留失败及全部重复，分位数差不称单请求额外开销，闭环完成率不称容量极限。完整结果见[性能结果报告](docs/performance/V0.2/P1-results.md)，普通CTest不自动执行完整性能矩阵。
+
+- 2026-10-20：接续2026-10-19的P1独立初审PASS，由Leader002收口，0/2、无债。两角色72单元各19,380含预热attempt均无失败；PR约44ms及工具控制限制保留，不声明容量/优化收益。待协调者本地提交、不推送，V0.3/V0.4未启动。
