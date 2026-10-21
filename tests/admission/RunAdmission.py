@@ -114,6 +114,7 @@ class Gateway:
         path.write_text(json.dumps(config))
         self.process = subprocess.Popen([HOST, str(path), str(self.trace)], stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE, text=True)
+        self.stop_requested = False
         try:
             with selectors.DefaultSelector() as selector:
                 selector.register(self.process.stdout, selectors.EVENT_READ)
@@ -129,16 +130,24 @@ class Gateway:
             return {}
         return json.loads(self.trace.read_text())
 
-    def close(self):
-        if self.process.poll() is None:
+    def request_stop(self):
+        # The explicit shutdown probe and finally cleanup share one stop owner.
+        # A second SIGTERM during runtime destruction can outlive signalfd.
+        if not self.stop_requested and self.process.poll() is None:
             self.process.send_signal(signal.SIGTERM)
+            self.stop_requested = True
+
+    def close(self):
+        self.request_stop()
         try:
             out, err = self.process.communicate(timeout=5)
         except subprocess.TimeoutExpired:
             self.process.kill()
             self.process.communicate()
             raise
-        check(self.process.returncode == 0, err)
+        check(self.process.returncode == 0,
+              {'returncode': self.process.returncode,
+               'stop_requested': self.stop_requested, 'stderr': err[:4096]})
         check('AddressSanitizer' not in err and 'runtime error:' not in err, err)
         state = self.state()
         for key in ('final_queue', 'final_bytes', 'final_inflight', 'final_sessions', 'final_reserved', 'final_timers'):
@@ -231,7 +240,7 @@ def negative_checks(folder, backends):
         queued = connect(gateway.port)
         sockets.append(queued)
         wait_for(lambda: gateway.state().get('final_queue') == 1)
-        gateway.process.send_signal(signal.SIGTERM)
+        gateway.request_stop()
         status, body = response(queued)
         check(status == 503 and b'gateway_stopping' in body)
     finally:
