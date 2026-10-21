@@ -1,0 +1,55 @@
+{
+  "listen_port": 8080,
+  "max_connections": 128,
+  "max_reserved_bytes": 2147483648,
+  "models": [
+    {
+      "name": "gateway-qwen",
+      "policy": "round_robin",
+      "backends": [
+        {
+          "id": "backend-0",
+          "address": "127.0.0.1",
+          "port": 18081
+        },
+        {
+          "id": "backend-1",
+          "address": "127.0.0.1",
+          "port": 18082
+        }
+      ]
+    }
+  ],
+  "health": {
+    "failure_threshold": 2,
+    "cooldown_ms": 1000
+  },
+  "upstream_pool": {
+    "max_connections": 32,
+    "max_idle": 0,
+    "idle_timeout_ms": 5000
+  },
+  "stream_buffer": {
+    "high_water_bytes": 196608,
+    "low_water_bytes": 65536,
+    "max_total_bytes": 33554432
+  },
+  "timeouts_ms": {
+    "request": 5000,
+    "connect": 1000,
+    "upstream_write": 2000,
+    "response": 10000,
+    "stream_idle": 5000,
+    "downstream_write": 10000,
+    "total": 15000,
+    "shutdown": 3000
+  },
+  "admission": {
+    "max_inflight": 2,
+    "max_inflight_per_backend": 1,
+    "max_queue_requests_per_model": 8,
+    "max_queue_bytes_per_model": 65536,
+    "queue_timeout_ms": 100
+  },
+  "listen_address": "127.0.0.1"
+}
