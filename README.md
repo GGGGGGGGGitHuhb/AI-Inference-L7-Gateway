@@ -1,6 +1,6 @@
 # AI Inference L7 Gateway
 
-> 当前状态（2026-10-20）：V0.3/S3及V0.3/MVP **开发验收完成**，独立[Reviewer002 PASS](docs/reviewer/reports/V0.3/S3-report-002.md)，[Leader003收口](docs/leader/reports/V0.3/S3-report-003.md)，累计返工2/2，无残余发现或债务。当前分支 `codex/v0.3-s3-mvp-acceptance`，起点S2提交 `d89de57eb6be0106bccd24432b2559d342ed8b79`；S3待协调者本地提交、不推送。尚未发布，不声明生产能力，V0.4/L4LB联调未启动；旧日期条目及Approved待实现文字是历史快照。
+> 当前状态（2026-10-21）：**V0.4/S1 公平性能基线已完成开发验收**，累计返工4/4。[Reviewer002 PASS](docs/reviewer/reports/V0.4/S1-report-002.md)关闭全部发现，无待接受债务；[Leader006](docs/leader/reports/V0.4/S1-report-006.md)收口。独立三预设各21/21、完整57cell/7590ID通过；数据仍受发压能力与共享CPU限制，不能声称策略因果收益或网关容量。当前待协调者本地提交、不推送；V0.4/S2未开始，V0.4整体未完成或发布。
 
 面向在线文本推理服务的独立 C++ 七层网关项目，计划围绕流式代理、资源控制和请求调度建立可复现的工程实验。
 
@@ -12,7 +12,7 @@
 
 V0.1/S3与V0.1基础代理已完成开发验收。 S3经一次有限规范纠正后取得[Reviewer002 PASS](docs/reviewer/reports/V0.1/S3-report-002.md)，唯一空行规范发现关闭，无未解决发现或债项；收口见[Leader002](docs/leader/reports/V0.1/S3-report-002.md)。累计返工：S1 2/2、S2 1/2、S3 1/2，各阶段独立记录。
 
-当前开发分支 `codex/v0.3-s3-mvp-acceptance`，起点为S2本地提交d89de57。S2已验收并本地提交d89de57、0/2、无债，未核验推送。V0.3整体/MVP开发验收已完成，没有正式发布。
+当前开发分支 `codex/v0.4-s1-performance-baseline`，起点为S3本地提交4426608。S2已验收并本地提交d89de57、0/2、无债，未核验推送。V0.3整体/MVP开发验收已完成，没有正式发布。
 
 已验收：独立离线构建、最小复用组件、受限HTTP/1.1与文本JSON、单静态上游非流式代理、硬限额和分类deadline、信号停止，以及有界上游顺序复用与初始合成成本基线。下游继续每连接单请求；V0.2/S1新增SSE字节增量链路已独立验收；V0.3/S1多实例路由与健康、S2准入排队已验收，真实GPU和L4LB联调仍属后续阶段。S1与S2历史验收见[Leader S1-004](docs/leader/reports/V0.1/S1-report-004.md)、[Leader S2-003](docs/leader/reports/V0.1/S2-report-003.md)。
 
@@ -30,7 +30,7 @@ cmake --build build-local/builder/v0.2-s3/debug
 ctest --test-dir build-local/builder/v0.2-s3/debug --output-on-failure
 ```
 
-Release 与 AddressSanitizer/UndefinedBehaviorSanitizer：将上述三个命令的 `debug` 分别换为 `release`、`asan`。每个预设当前注册19项CTest（新增Admission、AdmissionE2E）；S2独立三套各19/19，另有独立有限混合与生命周期补充，详见S2收口报告；AssertionFailure 使用预期失败验证 Release 下检查仍有效。Pool、ReuseE2E、Runtime、GatewayE2E 和 MockBackend 需要本机 loopback socket 权限，会自动申请临时端口并回收自己的子进程；权限不足即失败，不跳过。
+Release 与 AddressSanitizer/UndefinedBehaviorSanitizer：将上述三个命令的 `debug` 分别换为 `release`、`asan`。每个预设当前注册21项CTest；V0.4/S1独立Debug/Release/ASan+UBSan各21/21，详见当前收口报告；AssertionFailure 使用预期失败验证 Release 下检查仍有效。Pool、ReuseE2E、Runtime、GatewayE2E 和 MockBackend 需要本机 loopback socket 权限，会自动申请临时端口并回收自己的子进程；权限不足即失败，不跳过。
 
 独立审查使用 `cmake --preset debug -B build-local/reviewer/v0.2-s3/debug`（其他预设同理），随后通过 `cmake --build <目录>` 和 `ctest --test-dir <目录>` 操作；同时将 TMPDIR/TMP/TEMP/cache 指向 reviewer 自有目录。
 
@@ -105,7 +105,7 @@ Gateway 的构建和启动不应依赖同级 Server、L4LB 仓库的本地路径
 - [Builder 初次实现报告](docs/builder/reports/V0.1/S1-report-001.md)：初次命令、结果与证据。
 - [Builder 返工报告](docs/builder/reports/V0.1/S1-report-002.md)：严格状态范围与有界 chunk 大小行前置适配、最新回归证据。
 
-chunk 扩展先按完整原始大小行校验，再仅将大小与 CRLF 交给 llhttp；原始线缆/行预算和消费量保持独立计量。初次复用记录中的后置扩展校验描述属于旧实现，当前以 Approved 返工 001、Builder 002 和 Reviewer 002 的实现及验收说明为准。原设计/审查/返工中的阶段状态保留为历史快照，S1收口状态见Leader004；项目当前阶段以本页、ROADMAP和V0.3/S1最新Leader报告为准。
+chunk 扩展先按完整原始大小行校验，再仅将大小与 CRLF 交给 llhttp；原始线缆/行预算和消费量保持独立计量。初次复用记录中的后置扩展校验描述属于旧实现，当前以 Approved 返工 001、Builder 002 和 Reviewer 002 的实现及验收说明为准。原设计/审查/返工中的阶段状态保留为历史快照，S1收口状态见Leader004；项目当前阶段以本页、ROADMAP和V0.4/S1最新Leader报告为准。
 
 尚未提供项目自身的 `LICENSE` 文件；third_party 内保留各依赖许可证。
 
@@ -133,7 +133,7 @@ python3 tests/ProxyBaseline.py --gateway build-local/builder/s3/release/ai-infer
 
 ## 当前提交规则
 
-按用户最新指令“以后每次工作完成都提交，不推送”，每次工作验收/收口后由协调者完成本地提交，禁止自动推送；历史报告中的未提交/禁止提交仅描述当时授权与快照。V0.2/S1已本地提交2f7cf8；S2已本地提交d933e88；S3已本地提交555b65d；P1已本地提交e231fda；V0.3/S1已本地提交b704df2；V0.3/S2已本地提交d89de57，当前S3已验收、待本地提交不推送；不推断S1远端状态或发布。
+按用户最新指令“以后每次工作完成都提交，不推送”，每次工作验收/收口后由协调者完成本地提交，禁止自动推送；历史报告中的未提交/禁止提交仅描述当时授权与快照。V0.2/S1已本地提交2f7cf8；S2已本地提交d933e88；S3已本地提交555b65d；P1已本地提交e231fda；V0.3/S1已本地提交b704df2；V0.3/S2已本地提交d89de57，V0.3/S3已本地提交4426608，当前V0.4/S1已完成开发验收、待本地提交；不推断S1远端状态或发布。
 
 ## V0.2/S1 流式链路（已独立验收）
 
@@ -240,3 +240,11 @@ Waiting截止为 `min(accept + total, enqueue + queue_timeout)`，total从接收
 独立Reviewer002 PASS，累计2/2：第1轮纠正文档歧义，第2轮修复新验收工具运行期128MiB存储预算。复用修复前独立debug/release/asan各20/20及真实28条（26成功含2预热、2取消）、模拟29条（19成功、2取消、2后端失败、1队列超时、5拒绝）作为产品/矩阵功能证据。新预算经7类负控、正常host、三套MvpDetectors及Reviewer自写3负控验证；没有在新预算下重跑正式矩阵。
 
 账本100ms、资源1s为采样目标周期，含调度/轮询/写盘开销，非硬实时“至少每100ms”；峰值观察不独立证明瞬时上界。真实慢读未触高水，CPU双实例共享资源，小样本不证明容量/SLO/长期公平或性能收益；P1约44ms现象未修。见[验收记录](docs/acceptance/V0.3/S3-results.md)和[操作说明](tests/mvp/README.md)。V0.3/MVP开发验收完成、未发布，后续阶段未启动。
+
+## V0.4/S1 公平性能基线（已独立验收）
+
+新增独立实验工具覆盖连接成本、慢读背压、RR/Least Inflight、准入排队及固定CPU真实后端。每角色57cell已包含三重复，7104正式与486预热分别统计；正常CTest只执行短检测器，完整矩阵需显式运行，资产与命令见[实验操作说明](tests/experiments/README.md)。
+
+[结果与双角色比较](docs/performance/V0.4/S1-results.md)、[独立验收](docs/reviewer/reports/V0.4/S1-report-002.md)、[Leader收口](docs/leader/reports/V0.4/S1-report-006.md)保存全部分母、负面结果及工具限制。LI在固定异质合成负载下的达标goodput较高，增加队列在固定SLO下反而降低goodput；发压敏感/客户端CPU标记触发，不能外推策略因果收益、生产容量或真实GPU效果。N仅调整合成后端NODELAY作诊断，产品未优化。
+
+测试修复区分high触发与合法迟滞观察，并分别验证finished活对象仍保留16MiB预约、正常析构后全归零；仅改测试，产品生命周期不变。原Release联合断言的现场子值未知，历史FAIL/Stop保留，不能追溯宣称根因已复现。S1累计4/4、无债，S2未启动。

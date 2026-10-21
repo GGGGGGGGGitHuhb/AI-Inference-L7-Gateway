@@ -31,6 +31,10 @@ struct ConnectionPoolTestAccess {
 
 namespace gateway::gateway_api {
 struct StreamingSessionTestAccess {
+  static void readUpstream(ProxySession& session) {
+    session.onUpstreamEvent(EPOLLIN);
+  }
+
   static bool paused(const ProxySession& session) {
     return session.upstreamPaused_;
   }
@@ -281,17 +285,44 @@ void testSlowReader(int framing, bool resetUpstream = false, int stopMode = 0) {
   std::uint64_t previousToken = Access::token(*session);
   bool upstreamClosed = false;
   for (int cycle = 0; cycle < (resetUpstream ? 1 : 2); ++cycle) {
+    const auto beforePause = runtime.snapshot().budget.pauses;
+    std::size_t triggerPending = 0;
+    std::uint64_t triggerToken = 0;
     while (!Access::paused(*session) && Clock::now() < deadline) {
       sendAvailable(upstream.fd(), wire, sent);
-      runtime.pollOnce(1);
+      // 在真实上游处理返回、同轮下游写之前取证，不能用历史全局峰代替。
+      Access::readUpstream(*session);
+      if (Access::paused(*session)) {
+        triggerPending = Access::pending(*session);
+        triggerToken = Access::token(*session);
+        runtime.pollOnce(1);
+      }
     }
-    GATEWAY_CHECK(Access::paused(*session));
     printStorageDiagnostics();
     const auto calls = Access::reads(*session);
     const auto bytes = Access::bytes(*session);
-    GATEWAY_CHECK(Access::token(*session) == 0 &&
-                  Access::pending(*session) >=
-                      config.streamBuffer.highWaterBytes);
+    const auto observed = runtime.snapshot().budget;
+    std::cout << "pause framing=" << framing << " reset=" << resetUpstream
+              << " stopMode=" << stopMode << " cycle=" << cycle
+              << " paused=" << Access::paused(*session)
+              << " token=" << Access::token(*session)
+              << " pending=" << Access::pending(*session)
+              << " high=" << config.streamBuffer.highWaterBytes
+              << " low=" << config.streamBuffer.lowWaterBytes
+              << " triggerPending=" << triggerPending
+              << " triggerToken=" << triggerToken
+              << " pauses=" << observed.pauses
+              << " resumes=" << observed.resumes << " reads=" << calls
+              << " bytes=" << bytes << std::endl;
+    GATEWAY_CHECK(triggerPending >= config.streamBuffer.highWaterBytes);
+    GATEWAY_CHECK(triggerToken == 0);
+    GATEWAY_CHECK(observed.pauses == beforePause + 1);
+    GATEWAY_CHECK(Access::paused(*session));
+    GATEWAY_CHECK(Access::token(*session) == 0);
+    // 下游可能已在同一poll消费部分数据；迟滞只要求尚未降至low。
+    GATEWAY_CHECK(Access::pending(*session) >
+                  config.streamBuffer.lowWaterBytes);
+    GATEWAY_CHECK(Access::pending(*session) <= http::StreamOutput::kCapacity);
     gateway_api::RuntimeTestAccess::staleEvent(runtime, previousToken);
     if (resetUpstream) {
       linger reset{1, 0};
