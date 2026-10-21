@@ -53,6 +53,16 @@ struct EventLoopTestAccess {
 };
 }  // namespace gateway::net
 
+namespace gateway::upstream {
+struct ConnectionPoolTestAccess {
+  static std::uint64_t token(ConnectionPool& pool,
+                             const ConnectionLease& lease) {
+    auto* entry = pool.findLease(lease.id(), lease.generation());
+    return entry ? entry->channel.token() : 0;
+  }
+};
+}  // namespace gateway::upstream
+
 namespace gateway::gateway_api {
 struct ProxySessionTestAccess {
   static void downstream(ProxySession& session, std::uint32_t events) {
@@ -81,6 +91,31 @@ struct ProxySessionTestAccess {
   }
 };
 struct StreamingSessionTestAccess {
+  static bool reservationValid(const ProxySession& session) {
+    return session.reservation_.valid();
+  }
+
+  static bool streamLeaseValid(const ProxySession& session) {
+    return session.streamCapacity_.valid();
+  }
+
+  static bool upstreamLeaseValid(const ProxySession& session) {
+    return session.upstreamLease_.valid();
+  }
+
+  static std::uint64_t token(ProxySession& session) {
+    return upstream::ConnectionPoolTestAccess::token(session.pool_,
+                                                     session.upstreamLease_);
+  }
+
+  static std::uint64_t reads(const ProxySession& session) {
+    return session.upstreamReadCalls_;
+  }
+
+  static std::uint64_t bytes(const ProxySession& session) {
+    return session.upstreamReadBytes_;
+  }
+
   static void validateHeaders(ProxySession& session, std::string_view headers) {
     GATEWAY_CHECK(session.responseParser_->parseBytes(headers).status ==
                   http::ParseStatus::kNeedMore);
@@ -753,6 +788,204 @@ void startStreamRequest(SessionFixture& fixture, bool upload = true) {
 void feedStream(SessionFixture& fixture, std::string bytes) {
   fixture.io.upstreamInput = std::move(bytes);
   ProxySessionTestAccess::upstream(*fixture.session, EPOLLIN);
+}
+
+bool validPausedSnapshot(bool paused, std::uint64_t token, std::size_t pending,
+                         std::size_t highTrigger, std::uint64_t pauses) {
+  return paused && token == 0 && pending > 8192 &&
+         pending <= http::StreamOutput::kCapacity && highTrigger >= 32768 &&
+         pauses == 1;
+}
+
+void checkHysteresisLevel(SessionFixture& fixture, std::size_t level,
+                          std::size_t trigger) {
+  using Access = gateway_api::StreamingSessionTestAccess;
+  const auto before = Access::pending(*fixture.session);
+  GATEWAY_CHECK(before > level);
+  fixture.io.blockClient = false;
+  fixture.io.clientSendBudget = before - level;
+  ProxySessionTestAccess::downstream(*fixture.session, EPOLLOUT);
+  GATEWAY_CHECK(Access::pending(*fixture.session) == level);
+  GATEWAY_CHECK(validPausedSnapshot(Access::paused(*fixture.session),
+                                    Access::token(*fixture.session), level,
+                                    trigger, fixture.budget.snapshot().pauses));
+  std::cout << "hysteresis pending=" << level << " paused=1 token=0"
+            << std::endl;
+}
+
+std::string verifyStreamWire(const std::string& wire) {
+  http::HttpParser buffered(http::MessageKind::kResponse);
+  const auto rejected = buffered.parseBytes(kStreamHeaders);
+  std::cout << "buffered SSE status=" << static_cast<int>(rejected.status)
+            << " error=" << (rejected.errorCode ? rejected.errorCode : "none")
+            << std::endl;
+  GATEWAY_CHECK(rejected.status == http::ParseStatus::kRejected);
+  GATEWAY_CHECK(rejected.errorCode &&
+                std::string(rejected.errorCode) == "unsupported_stream");
+
+  http::HttpParser parser(http::MessageKind::kResponse, {},
+                          http::ResponseMode::kAllowEventStream);
+  std::string body;
+  std::size_t offset = 0;
+  auto status = http::ParseStatus::kNeedMore;
+  while (offset < wire.size() && status != http::ParseStatus::kComplete) {
+    const auto count = std::min<std::size_t>(16384, wire.size() - offset);
+    const auto result =
+        parser.parseBytes(std::string_view(wire).substr(offset, count));
+    const auto fragment = parser.bodyFragment();
+    // 片段借用只在本次parse期间有效，必须立即复制，再推进wire消费位置。
+    body.append(fragment);
+    std::cout << "stream verification status="
+              << static_cast<int>(result.status)
+              << " errorStatus=" << result.errorStatus
+              << " error=" << (result.errorCode ? result.errorCode : "none")
+              << " consumed=" << result.consumedBytes << " offset=" << offset
+              << " wire=" << wire.size() << " decoded=" << parser.decodedTotal()
+              << " fragment=" << fragment.size() << std::endl;
+    GATEWAY_CHECK(result.status != http::ParseStatus::kRejected);
+    GATEWAY_CHECK(result.consumedBytes > 0 && result.consumedBytes <= count);
+    offset += result.consumedBytes;
+    status = result.status;
+  }
+  GATEWAY_CHECK(status == http::ParseStatus::kComplete);
+  GATEWAY_CHECK(offset == wire.size());
+  GATEWAY_CHECK(parser.decodedTotal() == body.size());
+  GATEWAY_CHECK(parser.message().body.empty());
+  return body;
+}
+
+void printLifecycleSnapshot(const char* stage, SessionFixture& fixture) {
+  using Access = gateway_api::StreamingSessionTestAccess;
+  const auto resources = fixture.budget.snapshot();
+  const auto pool = fixture.pool->snapshot();
+  const auto* session = fixture.session.get();
+  std::cout
+      << "lifecycle stage=" << stage << " reserved=" << resources.reserved
+      << " streamCapacity=" << resources.streamCapacity
+      << " pending=" << resources.pending << " paused=" << resources.paused
+      << " session=" << (session != nullptr)
+      << " finished=" << (session && session->finished())
+      << " reservation=" << (session && Access::reservationValid(*session))
+      << " streamLease=" << (session && Access::streamLeaseValid(*session))
+      << " upstreamLease=" << (session && Access::upstreamLeaseValid(*session))
+      << " hasUpstream=" << (session && session->hasUpstream())
+      << " token=" << (session ? Access::token(*fixture.session) : 0)
+      << " timers=" << fixture.loop.timerCount()
+      << " poolLeased=" << pool.leased << " poolTotal=" << pool.total
+      << std::endl;
+}
+
+class HysteresisDiagnosticGuard {
+ public:
+  explicit HysteresisDiagnosticGuard(SessionFixture& fixture)
+      : fixture_(fixture) {}
+
+  ~HysteresisDiagnosticGuard();
+
+ private:
+  SessionFixture& fixture_;
+};
+
+HysteresisDiagnosticGuard::~HysteresisDiagnosticGuard() {
+  if (std::uncaught_exceptions() == 0) return;
+  printLifecycleSnapshot("failed-before-session-destruction", fixture_);
+  // 原断言已失败；等价执行作用域清理，仅取证，不吞异常、不提前洗零。
+  fixture_.session.reset();
+  printLifecycleSnapshot("failed-after-session-destruction", fixture_);
+}
+
+std::size_t fdCount();
+
+void testStreamingHysteresis() {
+  using Access = gateway_api::StreamingSessionTestAccess;
+  SessionFixture fixture;
+  HysteresisDiagnosticGuard diagnostic(fixture);
+  const auto fixtureDescriptors = fdCount();
+  fixture.config.streamBuffer.highWaterBytes = 32768;
+  fixture.config.streamBuffer.lowWaterBytes = 8192;
+  startStreamRequest(fixture);
+  const auto oldToken = Access::token(*fixture.session);
+  GATEWAY_CHECK(oldToken != 0);
+  fixture.io.blockClient = true;
+  const std::string body(32768, 'h');
+  // 真实chunk解析到high，但尚未收到尾部，不能以完整响应解除暂停。
+  feedStream(fixture, kStreamHeaders + "8001\r\n" + body);
+  const auto trigger = Access::pending(*fixture.session);
+  GATEWAY_CHECK(validPausedSnapshot(Access::paused(*fixture.session),
+                                    Access::token(*fixture.session), trigger,
+                                    trigger, fixture.budget.snapshot().pauses));
+  const auto reads = Access::reads(*fixture.session);
+  const auto bytes = Access::bytes(*fixture.session);
+  std::cout << "hysteresis high=" << trigger
+            << " pauses=1 token=0 reads=" << reads << " bytes=" << bytes
+            << std::endl;
+  checkHysteresisLevel(fixture, 16384, trigger);
+  ProxySessionTestAccess::upstream(*fixture.session, EPOLLIN);
+  GATEWAY_CHECK(Access::reads(*fixture.session) == reads);
+  GATEWAY_CHECK(Access::bytes(*fixture.session) == bytes);
+  checkHysteresisLevel(fixture, 8193, trigger);
+  GATEWAY_CHECK(fixture.budget.snapshot().resumes == 0);
+  fixture.io.clientSendBudget = 1;
+  ProxySessionTestAccess::downstream(*fixture.session, EPOLLOUT);
+  GATEWAY_CHECK(Access::pending(*fixture.session) == 8192);
+  GATEWAY_CHECK(!Access::paused(*fixture.session));
+  const auto newToken = Access::token(*fixture.session);
+  GATEWAY_CHECK(newToken != 0 && newToken != oldToken);
+  GATEWAY_CHECK(fixture.budget.snapshot().resumes == 1);
+  printLifecycleSnapshot("before-upstream-completion", fixture);
+  fixture.io.upstreamInput += "z\r\n0\r\n\r\n";
+  net::EventLoopTestAccess::dispatch(fixture.loop, oldToken, EPOLLIN);
+  GATEWAY_CHECK(Access::reads(*fixture.session) == reads);
+  GATEWAY_CHECK(Access::bytes(*fixture.session) == bytes);
+  net::EventLoopTestAccess::dispatch(fixture.loop, newToken, EPOLLIN);
+  GATEWAY_CHECK(Access::reads(*fixture.session) > reads);
+  fixture.io.clientSendBudget = 16777216;
+  fixture.flushClient();
+  printLifecycleSnapshot("after-flush", fixture);
+  fixture.checkCleanup();
+  printLifecycleSnapshot("after-checkCleanup", fixture);
+  const auto decoded = verifyStreamWire(fixture.io.sentClient);
+  GATEWAY_CHECK(decoded.size() == 32769);
+  GATEWAY_CHECK(decoded == body + "z");
+  printLifecycleSnapshot("after-body-before-resource-assertion", fixture);
+  const auto snapshot = fixture.budget.snapshot();
+  GATEWAY_CHECK(fixture.session->finished());
+  GATEWAY_CHECK(Access::reservationValid(*fixture.session));
+  GATEWAY_CHECK(snapshot.reserved == gateway_api::BufferBudget::kSessionBytes);
+  GATEWAY_CHECK(snapshot.streamCapacity == 0);
+  GATEWAY_CHECK(snapshot.pending == 0);
+  GATEWAY_CHECK(snapshot.paused == 0);
+  GATEWAY_CHECK(!Access::streamLeaseValid(*fixture.session));
+  GATEWAY_CHECK(!Access::upstreamLeaseValid(*fixture.session));
+  GATEWAY_CHECK(Access::token(*fixture.session) == 0);
+  GATEWAY_CHECK(fixture.loop.timerCount() == 0);
+  GATEWAY_CHECK(fixture.pool->snapshot().leased == 0);
+  GATEWAY_CHECK(fixture.pool->snapshot().total == 0);
+  GATEWAY_CHECK(!validPausedSnapshot(true, 9, 16384, trigger, 1));
+  GATEWAY_CHECK(!validPausedSnapshot(true, 0, 16384, 32767, 1));
+  GATEWAY_CHECK(!validPausedSnapshot(false, newToken, 8193, trigger, 1));
+  GATEWAY_CHECK(!validPausedSnapshot(true, 0, 8192, trigger, 1));
+  GATEWAY_CHECK(!validPausedSnapshot(true, 0, 16384, trigger, 0));
+  // 正文、迟滞和负控均已验证；仅现在结束对象生命周期归还session预约。
+  fixture.session.reset();
+  printLifecycleSnapshot("normal-after-session-destruction", fixture);
+  const auto destroyed = fixture.budget.snapshot();
+  GATEWAY_CHECK(destroyed.reserved == 0);
+  GATEWAY_CHECK(destroyed.streamCapacity == 0);
+  GATEWAY_CHECK(destroyed.pending == 0);
+  GATEWAY_CHECK(destroyed.paused == 0);
+  GATEWAY_CHECK(fixture.loop.timerCount() == 0);
+  GATEWAY_CHECK(fixture.pool->snapshot().leased == 0);
+  GATEWAY_CHECK(fixture.pool->snapshot().total == 0);
+  // peer和EventLoop仍存活；仅本session的下游fd应从fixture初始值消失。
+  std::cout << "hysteresis fd_initial=" << fixtureDescriptors
+            << " fd_after_session=" << fdCount() << std::endl;
+  GATEWAY_CHECK(fdCount() + 1 == fixtureDescriptors);
+  fixture.session.reset();
+  GATEWAY_CHECK(fixture.budget.snapshot().reserved == 0);
+  std::cout << "hysteresis low=8192 newToken=" << newToken
+            << " complete_body=" << decoded.size()
+            << " resources_zero=1 illegal_snapshots_rejected=5" << std::endl;
 }
 
 void testStreamingCommitAndEarly() {
@@ -1636,6 +1869,7 @@ int main() {
     testClosing();
     testReuseSessionBoundaries();
     testReusedFailureAndDeadlines();
+    testStreamingHysteresis();
     testStreamingCommitAndEarly();
     testStreamingLimitsAndTime();
     testStreamingCompletionDeadlines();
