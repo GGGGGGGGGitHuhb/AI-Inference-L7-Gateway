@@ -1,6 +1,6 @@
 # AI Inference L7 Gateway
 
-> 当前状态（2026-10-29）：**V0.5/S1与S2均已完成开发验收，V0.5开发验收完成，未发布。** S2由[Reviewer001 PASS](docs/reviewer/reports/V0.5/S2-report-001.md)与[Leader002收口](docs/leader/reports/V0.5/S2-report-002.md)：双角色各18/18、4536请求及偏斜8请求通过，Release回归各21/21，无遗留债务。[双角色结果](docs/performance/V0.5/S2-results.md)保留CPU/延迟差值方向不一致的限制，不声明固定开销、生产容量或扩容收益。
+> 当前状态（2026-10-29）：**V0.6容量基线与瓶颈优化已完成规划，S1待实现，尚未执行新压测或产品优化。** V0.5开发验收完成、未发布。新版本按“容量摸底与归因→单项优化→组合复验”推进，见[版本计划](docs/leader/designs/V0.6/version-plan.md)、[S1设计](docs/leader/designs/V0.6/S1-design.md)与[规划报告](docs/leader/reports/V0.6/S1-report-001.md)。
 
 面向在线文本推理服务的独立 C++ 七层网关项目，计划围绕流式代理、资源控制和请求调度建立可复现的工程实验。
 
@@ -12,7 +12,7 @@
 
 V0.1/S3与V0.1基础代理已完成开发验收。 S3经一次有限规范纠正后取得[Reviewer002 PASS](docs/reviewer/reports/V0.1/S3-report-002.md)，唯一空行规范发现关闭，无未解决发现或债项；收口见[Leader002](docs/leader/reports/V0.1/S3-report-002.md)。累计返工：S1 2/2、S2 1/2、S3 1/2，各阶段独立记录。
 
-当前开发分支 `codex/v0.5-s2-cost-boundaries`，起点为已验收并推送的V0.5/S1提交92fcf3d。V0.3/MVP与V0.4均已开发验收完成；V0.5/S2状态见页首，没有正式发布。
+当前规划分支 `codex/v0.6-performance-plan`，起点为54c3346。V0.1～V0.5已完成开发验收；V0.6进入性能优化规划，尚未实施，没有正式发布。
 
 已验收：独立离线构建、最小复用组件、受限HTTP/1.1与文本JSON、单静态上游非流式代理、硬限额和分类deadline、信号停止，以及有界上游顺序复用与初始合成成本基线。下游继续每连接单请求；V0.2/S1新增SSE字节增量链路已独立验收；V0.3/S1多实例路由与健康、S2准入排队已验收，真实GPU收益仍未验证；L4LB联调现已进入V0.5/S1。S1与S2历史验收见[Leader S1-004](docs/leader/reports/V0.1/S1-report-004.md)、[Leader S2-003](docs/leader/reports/V0.1/S2-report-003.md)。
 
@@ -262,3 +262,7 @@ S1公平基线与S2单一等待预算实验均完成；[操作与三份完整配
 ## V0.5/S2 拓扑成本与长流边界
 
 [固定矩阵与复现说明](tests/l4lb_cost/README.md)比较直连单Gateway、客户端均分双Gateway及L4接入双Gateway的延迟、CPU和各段用户态TCP载荷字节；单列长流连接数均衡但在途偏斜的构造反例。固定60req/s本机合成观察不证明横向扩展容量或真实推理收益。当前验收状态见页首。
+
+## V0.6 性能优化规划
+
+功能验收后继续进行容量摸底和性能优化，不将V0.5固定60req/s视为容量上限。[版本计划](docs/leader/designs/V0.6/version-plan.md)分为S1容量摸底与归因、S2针对性优化、S3组合复验；当前仅完成文档规划，下一步是[S1](docs/leader/designs/V0.6/S1-design.md)测量设施与校准。S2/S3详细方案根据证据确定，不提前承诺QPS或指定优化技术。
