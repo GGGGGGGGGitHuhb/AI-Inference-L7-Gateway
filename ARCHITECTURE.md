@@ -1,6 +1,6 @@
 # AI Inference L7 Gateway 架构大纲
 
-> 当前状态（2026-10-29）：**V0.5/S1 L4LB组合拓扑与故障联调已完成开发验收；S2未开始，未发布。** [Reviewer001 PASS](docs/reviewer/reports/V0.5/S1-report-001.md)与[Leader002收口](docs/leader/reports/V0.5/S1-report-002.md)：双角色独立矩阵各6/6、30请求/29后端，Release回归各21/21，无遗留债务。[操作说明](tests/l4lb/README.md)与[验收结果](docs/acceptance/V0.5/S1-results.md)保留TCP健康、下游单请求关闭、故障不迁移及单进程配额边界。
+> 当前状态（2026-10-29）：**V0.5/S1与S2均已完成开发验收，V0.5开发验收完成，未发布。** S2由[Reviewer001 PASS](docs/reviewer/reports/V0.5/S2-report-001.md)与[Leader002收口](docs/leader/reports/V0.5/S2-report-002.md)：双角色各18/18、4536请求及偏斜8请求通过，Release回归各21/21，无遗留债务。[双角色结果](docs/performance/V0.5/S2-results.md)保留CPU/延迟差值方向不一致的限制，不声明固定开销、生产容量或扩容收益。
 
 文档状态：`Approved`（总体架构基线；V0.1基础代理/上游复用及V0.2/S1流链路、S2背压协同已验收，V0.2/S3固定真实CPU后端验证已验收，V0.3/S1静态模型路由/RR/LI与被动健康已验收，V0.3/S2准入排队及S3综合MVP已验收，V0.4/S1仅新增实验与测试保障，产品架构保持）。创建日期：2026-10-17；采纳日期：2026-10-18。
 
@@ -265,3 +265,5 @@ Available初始仅为配置许可，恢复需完整HTTP成功，TCP可达不等�
 组合链路为客户端 → 用户态l4lb TCP → 两个独立Gateway → 模型后端。L4每条新TCP连接选择一次Gateway，不解析模型、不重试或迁移已有流；Gateway完成HTTP/SSE、模型路由、上游被动健康与单进程准入。下游仍每连接单请求，复用能力属于上游池。L4主动TCP握手探测与Gateway被动模型请求健康是两个不同层次，不能互相替代。多个Gateway的限额不构成集群全局额度；共享后端须另行标定总容量。
 
 联调工具与配置在[tests/l4lb](tests/l4lb/README.md)，通过外部二进制路径组合运行，不增加产品构建依赖，不要求原Server常驻，不启用XDP TCP或UDP DSR。状态与实测证据见阶段报告。
+
+V0.5/S2没有改变运行时架构。三拓扑对照保持总准入额度和连接模式，客户端均分双Gateway与L4接入双Gateway用于观察额外代理层；连接轮询只约束新连接数量，长流工作量仍可集中于单Gateway。网络传输量按逻辑链路的用户态正返回字节计量，不等同物理包流量；实测与限制见[结果](docs/performance/V0.5/S2-results.md)。
