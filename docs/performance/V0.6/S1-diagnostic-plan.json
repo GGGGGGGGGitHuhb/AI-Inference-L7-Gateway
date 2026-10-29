@@ -1,0 +1,41 @@
+{
+  "status": "Approved",
+  "stage": "V0.6/S1",
+  "basis": "REQ04 single-variable diagnostic; first two completed L/3840 repetitions show poor SLO success; primary matrix unchanged",
+  "created_before_collection": true,
+  "tool_manifest_sha256": "a559456acd9851c51a14b877fcfb42bdfe829c144bd4c61efdf71ebc245fe692",
+  "configuration": {
+    "kind": "diagnostic",
+    "path": "L",
+    "workload": "A",
+    "rate": 3840,
+    "warm": 2,
+    "duration": 5,
+    "workers": 2,
+    "slots": 128,
+    "backends": 1,
+    "stream_mib": 4,
+    "reuse": false,
+    "nodelay": 1,
+    "sample_interval": 0.1
+  },
+  "variable": "aggregate capacity, coupled entry/pool/admission/reserved-memory settings",
+  "capacities": [
+    32,
+    64
+  ],
+  "role_order": {
+    "builder": [
+      32,
+      64
+    ],
+    "reviewer": [
+      64,
+      32
+    ]
+  },
+  "per_cell_worst_bytes": 28950528,
+  "two_cell_worst_bytes": 57901056,
+  "budget_rule": "Use remaining diagnostic cells; actual evidence + both reservations + 16MiB closure must fit 2GiB before launch. Replaces earlier unused low-rate diagnostic reservation only; no budget increase.",
+  "interpretation": "Configuration/control result, not same-resource product improvement. One paired control per role; retain generator and CPU validity, failures and all primary repetitions. No extra reruns or post-hoc rate changes."
+}

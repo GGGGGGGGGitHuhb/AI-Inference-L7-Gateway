@@ -1,8 +1,10 @@
 # AI Inference L7 Gateway 架构大纲
 
-> 当前状态（2026-10-29）：**V0.6容量基线与瓶颈优化已完成规划，S1待实现，尚未执行新压测或产品优化。** V0.5开发验收完成、未发布。新版本按“容量摸底与归因→单项优化→组合复验”推进，见[版本计划](docs/leader/designs/V0.6/version-plan.md)、[S1设计](docs/leader/designs/V0.6/S1-design.md)与[规划报告](docs/leader/reports/V0.6/S1-report-001.md)。
+> 当前状态（2026-10-29）：**V0.6/S1测量工具与有界诊断已独立接受；产品最大容量归因及S2入口BLOCKED，S2/S3未启动。** V0.5开发验收完成、未发布，本轮未修改产品代码。见[测量结果](docs/performance/V0.6/S1-results.md)、[瓶颈记录](docs/performance/V0.6/S1-bottlenecks.md)与[收口报告](docs/leader/reports/V0.6/S1-report-003.md)。
 
 文档状态：`Approved`（总体架构基线；V0.1基础代理/上游复用及V0.2/S1流链路、S2背压协同已验收，V0.2/S3固定真实CPU后端验证已验收，V0.3/S1静态模型路由/RR/LI与被动健康已验收，V0.3/S2准入排队及S3综合MVP已验收，V0.4/S1仅新增实验与测试保障，产品架构保持）。创建日期：2026-10-17；采纳日期：2026-10-18。
+
+V0.6/S1新增独立容量测量工具，覆盖直连后端、单/双Gateway及用户态TCP L4LB组合；工具和有界诊断已接受，产品架构保持。当前证据尚不能定位产品代码热点或确认最大容量，S2入口BLOCKED。
 
 ## 1. 依据与状态
 

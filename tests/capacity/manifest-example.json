@@ -1,0 +1,826 @@
+{
+  "schema_version": 1,
+  "status": "Draft",
+  "configuration": {
+    "slots": 128,
+    "backends": 1,
+    "capacity": 32,
+    "stream_mib": 4,
+    "reuse": false,
+    "nodelay": 1,
+    "sample_interval": 0.1
+  },
+  "workloads": {
+    "A": {
+      "rates": [
+        960,
+        1920,
+        3840
+      ],
+      "workers": 2
+    },
+    "S": {
+      "rates": [
+        240,
+        480,
+        600
+      ],
+      "workers": 1
+    }
+  },
+  "cells": [
+    {
+      "id": "F-A-0-B-960",
+      "kind": "formal",
+      "path": "B",
+      "workload": "A",
+      "rate": 960,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-0-G-960",
+      "kind": "formal",
+      "path": "G",
+      "workload": "A",
+      "rate": 960,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-0-M-960",
+      "kind": "formal",
+      "path": "M",
+      "workload": "A",
+      "rate": 960,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-0-L-960",
+      "kind": "formal",
+      "path": "L",
+      "workload": "A",
+      "rate": 960,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-0-G-1920",
+      "kind": "formal",
+      "path": "G",
+      "workload": "A",
+      "rate": 1920,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-0-M-1920",
+      "kind": "formal",
+      "path": "M",
+      "workload": "A",
+      "rate": 1920,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-0-L-1920",
+      "kind": "formal",
+      "path": "L",
+      "workload": "A",
+      "rate": 1920,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-0-B-1920",
+      "kind": "formal",
+      "path": "B",
+      "workload": "A",
+      "rate": 1920,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-0-M-3840",
+      "kind": "formal",
+      "path": "M",
+      "workload": "A",
+      "rate": 3840,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-0-L-3840",
+      "kind": "formal",
+      "path": "L",
+      "workload": "A",
+      "rate": 3840,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-0-B-3840",
+      "kind": "formal",
+      "path": "B",
+      "workload": "A",
+      "rate": 3840,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-0-G-3840",
+      "kind": "formal",
+      "path": "G",
+      "workload": "A",
+      "rate": 3840,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-1-G-960",
+      "kind": "formal",
+      "path": "G",
+      "workload": "A",
+      "rate": 960,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-1-M-960",
+      "kind": "formal",
+      "path": "M",
+      "workload": "A",
+      "rate": 960,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-1-L-960",
+      "kind": "formal",
+      "path": "L",
+      "workload": "A",
+      "rate": 960,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-1-B-960",
+      "kind": "formal",
+      "path": "B",
+      "workload": "A",
+      "rate": 960,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-1-M-1920",
+      "kind": "formal",
+      "path": "M",
+      "workload": "A",
+      "rate": 1920,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-1-L-1920",
+      "kind": "formal",
+      "path": "L",
+      "workload": "A",
+      "rate": 1920,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-1-B-1920",
+      "kind": "formal",
+      "path": "B",
+      "workload": "A",
+      "rate": 1920,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-1-G-1920",
+      "kind": "formal",
+      "path": "G",
+      "workload": "A",
+      "rate": 1920,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-1-L-3840",
+      "kind": "formal",
+      "path": "L",
+      "workload": "A",
+      "rate": 3840,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-1-B-3840",
+      "kind": "formal",
+      "path": "B",
+      "workload": "A",
+      "rate": 3840,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-1-G-3840",
+      "kind": "formal",
+      "path": "G",
+      "workload": "A",
+      "rate": 3840,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-1-M-3840",
+      "kind": "formal",
+      "path": "M",
+      "workload": "A",
+      "rate": 3840,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-2-M-960",
+      "kind": "formal",
+      "path": "M",
+      "workload": "A",
+      "rate": 960,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-2-L-960",
+      "kind": "formal",
+      "path": "L",
+      "workload": "A",
+      "rate": 960,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-2-B-960",
+      "kind": "formal",
+      "path": "B",
+      "workload": "A",
+      "rate": 960,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-2-G-960",
+      "kind": "formal",
+      "path": "G",
+      "workload": "A",
+      "rate": 960,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-2-L-1920",
+      "kind": "formal",
+      "path": "L",
+      "workload": "A",
+      "rate": 1920,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-2-B-1920",
+      "kind": "formal",
+      "path": "B",
+      "workload": "A",
+      "rate": 1920,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-2-G-1920",
+      "kind": "formal",
+      "path": "G",
+      "workload": "A",
+      "rate": 1920,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-2-M-1920",
+      "kind": "formal",
+      "path": "M",
+      "workload": "A",
+      "rate": 1920,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-2-B-3840",
+      "kind": "formal",
+      "path": "B",
+      "workload": "A",
+      "rate": 3840,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-2-G-3840",
+      "kind": "formal",
+      "path": "G",
+      "workload": "A",
+      "rate": 3840,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-2-M-3840",
+      "kind": "formal",
+      "path": "M",
+      "workload": "A",
+      "rate": 3840,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-A-2-L-3840",
+      "kind": "formal",
+      "path": "L",
+      "workload": "A",
+      "rate": 3840,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-0-B-240",
+      "kind": "formal",
+      "path": "B",
+      "workload": "S",
+      "rate": 240,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-0-G-240",
+      "kind": "formal",
+      "path": "G",
+      "workload": "S",
+      "rate": 240,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-0-M-240",
+      "kind": "formal",
+      "path": "M",
+      "workload": "S",
+      "rate": 240,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-0-L-240",
+      "kind": "formal",
+      "path": "L",
+      "workload": "S",
+      "rate": 240,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-0-G-480",
+      "kind": "formal",
+      "path": "G",
+      "workload": "S",
+      "rate": 480,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-0-M-480",
+      "kind": "formal",
+      "path": "M",
+      "workload": "S",
+      "rate": 480,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-0-L-480",
+      "kind": "formal",
+      "path": "L",
+      "workload": "S",
+      "rate": 480,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-0-B-480",
+      "kind": "formal",
+      "path": "B",
+      "workload": "S",
+      "rate": 480,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-0-M-600",
+      "kind": "formal",
+      "path": "M",
+      "workload": "S",
+      "rate": 600,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-0-L-600",
+      "kind": "formal",
+      "path": "L",
+      "workload": "S",
+      "rate": 600,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-0-B-600",
+      "kind": "formal",
+      "path": "B",
+      "workload": "S",
+      "rate": 600,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-0-G-600",
+      "kind": "formal",
+      "path": "G",
+      "workload": "S",
+      "rate": 600,
+      "repeat": 0,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-1-G-240",
+      "kind": "formal",
+      "path": "G",
+      "workload": "S",
+      "rate": 240,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-1-M-240",
+      "kind": "formal",
+      "path": "M",
+      "workload": "S",
+      "rate": 240,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-1-L-240",
+      "kind": "formal",
+      "path": "L",
+      "workload": "S",
+      "rate": 240,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-1-B-240",
+      "kind": "formal",
+      "path": "B",
+      "workload": "S",
+      "rate": 240,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-1-M-480",
+      "kind": "formal",
+      "path": "M",
+      "workload": "S",
+      "rate": 480,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-1-L-480",
+      "kind": "formal",
+      "path": "L",
+      "workload": "S",
+      "rate": 480,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-1-B-480",
+      "kind": "formal",
+      "path": "B",
+      "workload": "S",
+      "rate": 480,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-1-G-480",
+      "kind": "formal",
+      "path": "G",
+      "workload": "S",
+      "rate": 480,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-1-L-600",
+      "kind": "formal",
+      "path": "L",
+      "workload": "S",
+      "rate": 600,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-1-B-600",
+      "kind": "formal",
+      "path": "B",
+      "workload": "S",
+      "rate": 600,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-1-G-600",
+      "kind": "formal",
+      "path": "G",
+      "workload": "S",
+      "rate": 600,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-1-M-600",
+      "kind": "formal",
+      "path": "M",
+      "workload": "S",
+      "rate": 600,
+      "repeat": 1,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-2-M-240",
+      "kind": "formal",
+      "path": "M",
+      "workload": "S",
+      "rate": 240,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-2-L-240",
+      "kind": "formal",
+      "path": "L",
+      "workload": "S",
+      "rate": 240,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-2-B-240",
+      "kind": "formal",
+      "path": "B",
+      "workload": "S",
+      "rate": 240,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-2-G-240",
+      "kind": "formal",
+      "path": "G",
+      "workload": "S",
+      "rate": 240,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-2-L-480",
+      "kind": "formal",
+      "path": "L",
+      "workload": "S",
+      "rate": 480,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-2-B-480",
+      "kind": "formal",
+      "path": "B",
+      "workload": "S",
+      "rate": 480,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-2-G-480",
+      "kind": "formal",
+      "path": "G",
+      "workload": "S",
+      "rate": 480,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-2-M-480",
+      "kind": "formal",
+      "path": "M",
+      "workload": "S",
+      "rate": 480,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-2-B-600",
+      "kind": "formal",
+      "path": "B",
+      "workload": "S",
+      "rate": 600,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-2-G-600",
+      "kind": "formal",
+      "path": "G",
+      "workload": "S",
+      "rate": 600,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-2-M-600",
+      "kind": "formal",
+      "path": "M",
+      "workload": "S",
+      "rate": 600,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "F-S-2-L-600",
+      "kind": "formal",
+      "path": "L",
+      "workload": "S",
+      "rate": 600,
+      "repeat": 2,
+      "warm": 3,
+      "duration": 20
+    }
+  ],
+  "tools": {},
+  "selection": {
+    "calibration": []
+  },
+  "environment": {},
+  "sources": {},
+  "semantics": {
+    "e2e": "HTTP framing and body validation observed complete minus scheduled",
+    "close": "separate; EOF and full resource drain required",
+    "goodput": "SLO-success requests scheduled in formal window including drain completion, divided by 20 seconds",
+    "A_slo_ms": 100,
+    "S_slo_ms": 250,
+    "S_first_body_ms": 50,
+    "slo_fraction": 0.99,
+    "not_sent_fraction_max": 0.01,
+    "dispatch_lag_p95_ms_max": 5,
+    "quantile_min_success": {
+      "p50": 20,
+      "p95": 100,
+      "p99": 1000
+    },
+    "generator_control_sensitive_relative_change": 0.1,
+    "busy_core_flag": 0.85
+  },
+  "resources": {
+    "affinity": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "cpu_quota": "inherited; no per-process quota or pinning; same-host topology observation only",
+    "aggregate_gateway_connections": 32,
+    "aggregate_gateway_admission": 32,
+    "aggregate_gateway_reserved_bytes": 536870912,
+    "aggregate_stream_bytes": 4194304,
+    "per_stream_bytes": 262144,
+    "split": "G full aggregate; M/L each half; B no proxy budget",
+    "backend_workers": 1,
+    "slots_are_aggregate": true
+  },
+  "limits": {
+    "per_role_cells": 120,
+    "E1": 28,
+    "E2": 8,
+    "formal": 72,
+    "diagnostic": 12,
+    "active_seconds": 5400,
+    "cell_active_seconds": 45,
+    "request_seconds": 5,
+    "drain_seconds": 5,
+    "cleanup_term_seconds": 5,
+    "evidence_bytes": 2147483648,
+    "single_file_bytes": 1048576,
+    "rss_bytes": 1073741824,
+    "fds": 2048
+  }
+}
