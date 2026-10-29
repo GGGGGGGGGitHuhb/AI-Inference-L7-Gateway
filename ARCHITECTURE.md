@@ -1,6 +1,6 @@
 # AI Inference L7 Gateway 架构大纲
 
-> 当前状态（2026-10-21）：**V0.4/S1与S2均已完成开发验收，V0.4开发验收完成，未发布。** S2由[Reviewer001 PASS](docs/reviewer/reports/V0.4/S2-report-001.md)与[Leader006](docs/leader/reports/V0.4/S2-report-006.md)收口，累计3/3、无债；独立完整21cell/2970ID通过，既有独立三套21/21及控制按精确身份复用。100ms候选有受限正向观察，但发压/CPU限制仍在，**不推荐替换500ms实验基线**，产品默认1000ms不变。待协调者本地提交、不推送；V0.5未开始。
+> 当前状态（2026-10-29）：**V0.5/S1 L4LB组合拓扑与故障联调已完成开发验收；S2未开始，未发布。** [Reviewer001 PASS](docs/reviewer/reports/V0.5/S1-report-001.md)与[Leader002收口](docs/leader/reports/V0.5/S1-report-002.md)：双角色独立矩阵各6/6、30请求/29后端，Release回归各21/21，无遗留债务。[操作说明](tests/l4lb/README.md)与[验收结果](docs/acceptance/V0.5/S1-results.md)保留TCP健康、下游单请求关闭、故障不迁移及单进程配额边界。
 
 文档状态：`Approved`（总体架构基线；V0.1基础代理/上游复用及V0.2/S1流链路、S2背压协同已验收，V0.2/S3固定真实CPU后端验证已验收，V0.3/S1静态模型路由/RR/LI与被动健康已验收，V0.3/S2准入排队及S3综合MVP已验收，V0.4/S1仅新增实验与测试保障，产品架构保持）。创建日期：2026-10-17；采纳日期：2026-10-18。
 
@@ -259,3 +259,9 @@ Available初始仅为配置许可，恢复需完整HTTP成功，TCP可达不等�
 2026-10-21按用户启动授权进入待实现。[S2设计](docs/leader/designs/V0.4/S2-design.md)仅使用已有AdmissionConfig.queueTimeoutMs/ProxySession Waiting期限，预注册100ms候选对500ms实验基线；全局默认1000ms、FIFO、total deadline和产品模块均保持。新tests/queue_budget局部复用S1测量机制，冻结21cell及负结果规则，不改S1工具/数据。此处是已批准范围，尚未实现或验收；不承诺容量、真实模型收益或最优参数。
 
 2026-10-21最终验收：S2由[Reviewer001 PASS](docs/reviewer/reports/V0.4/S2-report-001.md)与[Leader006](docs/leader/reports/V0.4/S2-report-006.md)收口，累计3/3、无债；上段待实现为初版批准快照。tests/queue_budget已交付三配置及有限实验，产品默认/架构不变。唯一旧测试例外为tests/admission/RunAdmission.py统一停止请求所有权，显式停止与finally清理共用幂等入口，严格零退出/资源保障保持。Reviewer外层supervisor只在证据目录，用于生命周期记录与回收，不属于产品架构；原143终止原因未知。V0.4开发验收完成，未发布，V0.5未启动。
+
+## V0.5/S1 组合部署边界
+
+组合链路为客户端 → 用户态l4lb TCP → 两个独立Gateway → 模型后端。L4每条新TCP连接选择一次Gateway，不解析模型、不重试或迁移已有流；Gateway完成HTTP/SSE、模型路由、上游被动健康与单进程准入。下游仍每连接单请求，复用能力属于上游池。L4主动TCP握手探测与Gateway被动模型请求健康是两个不同层次，不能互相替代。多个Gateway的限额不构成集群全局额度；共享后端须另行标定总容量。
+
+联调工具与配置在[tests/l4lb](tests/l4lb/README.md)，通过外部二进制路径组合运行，不增加产品构建依赖，不要求原Server常驻，不启用XDP TCP或UDP DSR。状态与实测证据见阶段报告。

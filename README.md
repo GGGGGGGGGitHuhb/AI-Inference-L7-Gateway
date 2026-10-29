@@ -1,6 +1,6 @@
 # AI Inference L7 Gateway
 
-> 当前状态（2026-10-21）：**V0.4/S1与S2均已完成开发验收，V0.4开发验收完成，未发布。** S2由[Reviewer001 PASS](docs/reviewer/reports/V0.4/S2-report-001.md)与[Leader006](docs/leader/reports/V0.4/S2-report-006.md)收口，累计3/3、无债；独立完整21cell/2970ID通过，既有独立三套21/21及控制按精确身份复用。100ms候选有受限正向观察，但发压/CPU限制仍在，**不推荐替换500ms实验基线**，产品默认1000ms不变。待协调者本地提交、不推送；V0.5未开始。
+> 当前状态（2026-10-29）：**V0.5/S1 L4LB组合拓扑与故障联调已完成开发验收；S2未开始，未发布。** [Reviewer001 PASS](docs/reviewer/reports/V0.5/S1-report-001.md)与[Leader002收口](docs/leader/reports/V0.5/S1-report-002.md)：双角色独立矩阵各6/6、30请求/29后端，Release回归各21/21，无遗留债务。[操作说明](tests/l4lb/README.md)与[验收结果](docs/acceptance/V0.5/S1-results.md)保留TCP健康、下游单请求关闭、故障不迁移及单进程配额边界。
 
 面向在线文本推理服务的独立 C++ 七层网关项目，计划围绕流式代理、资源控制和请求调度建立可复现的工程实验。
 
@@ -12,9 +12,9 @@
 
 V0.1/S3与V0.1基础代理已完成开发验收。 S3经一次有限规范纠正后取得[Reviewer002 PASS](docs/reviewer/reports/V0.1/S3-report-002.md)，唯一空行规范发现关闭，无未解决发现或债项；收口见[Leader002](docs/leader/reports/V0.1/S3-report-002.md)。累计返工：S1 2/2、S2 1/2、S3 1/2，各阶段独立记录。
 
-当前开发分支 `codex/v0.4-s2-evidence-driven-improvement`，起点为S1本地提交752987a。S2已验收并本地提交d89de57、0/2、无债，未核验推送。V0.3整体/MVP开发验收已完成，没有正式发布。
+当前开发分支 `codex/v0.5-s1-l4lb-integration`，起点为V0.4/S2本地提交31e7e78。V0.3/MVP与V0.4均已开发验收完成；V0.5/S1状态见页首，没有正式发布。
 
-已验收：独立离线构建、最小复用组件、受限HTTP/1.1与文本JSON、单静态上游非流式代理、硬限额和分类deadline、信号停止，以及有界上游顺序复用与初始合成成本基线。下游继续每连接单请求；V0.2/S1新增SSE字节增量链路已独立验收；V0.3/S1多实例路由与健康、S2准入排队已验收，真实GPU和L4LB联调仍属后续阶段。S1与S2历史验收见[Leader S1-004](docs/leader/reports/V0.1/S1-report-004.md)、[Leader S2-003](docs/leader/reports/V0.1/S2-report-003.md)。
+已验收：独立离线构建、最小复用组件、受限HTTP/1.1与文本JSON、单静态上游非流式代理、硬限额和分类deadline、信号停止，以及有界上游顺序复用与初始合成成本基线。下游继续每连接单请求；V0.2/S1新增SSE字节增量链路已独立验收；V0.3/S1多实例路由与健康、S2准入排队已验收，真实GPU收益仍未验证；L4LB联调现已进入V0.5/S1。S1与S2历史验收见[Leader S1-004](docs/leader/reports/V0.1/S1-report-004.md)、[Leader S2-003](docs/leader/reports/V0.1/S2-report-003.md)。
 
 ## 构建与验证
 
@@ -252,3 +252,7 @@ Waiting截止为 `min(accept + total, enqueue + queue_timeout)`，total从接收
 ## V0.4 已验收配置实验
 
 S1公平基线与S2单一等待预算实验均完成；[操作与三份完整配置](tests/queue_budget/README.md)、[双角色结果](docs/performance/V0.4/S2-results.md)。配置区分无队列、500ms实验基线和100ms候选，均非生产通用推荐；产品默认1000ms保持。唯一旧测试改动是停止请求幂等清理，产品源码未变。原独立run001外层143中断原因仍未知；新run002完整通过，不回填旧根因。
+
+## V0.5/S1 L4LB 组合联调
+
+[运行说明、完整配置与故障矩阵](tests/l4lb/README.md)使用真实用户态TCP L4LB、两个Gateway和可控HTTP/SSE后端。下游每连接单请求关闭；L4按连接绑定，故障流不迁移，TCP握手不代表模型可用；准入额度仍为每Gateway独立。当前验收状态见页首。

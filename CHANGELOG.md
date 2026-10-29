@@ -4,7 +4,14 @@
 
 ## Unreleased
 
-### V0.4/S2 等待预算对照 — 已验收（2026-10-21，待本地提交）
+### V0.5/S1 L4LB组合拓扑与故障 — 已验收（2026-10-29）
+
+- 新增真实用户态TCP L4LB + 两Gateway部署配置及可控HTTP/SSE故障工具，覆盖模型路由、半关闭、流式取消、局部准入、单实例/全部实例故障和恢复。
+- [Reviewer001 PASS](docs/reviewer/reports/V0.5/S1-report-001.md)、[Leader002收口](docs/leader/reports/V0.5/S1-report-002.md)：双角色独立矩阵各6/6、30应用请求/29唯一后端收件，Release回归各21/21；检测器、独立审计及失败取证/防覆盖负控通过。
+- 核实TCP握手健康不是模型健康、每Gateway限额不是集群全局配额，已有故障流不会迁移或重试。下游仍每连接单请求关闭，上游池复用边界保持；原测试误假定下游Keep-Alive按返工001纠正，失败证据保留。
+- 两仓产品、旧测试和构建定义未修改；L4LB用户工作树只读使用并记录实际源码身份。没有XDP TCP、性能或扩容收益声明，V0.5/S2未开始。[操作说明](tests/l4lb/README.md)、[结果](docs/acceptance/V0.5/S1-results.md)。
+
+### V0.4/S2 等待预算对照 — 已验收（2026-10-21，本地提交31e7e78）
 
 - 交付三份完整配置及固定21cell/2970ID的5/60req/s对照：500ms实验基线、100ms预注册候选和无队列参照；产品默认1000ms及产品源码保持。
 - [Reviewer001 PASS](docs/reviewer/reports/V0.4/S2-report-001.md)、[Leader006收口](docs/leader/reports/V0.4/S2-report-006.md)，累计3/3、无债。独立run002一次完整通过；此前独立三预设各21/21及控制按精确身份复用，不冒称本轮重跑。
