@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### V0.5/S2 拓扑成本与扩展边界 — 已验收（2026-10-29）
+
+- 新增固定18cell的D/M/L对照工具：直连单Gateway、客户端均分双Gateway、用户态L4LB接入双Gateway；两种合成负载、三重复、同总额度与无连接复用，测量延迟/CPU/各段用户态TCP载荷。
+- [Reviewer001 PASS](docs/reviewer/reports/V0.5/S2-report-001.md)、[Leader002收口](docs/leader/reports/V0.5/S2-report-002.md)：双角色各4536计划请求及偏斜8请求全成功、Release回归各21/21，独立复算和中断/早退/防覆盖/预算负控通过，57个进程分别全部回收。
+- 长流构造案例验证连接数4:4但在途4:0；多一段L4载荷可核对。CPU/延迟部分差值方向不一致，完整披露tick量化及同机限制，不声明固定成本、稳定加速或横向扩展收益。
+- 产品、旧工具与L4源码工作树不修改；没有真实模型/GPU或包级网络测量。V0.5/S1与S2均完成开发验收，未发布。见[复现说明](tests/l4lb_cost/README.md)、[完整双角色结果](docs/performance/V0.5/S2-results.md)。
+
 ### V0.5/S1 L4LB组合拓扑与故障 — 已验收（2026-10-29）
 
 - 新增真实用户态TCP L4LB + 两Gateway部署配置及可控HTTP/SSE故障工具，覆盖模型路由、半关闭、流式取消、局部准入、单实例/全部实例故障和恢复。
