@@ -1,0 +1,4946 @@
+{
+  "cells": [
+    {
+      "role": "builder",
+      "input": "build-local/builder/v0.6-s1/evidence/run/F-A-M-1920-r0",
+      "spec": {
+        "id": "F-A-M-1920-r0",
+        "kind": "formal",
+        "path": "M",
+        "workload": "A",
+        "rate": 1920,
+        "repeat": 0,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 11371520,
+        "start": 395485655941137,
+        "targets": [
+          40421,
+          38411
+        ],
+        "measure_start": 395489655941137
+      },
+      "phases": {
+        "w": {
+          "planned": 5760,
+          "outcomes": {
+            "success": 5760
+          },
+          "errors": {},
+          "backend_by_outcome": {
+            "success": 5760
+          },
+          "per_second": {
+            "0": {
+              "success": 1920
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": null,
+            "p95": null,
+            "p99": null
+          }
+        },
+        "f": {
+          "planned": 38400,
+          "outcomes": {
+            "success": 38390,
+            "transport_failure": 10
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 10
+          },
+          "backend_by_outcome": {
+            "success": 38390
+          },
+          "per_second": {
+            "0": {
+              "success": 1910,
+              "transport_failure": 10
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1920
+            },
+            "3": {
+              "success": 1920
+            },
+            "4": {
+              "success": 1920
+            },
+            "5": {
+              "success": 1920
+            },
+            "6": {
+              "success": 1920
+            },
+            "7": {
+              "success": 1920
+            },
+            "8": {
+              "success": 1920
+            },
+            "9": {
+              "success": 1920
+            },
+            "10": {
+              "success": 1920
+            },
+            "11": {
+              "success": 1920
+            },
+            "12": {
+              "success": 1920
+            },
+            "13": {
+              "success": 1920
+            },
+            "14": {
+              "success": 1920
+            },
+            "15": {
+              "success": 1920
+            },
+            "16": {
+              "success": 1920
+            },
+            "17": {
+              "success": 1920
+            },
+            "18": {
+              "success": 1920
+            },
+            "19": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 1.35588,
+            "p95": 3.071698,
+            "p99": 3.071698
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests"
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "61943f829d800485450e85263d65a7e8f08a2744c92e63b8d8b65876ffd0feaf",
+        "backend-0001.jsonl": "71096863c270fbc244567637bfd698e37613aa8aa73ff6c21c16bbf058b80a13",
+        "backend-0002.jsonl": "bb242b7843e1409a46a906e18805ccfbe20deb55e90e8aa4e69fcbf84acda3c6",
+        "backend-0003.jsonl": "0942a66e78c90d4e5a4b2baf3bf90bc46a9e38c94698273ce351ba6f9ded65e9",
+        "backend-summary.json": "1178901bf45cda6a465ea3c2d8aa8c009b7b4a152e6ee02c6c913611dd8c2633",
+        "client-0-0000.jsonl": "e6d22fdcf822ccb7c845b6a26e29b8f1c000dccc75829abc935198e228294669",
+        "client-0-0001.jsonl": "c64f5784b2ab6eb7cd25856666dcfe6a99ac9c9a8e86822b972e4b6579c69824",
+        "client-0-0002.jsonl": "cc68ce977e660a69921662bbcfa257fa8bd931c87d49ef2ad319d151f98b07cb",
+        "client-0-0003.jsonl": "faf14ab48df009c7a6d37d0c3e898b3561c09ef23446128bb81dd654a55c0aa1",
+        "client-0-0004.jsonl": "f975e27ea342c509f6642fe0ada47557156cb6b4dad6384c341659c2d212a44f",
+        "client-0-0005.jsonl": "c4fa809c11564bb3fa7250a3537a725ffea19c8df28f2017deb3aa8b5e04bfee",
+        "client-0-summary.json": "4bc9b39f31705cbcbf3cefe45269e7e9439859155e44f0d4b8a5f6d38c5d1065",
+        "client-1-0000.jsonl": "fdb82d4b7fc6557d6c533c34f0b92d36eddf882dc5daf98b4517dbac3c9d58f9",
+        "client-1-0001.jsonl": "5a72415b8be55a7c2d5f03b111118d982ed047c42c6cfe2a8ea51adda76233ef",
+        "client-1-0002.jsonl": "56e0f15a6f5091aa8ff5b6683ae1a9f0a28cbb6670227b29a959b3ea664e4713",
+        "client-1-0003.jsonl": "316642a32e33f2ffacdf2afb6696c3ba8efcfaf24e1c5e8c46e9c4ba1a5343eb",
+        "client-1-0004.jsonl": "bc31a708c330cd86dc0f4ad7af8bd4a0ccc638803b1e51e88d77592a041ed778",
+        "client-1-0005.jsonl": "8ec24ffd785a4787ecc2198ed5b342bfad5dc42ce1b4375544d4eb4deab5904a",
+        "client-1-summary.json": "1cf9df4694238ee5d022c842e212ddccc0748651677c473bb80e3ffe74d25faf",
+        "drain.json": "b186a0d63c213f1a74b1a0f7d74dbafb3ed7c77d3329dc316c7971c32ab090e3",
+        "gateway-0.json": "0f4b5b2345ba8f7df55fdff205720d0e96de9c8787573edc27a207294d361cb0",
+        "gateway-1.json": "09903d0a95519b64d5a58bf27ea36d4c5abd64dcd933fb9de9c8baec258d9534",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "f36319beb4b5b2654615068c380c8618e0c5fa7ba0d371b049f73e649f1ec800",
+        "log-gateway-1-0000.jsonl": "d22f95c7ad3fd83207da08235d2979e41cc9514bbaef5f54fca10e466cc792fa",
+        "processes.json": "7ede008507fb30147bc01108aa1f2abd5738ea86c3dc808f47d9eb42482a26a0",
+        "resources-0000.jsonl": "07a72cd61ec141ee96dcd62aea21475464ffccf3f350826bf4631094b7b0c992",
+        "result.json": "41163c4648a52bc4f3cbf42d06484a6e322492d35b4f4c98105def369e1947e7",
+        "spec.json": "d022da36edba4eebc941a975f9d06e10824c84106761dad064ecdd83f5c16f20"
+      }
+    },
+    {
+      "role": "builder",
+      "input": "build-local/builder/v0.6-s1/evidence/run/F-A-M-1920-r1",
+      "spec": {
+        "id": "F-A-M-1920-r1",
+        "kind": "formal",
+        "path": "M",
+        "workload": "A",
+        "rate": 1920,
+        "repeat": 1,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 11371520,
+        "start": 398118739970163,
+        "targets": [
+          36763,
+          38233
+        ],
+        "measure_start": 398122739970163
+      },
+      "phases": {
+        "w": {
+          "planned": 5760,
+          "outcomes": {
+            "success": 5760
+          },
+          "errors": {},
+          "backend_by_outcome": {
+            "success": 5760
+          },
+          "per_second": {
+            "0": {
+              "success": 1920
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": null,
+            "p95": null,
+            "p99": null
+          }
+        },
+        "f": {
+          "planned": 38400,
+          "outcomes": {
+            "success": 38371,
+            "transport_failure": 29
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 25,
+            "[\"transport_failure\",\"[Errno 104] Connection reset by peer\",0]": 4
+          },
+          "backend_by_outcome": {
+            "success": 38371
+          },
+          "per_second": {
+            "0": {
+              "success": 1910,
+              "transport_failure": 10
+            },
+            "1": {
+              "success": 1904,
+              "transport_failure": 16
+            },
+            "2": {
+              "success": 1920
+            },
+            "3": {
+              "success": 1920
+            },
+            "4": {
+              "success": 1920
+            },
+            "5": {
+              "success": 1920
+            },
+            "6": {
+              "success": 1920
+            },
+            "7": {
+              "success": 1920
+            },
+            "8": {
+              "success": 1920
+            },
+            "9": {
+              "success": 1920
+            },
+            "10": {
+              "success": 1920
+            },
+            "11": {
+              "success": 1920
+            },
+            "12": {
+              "success": 1920
+            },
+            "13": {
+              "success": 1920
+            },
+            "14": {
+              "success": 1917,
+              "transport_failure": 3
+            },
+            "15": {
+              "success": 1920
+            },
+            "16": {
+              "success": 1920
+            },
+            "17": {
+              "success": 1920
+            },
+            "18": {
+              "success": 1920
+            },
+            "19": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 0.873708,
+            "p95": 2.49079,
+            "p99": 3.266911
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests"
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "2ea1b0b8fc335cd45adc43000ec224431176d27f06c0e8cd09eedc35855bf1f0",
+        "backend-0001.jsonl": "2e786758f4ea44bbfc52851d8dc508b4447d1ffad5fe742422d9a4b98dc46ce2",
+        "backend-0002.jsonl": "2418d3a348d580ae668b67d3a37d13ffc17d1705b1e456bf047be5c7cd671fc4",
+        "backend-0003.jsonl": "49a29286517796308b01319abed9fdbca49607d1ce4a38973f1576bae79992f8",
+        "backend-summary.json": "d560bc92bbeda0f48f07940b1b44062bb5f9aa44a7d5db4253d91b621b667921",
+        "client-0-0000.jsonl": "f731bdc413fd835a2dbbec1f3d67234e1221c7b05ff8a4d19cd67ca1d32ee470",
+        "client-0-0001.jsonl": "cebd131e9a85949e0b0361b33c55e7cdc19b3363d0a395dc339cc522ce9c5498",
+        "client-0-0002.jsonl": "76b475b4ec99f8c2f4016bea9c552dac3f66d39f4024b5145093542e42e7cf6c",
+        "client-0-0003.jsonl": "fa954f8dd91e4bcad8ffb00827115db206ca24585c03a418ee97fb86e2d567c6",
+        "client-0-0004.jsonl": "7ee04a63714e55a60ef8363b395da4ea43af5bdc23034d8bc5eb8d67f2578ece",
+        "client-0-0005.jsonl": "d4a94c634e24e2cfeba8faefaa2ec8bfd9d1dc2d5b9021c2a81c99c83b1c535c",
+        "client-0-summary.json": "a9739d361c7f37a55485173f7f64ecec56aa4bd22e843d1b5bba3da6f186be70",
+        "client-1-0000.jsonl": "1d7f7db0217a2ed75846b9498b66215b9a158580a6fcf5509660f198b5bd9175",
+        "client-1-0001.jsonl": "c624a7280cd01913b68d58656407edda6a4753a2757584fc69433ab2ef8a65e6",
+        "client-1-0002.jsonl": "5c10ec5e15fe8b2fd02f60c3a7bfbf32422c0d1a5191e827f15f1520d145df28",
+        "client-1-0003.jsonl": "191625e973763860aa2368623de47927f9620ef9ec443d61ccecd4f8fa0ed2d3",
+        "client-1-0004.jsonl": "0cf1d2d681808db32be152f8428a5a28b9cc984539b99f3e80a9fef4ada06daf",
+        "client-1-0005.jsonl": "477ad85f7505513eeb5991b0f7fe185834cc2341734cf0ba96c4224d80c27f48",
+        "client-1-summary.json": "a9739d361c7f37a55485173f7f64ecec56aa4bd22e843d1b5bba3da6f186be70",
+        "drain.json": "8353edd514b48f10d851b0520b0767d0ef9931ec035cabd369302a2608fd3ef3",
+        "gateway-0.json": "518c4b2a30c0a949cfe51236def0c99dfb65c88a35b03dd97bc53b152cbd7554",
+        "gateway-1.json": "05f5f9d70869bdb7044b9acc446ae6ec1db9c026dfc6f0087b88cd882967392b",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "9fe98cc113cd79453f96246feb72554214273bd2ee3c201a7f680bdcae0cadd0",
+        "log-gateway-1-0000.jsonl": "1b580e31993b5736137db02d08b1b8248b8948c443133fa15fa2431c299b2da6",
+        "processes.json": "c85c800d29a4ef42ba2c7b721f80c05285b33f6b8b76b71f99cd7e1426d4c4ff",
+        "resources-0000.jsonl": "48eaaf73764589a296461a05a242067b3fa14aaea096026a5922b84f7d0408ee",
+        "result.json": "cb93c22c55e82d68cf986cd2f9016d651cca16c6c906f857f2e6a2169b1cafd2",
+        "spec.json": "4d21042026ccadca50631ae8963bc7e7f5030efdd75a6a3a3b604d9125db0342"
+      }
+    },
+    {
+      "role": "builder",
+      "input": "build-local/builder/v0.6-s1/evidence/run/F-A-M-1920-r2",
+      "spec": {
+        "id": "F-A-M-1920-r2",
+        "kind": "formal",
+        "path": "M",
+        "workload": "A",
+        "rate": 1920,
+        "repeat": 2,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 11371520,
+        "start": 399989375862301,
+        "targets": [
+          39139,
+          39709
+        ],
+        "measure_start": 399993375862301
+      },
+      "phases": {
+        "w": {
+          "planned": 5760,
+          "outcomes": {
+            "success": 5760
+          },
+          "errors": {},
+          "backend_by_outcome": {
+            "success": 5760
+          },
+          "per_second": {
+            "0": {
+              "success": 1920
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": null,
+            "p95": null,
+            "p99": null
+          }
+        },
+        "f": {
+          "planned": 38400,
+          "outcomes": {
+            "success": 38400
+          },
+          "errors": {},
+          "backend_by_outcome": {
+            "success": 38400
+          },
+          "per_second": {
+            "0": {
+              "success": 1920
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1920
+            },
+            "3": {
+              "success": 1920
+            },
+            "4": {
+              "success": 1920
+            },
+            "5": {
+              "success": 1920
+            },
+            "6": {
+              "success": 1920
+            },
+            "7": {
+              "success": 1920
+            },
+            "8": {
+              "success": 1920
+            },
+            "9": {
+              "success": 1920
+            },
+            "10": {
+              "success": 1920
+            },
+            "11": {
+              "success": 1920
+            },
+            "12": {
+              "success": 1920
+            },
+            "13": {
+              "success": 1920
+            },
+            "14": {
+              "success": 1920
+            },
+            "15": {
+              "success": 1920
+            },
+            "16": {
+              "success": 1920
+            },
+            "17": {
+              "success": 1920
+            },
+            "18": {
+              "success": 1920
+            },
+            "19": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": null,
+            "p95": null,
+            "p99": null
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests"
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "267a94431f4f6151302205a12acb915b2bd8b2073842519028901f659ed0c0e3",
+        "backend-0001.jsonl": "f9c140a1f6f621c43b64320e5ba2bb1e992c5e4bebe8e43859f01e6fa848815b",
+        "backend-0002.jsonl": "ed232dbd4ae1872852ee64bd2356a909a799247e1210528ace8d84f65824756c",
+        "backend-0003.jsonl": "84a6674e5d90b0f297b95c8342c6996ab4073d98801e580cb4ab72da4e1afbe6",
+        "backend-summary.json": "e8f3f2b06371e945095933cb93c9ce2de985596b5ce89454255439e4b9c63b67",
+        "client-0-0000.jsonl": "b5bb1b6183889e237b7c4f4c6565ecd809b779d30c422dab5cde10f883b87b5b",
+        "client-0-0001.jsonl": "bd28dbb50807f74ba73d2fc5b27ad28a734c9f7f7a2a7e7011d6c0a84b40e8e4",
+        "client-0-0002.jsonl": "799998087073eaba4934d426ba7632bf3099ad8f4aba8107c2b60ed90d1fb671",
+        "client-0-0003.jsonl": "86ef9851dc4eb349e5d5304e2e15798200df703d6fd09b8d47beffc1462da90d",
+        "client-0-0004.jsonl": "628c5e2a6787ef7d3af40e21c3ebf3a7d81fed0a2534372053b748b6ddfa92cb",
+        "client-0-0005.jsonl": "635facb01936553d3995c1f7d7f0e0d0dcdf1977b6faa549f04c76760172d61a",
+        "client-0-summary.json": "673dc2cf68792027f318a482bbbe84713f78c86f43b4dc786ed567ed690e30f8",
+        "client-1-0000.jsonl": "97e088790ee1ec569dd5f7a265ec5ad3fea52f4b9dbf255c95c68c0c4089f2bd",
+        "client-1-0001.jsonl": "d495eddc1cfe751f959de66af73f4aa61772a65c31f7bc8221dd4ee5a1e5be88",
+        "client-1-0002.jsonl": "0ef443aa88b1cd8378ab32eb01e7b88601c78cae71db4345b00647186918df6e",
+        "client-1-0003.jsonl": "6a8994584580735d5a03332356ffeca8f5065f4de5673451c8573f6a28551a55",
+        "client-1-0004.jsonl": "8b7986f88160c05f49e203944c850eefc9fbc19c7cde186a7bec751764b81c34",
+        "client-1-0005.jsonl": "3598f2716f0bf9036757feb9126c320076772b8ba61513c3fdd3f5cc55c7ba0d",
+        "client-1-summary.json": "4cbc8d8261835066d3ab710e33830977d0944cc9a38ec3a6a5ba14195d1a4461",
+        "drain.json": "bd06ed82c95d2cd6193c7a8ded1da2ecd759eb0e8d3f311010bc78e11ba65074",
+        "gateway-0.json": "ed7cbd0b9f8960d79795111f33544f8aab8d86b91aac22208f5a7d238c8b0406",
+        "gateway-1.json": "ae4e41c06301356f9a754fa6e98824533eca6c7f627f3b730d23cbc9cde43207",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "afad2605dc421163eddb28bd9e615a652fe0cc2f64dad3aa2a4b54f9509dedbf",
+        "log-gateway-1-0000.jsonl": "82ddbb6284daf5edb04fda497c048bdc0b618d3b35a42a66d9d37b4e846b0db2",
+        "processes.json": "b0e527937261bd836869d0b88799b3985bc4f8c6ff453f6706540d2c60ff680c",
+        "resources-0000.jsonl": "794d79b3d740d18842e8337b28594c8d735a263aafdcbc8fc9bb654e7ede7a08",
+        "result.json": "fd39980fa74df41c2a3c3790c4428a330dae215acb5edba2ae92c8dbba211ad3",
+        "spec.json": "60540cccb6eede47bfbabb43f49a90820c131d612144d38a89165e5f130134ca"
+      }
+    },
+    {
+      "role": "builder",
+      "input": "build-local/builder/v0.6-s1/evidence/run/F-A-M-3840-r0",
+      "spec": {
+        "id": "F-A-M-3840-r0",
+        "kind": "formal",
+        "path": "M",
+        "workload": "A",
+        "rate": 3840,
+        "repeat": 0,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 22676480,
+        "start": 396447054618636,
+        "targets": [
+          38255,
+          39215
+        ],
+        "measure_start": 396451054618636
+      },
+      "phases": {
+        "w": {
+          "planned": 11520,
+          "outcomes": {
+            "success": 11510,
+            "transport_failure": 10
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 9,
+            "[\"transport_failure\",\"[Errno 104] Connection reset by peer\",0]": 1
+          },
+          "backend_by_outcome": {
+            "success": 11510
+          },
+          "per_second": {
+            "0": {
+              "success": 3830,
+              "transport_failure": 10
+            },
+            "1": {
+              "success": 3840
+            },
+            "2": {
+              "success": 3840
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 1.325933,
+            "p95": 2.493913,
+            "p99": 2.493913
+          }
+        },
+        "f": {
+          "planned": 76800,
+          "outcomes": {
+            "success": 76449,
+            "transport_failure": 348,
+            "not_sent": 3
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 340,
+            "[\"not_sent\",null,0]": 3,
+            "[\"transport_failure\",\"[Errno 104] Connection reset by peer\",0]": 8
+          },
+          "backend_by_outcome": {
+            "success": 76449
+          },
+          "per_second": {
+            "0": {
+              "success": 3607,
+              "transport_failure": 230,
+              "not_sent": 3
+            },
+            "1": {
+              "success": 3840
+            },
+            "2": {
+              "success": 3840
+            },
+            "3": {
+              "success": 3840
+            },
+            "4": {
+              "success": 3824,
+              "transport_failure": 16
+            },
+            "5": {
+              "success": 3840
+            },
+            "6": {
+              "success": 3812,
+              "transport_failure": 28
+            },
+            "7": {
+              "success": 3840
+            },
+            "8": {
+              "success": 3840
+            },
+            "9": {
+              "success": 3839,
+              "transport_failure": 1
+            },
+            "10": {
+              "success": 3840
+            },
+            "11": {
+              "success": 3840
+            },
+            "12": {
+              "success": 3780,
+              "transport_failure": 60
+            },
+            "13": {
+              "success": 3840
+            },
+            "14": {
+              "success": 3840
+            },
+            "15": {
+              "success": 3840
+            },
+            "16": {
+              "success": 3840
+            },
+            "17": {
+              "success": 3840
+            },
+            "18": {
+              "success": 3827,
+              "transport_failure": 13
+            },
+            "19": {
+              "success": 3840
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 2.068703,
+            "p95": 7.951009,
+            "p99": 12.216212
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests"
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "91d9e881499262616a5a9773134d0ccd2ea13ccd4ba0fece112be76d3a1cd14e",
+        "backend-0001.jsonl": "2ef17db59b0f8301060a8645512a766c4320b36c8e383611417ac30d449f3af0",
+        "backend-0002.jsonl": "c557482bd37e23ac415b27b270b84b73f02f6955409e1cf7dadb02d7416706b7",
+        "backend-0003.jsonl": "0aca9e4b2de769bad819fa4021172080534fa231d6bdaf86c4d9a150552322a7",
+        "backend-0004.jsonl": "73992d447ffc6161ad51af277e15fa0176269e87d9097bb3a7c02cda15bc1ecc",
+        "backend-0005.jsonl": "63c64f539913a72ae0186530a2c0c3c56eea3e166d460938c8655bcac19b4bff",
+        "backend-0006.jsonl": "ec30d2d2baac53542e8a3f26f337abc01e629ca61c3193924eeb5776761be55c",
+        "backend-0007.jsonl": "c06366a95aea3de5c9ab96a6540ad0c378c5a87697497a6f4e61c662592a71aa",
+        "backend-summary.json": "bfb7412feb3de3c854c04b958a79a61ab59f5effa776c10a4663b58a5393d545",
+        "client-0-0000.jsonl": "8c85ceb88fa2d4918d4e4ee23e303be13e94a2f49b493cfa8d2b6185f0c7a119",
+        "client-0-0001.jsonl": "c86322255c52240ae73734ce06496066a6227e7abed69ebaf76de5bbd63011cc",
+        "client-0-0002.jsonl": "7024fc264d4defec495744bbe44e437eecaa29b34c3df632ec29b6a90f3298f1",
+        "client-0-0003.jsonl": "1a7f759403a64f9569d271578dd47211687fb7b3344960450e7866142906b5fa",
+        "client-0-0004.jsonl": "1451a8ab37e7c5efd7b712ef46543e9b17082c4bad6819e127c6fcf4689c537d",
+        "client-0-0005.jsonl": "2a8a057bb747aec613223dc66051a123ee004fb2183e7596810467baf70e9e16",
+        "client-0-0006.jsonl": "5e80da8be0dbb111cb6639a7218fe8c836a46c6a28274cfa90de514da787525f",
+        "client-0-0007.jsonl": "0172ffc296a30aa7804da88eab25761bf8758b6d5a23d1839ac15433173c460f",
+        "client-0-0008.jsonl": "09f9d5d851003c243bdd5438a402621c50eda5de99a23673b6893f99610c3e78",
+        "client-0-0009.jsonl": "d5c749459ea1c752984a954845e28d165c24642d37796519c2ff1528fedc3bdd",
+        "client-0-0010.jsonl": "0e9c5aaf5dc4239b33a470755b0443c656cd316613fd4187ff39f2122a84eed0",
+        "client-0-0011.jsonl": "576093b47dc73203d17bdf7fbca2adf609d0b0aaec00aff9a395570ef1a6dbe7",
+        "client-0-summary.json": "daeca11bbb795e2af30e25d6d9598a7260bee74b76836e54487ad92685134c05",
+        "client-1-0000.jsonl": "4e73aae053788867b7fd1b96f8ab747d4339c54a0af45447395868bcce2bea4a",
+        "client-1-0001.jsonl": "0f9cd0e81c22b36782a156fbbede0ad8f0d857088210d13e18d7e31c7bad8b59",
+        "client-1-0002.jsonl": "9f90876947b59c469714f64f13902feddc39cd16381769fd3895fa637dea15a1",
+        "client-1-0003.jsonl": "d663ccc528f525b6e2d81463dcd18eb3014c695c8781eb8f3561328d3c3a80be",
+        "client-1-0004.jsonl": "7db5d639c7c74451043472783595cdc975f73f8cbc690e54cd5fdaf7e930cdeb",
+        "client-1-0005.jsonl": "7c368c2987025938f83e23f6ff0425847f74c72f6e4e88ac949cb905f235b969",
+        "client-1-0006.jsonl": "f6f02105e581e2ae26694f6b15943878acac45f7039b5baffcf5378a2dcc29e3",
+        "client-1-0007.jsonl": "d099b8dbcd418815f60b2f2ffe7398b3f9b9618b0c8c6040c31d7c7c13c08b50",
+        "client-1-0008.jsonl": "35e1ddfa71957900e2fd683ec41a099520b597caeacbc7f69bc7915c805674a3",
+        "client-1-0009.jsonl": "06b9af26c6bff72ab545eaf730bece0102117074825811bf9b42362ca0d3f5c8",
+        "client-1-0010.jsonl": "d345de0de2a7924169423c001eaf7717f9deb4ded522229a513940434f4aecca",
+        "client-1-0011.jsonl": "6f020d63e3ea5c7b2e13dd3d0e2fbed7c828f4e3773ae3b8dbcbe6909139454a",
+        "client-1-summary.json": "daeca11bbb795e2af30e25d6d9598a7260bee74b76836e54487ad92685134c05",
+        "drain.json": "9bd64524c51a561c19682939ff29a73a670938a92e9f881c18735c50ed3dd056",
+        "gateway-0.json": "758c79ca964a3e838191f194c1e7117ae00794c388ee32f10fe73ec203b4b49c",
+        "gateway-1.json": "99610f25167fef37a61a8c378f8e6727f25b45c5b2d0a7bd6a0da3b5ed42c066",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "9cac541ee1653b74fc61e72f7d25cbddb3e0ddb7cb4f17930e969b32a8f8e90b",
+        "log-gateway-1-0000.jsonl": "397559435ef57f985102cfbfce4a7fc70f29049b9c0761cd4ce45a6499580b28",
+        "processes.json": "313e3705a5ea315af612687932fbc5b3602f3cda06abf308749859827007d6df",
+        "resources-0000.jsonl": "f372097453deb6969522e6489907b894f2bde9654ee01cfeb1bcc24f5b19a239",
+        "result.json": "6be042625643cbeafa64467354617198e3d9a9d97ca20d2a30884439136f4f63",
+        "spec.json": "48cd9f6dceabaeead57859985273e21904a7a15cd28006bf8a20b6ccd64c9f40"
+      }
+    },
+    {
+      "role": "builder",
+      "input": "build-local/builder/v0.6-s1/evidence/run/F-A-M-3840-r1",
+      "spec": {
+        "id": "F-A-M-3840-r1",
+        "kind": "formal",
+        "path": "M",
+        "workload": "A",
+        "rate": 3840,
+        "repeat": 1,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 22676480,
+        "start": 399477997490324,
+        "targets": [
+          40203,
+          39607
+        ],
+        "measure_start": 399481997490324
+      },
+      "phases": {
+        "w": {
+          "planned": 11520,
+          "outcomes": {
+            "transport_failure": 122,
+            "success": 11386,
+            "not_sent": 12
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 122,
+            "[\"not_sent\",null,0]": 12
+          },
+          "backend_by_outcome": {
+            "success": 11386
+          },
+          "per_second": {
+            "0": {
+              "transport_failure": 122,
+              "success": 3706,
+              "not_sent": 12
+            },
+            "1": {
+              "success": 3840
+            },
+            "2": {
+              "success": 3840
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 3.578027,
+            "p95": 11.965401,
+            "p99": 14.231249
+          }
+        },
+        "f": {
+          "planned": 76800,
+          "outcomes": {
+            "transport_failure": 280,
+            "success": 76508,
+            "not_sent": 12
+          },
+          "errors": {
+            "[\"transport_failure\",\"[Errno 104] Connection reset by peer\",0]": 5,
+            "[\"transport_failure\",\"EOF before any response\",0]": 275,
+            "[\"not_sent\",null,0]": 12
+          },
+          "backend_by_outcome": {
+            "success": 76508
+          },
+          "per_second": {
+            "0": {
+              "transport_failure": 182,
+              "success": 3646,
+              "not_sent": 12
+            },
+            "1": {
+              "success": 3840
+            },
+            "2": {
+              "success": 3839,
+              "transport_failure": 1
+            },
+            "3": {
+              "success": 3840
+            },
+            "4": {
+              "success": 3840
+            },
+            "5": {
+              "success": 3838,
+              "transport_failure": 2
+            },
+            "6": {
+              "success": 3840
+            },
+            "7": {
+              "success": 3840
+            },
+            "8": {
+              "success": 3840
+            },
+            "9": {
+              "success": 3839,
+              "transport_failure": 1
+            },
+            "10": {
+              "success": 3840
+            },
+            "11": {
+              "success": 3822,
+              "transport_failure": 18
+            },
+            "12": {
+              "success": 3840
+            },
+            "13": {
+              "success": 3840
+            },
+            "14": {
+              "success": 3780,
+              "transport_failure": 60
+            },
+            "15": {
+              "success": 3840
+            },
+            "16": {
+              "success": 3840
+            },
+            "17": {
+              "success": 3840
+            },
+            "18": {
+              "success": 3840
+            },
+            "19": {
+              "success": 3824,
+              "transport_failure": 16
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 2.023176,
+            "p95": 10.567755,
+            "p99": 12.51363
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests"
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "df5744e8db613b017df1fbc2056e28edb2a302f3001c853f396efb14ed5b49b2",
+        "backend-0001.jsonl": "c1fa2770d68fbfaa99973b71a97aef135d11d31507a8413819a91aca2e8e8757",
+        "backend-0002.jsonl": "161f6bf146a3f2d86201c26706aac53b7214e1235cd596953cfd137f40cb9d47",
+        "backend-0003.jsonl": "d6e6b2cda68f534915c9e58662e44592c3bf3e9a998916616fd96160751fc4ba",
+        "backend-0004.jsonl": "6da7e7d3f883562f470310ce3096c1c32b6041d12554837501eef55124fd8bbf",
+        "backend-0005.jsonl": "0495e57d56d9953bc85c0fc70001ea404790f28caf722f37cf4a7923ff137d8a",
+        "backend-0006.jsonl": "6a50b22b6b2cfbc1695b805e1958e839a947086149521443cce916752b4a9097",
+        "backend-0007.jsonl": "dfad015e8f2dd1082ad1b808a8a324efb0e5e646342fc8fcd29f1a6f065fa917",
+        "backend-summary.json": "bb50720a031435d46e0abb4e6b81d1e5551f7cdd4fa2d7e062210fc69ad06f57",
+        "client-0-0000.jsonl": "8f62ae18afab45d014c9c1d0c16fe35989a0ecedd95953a4604b3e573262c0fa",
+        "client-0-0001.jsonl": "81dcb87a5af708c8436a4cdfcfab0d4b9942dc004cda50f14c49db0a33297f95",
+        "client-0-0002.jsonl": "890e5ee12a515a021167bb10a181872c0cdee26a17899f11529fa72978773990",
+        "client-0-0003.jsonl": "cc1e2ae1dc44936dea8a118264cf91ae46c65780e6b19ae30de1f7ad0b0211d2",
+        "client-0-0004.jsonl": "1cf3541dc9898571fe62470b533812b36ff1826038c07cd10650912d4372183f",
+        "client-0-0005.jsonl": "e204a7fb2e256032d7126a5c67acf65e9f047153c27aaba0facb9ad15b19a42b",
+        "client-0-0006.jsonl": "05c77e3ca6c644bc33463cbbf2c2b76b099f0c1705746d48eda0452bdc422975",
+        "client-0-0007.jsonl": "5a0669781c5b09b8c01e860a8235ed9233e275555d0f969e6afb5fe3fc85b5f3",
+        "client-0-0008.jsonl": "78d47c8106929009b57dea5faab1102633e80bb2e079228bc2c9f9b0da23e3f8",
+        "client-0-0009.jsonl": "bdb83764ded9a601626317e349c65fe4b05854659b3077d44f27a76b4a9a512f",
+        "client-0-0010.jsonl": "346a626e763da16ec020e15e6d00eb5900237fc822ad7277083fe79191e79d5e",
+        "client-0-0011.jsonl": "483d3100129cb75747320df6021cf09eb77219d34f6fc870d74ac37465255417",
+        "client-0-summary.json": "533a6ff56b6d2fc0eb2d9408f5089723734943787a4545f4f599416ee76a9d5e",
+        "client-1-0000.jsonl": "cc7480bad82d581d5f6982f07d1503bd39176539963a20ed25f1cfec0476e9e0",
+        "client-1-0001.jsonl": "d380a03c5243c70c0f353d3d8dd7dcdca5fdd37bc361b079bd235b4cde14380a",
+        "client-1-0002.jsonl": "05d8d83cc5a06da52c15c557b226e4b0ea4690b3b679cbb5379b0ab0694b4987",
+        "client-1-0003.jsonl": "27491ac382c87201f25e7719fcc53c9bb85e113d60a4e0c6696f92394ce90fb7",
+        "client-1-0004.jsonl": "c82211e8a0e79e40238a66758d4d49dafa35fc21ef7ab3d5e65fb052683bf7bb",
+        "client-1-0005.jsonl": "cb0eecfd3715251aec6f37cae239fc660f95e771b7cfe9e825c6e9b243990df7",
+        "client-1-0006.jsonl": "204a815a4bbe6076c747d0ebde4f0edb95db3536e077f5711ecbc71afef61cac",
+        "client-1-0007.jsonl": "b51ae2e99bda4a9082f58c7081caf98fe77f2b2fd0aa2c7ae6f93d4b8ee7c694",
+        "client-1-0008.jsonl": "bfb4db29964b1d0889b6082669199437d9b4c567062e9e98e2089258b601af2a",
+        "client-1-0009.jsonl": "f6a8ed65ff18696a04c50b4b72fb2d6032eaa02b4b3b2e4e9946eb05b3b8a875",
+        "client-1-0010.jsonl": "a57ccbec61144f18973cbee33e100809c894a9f3381fdc31e02c09b6dbcbf577",
+        "client-1-0011.jsonl": "bab06500c2d647a1bddf7901be172c2b3e9f9ce7e4a0a0b3fa851c7a84520062",
+        "client-1-summary.json": "daeca11bbb795e2af30e25d6d9598a7260bee74b76836e54487ad92685134c05",
+        "drain.json": "e914a83b6da95f49b740fc7723e420f1b2e9b533e40d39bc28c3b4c8f9548ad0",
+        "gateway-0.json": "874120319275206316e727fa32b3993f6b90b4e4f22b485c2f211c8e400e33d8",
+        "gateway-1.json": "6c72d0931460c2442b976d2995ca860098972e4c19e43a43bceba1e065ea7ae0",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "725baa353528d6c15eb09c7b1f600d2bf5edb1e0eeee9709dd99e9aa3eab7650",
+        "log-gateway-1-0000.jsonl": "9d56018933d301a960e10c16d9e5f5d705b3918be2e63a6a1260f1e33b1f5715",
+        "processes.json": "cd46ca8a26717fe4aa4293eff33f9b05866ec5dfd4f806518c3ac374217bd644",
+        "resources-0000.jsonl": "d4d9174cffa8e5237f9101d6f76b44e2bad2275b41a0b8b5bbbe292afec4ca6d",
+        "result.json": "ca28c596c0ca94c0b8dd4d93015b43aaab8c2a69568bf1112778f6810c247377",
+        "spec.json": "7024e983121f38adbb667ec407212b238d73d62687a92c7582df54cc4ae7c5e7"
+      }
+    },
+    {
+      "role": "builder",
+      "input": "build-local/builder/v0.6-s1/evidence/run/F-A-M-3840-r2",
+      "spec": {
+        "id": "F-A-M-3840-r2",
+        "kind": "formal",
+        "path": "M",
+        "workload": "A",
+        "rate": 3840,
+        "repeat": 2,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 22676480,
+        "start": 400066317278574,
+        "targets": [
+          36707,
+          36643
+        ],
+        "measure_start": 400070317278574
+      },
+      "phases": {
+        "w": {
+          "planned": 11520,
+          "outcomes": {
+            "transport_failure": 131,
+            "success": 11389
+          },
+          "errors": {
+            "[\"transport_failure\",\"[Errno 104] Connection reset by peer\",0]": 6,
+            "[\"transport_failure\",\"EOF before any response\",0]": 125
+          },
+          "backend_by_outcome": {
+            "success": 11389
+          },
+          "per_second": {
+            "0": {
+              "transport_failure": 84,
+              "success": 3756
+            },
+            "1": {
+              "success": 3840
+            },
+            "2": {
+              "success": 3793,
+              "transport_failure": 47
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 2.245967,
+            "p95": 5.1986,
+            "p99": 5.301661
+          }
+        },
+        "f": {
+          "planned": 76800,
+          "outcomes": {
+            "success": 76570,
+            "transport_failure": 230
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 226,
+            "[\"transport_failure\",\"[Errno 104] Connection reset by peer\",0]": 4
+          },
+          "backend_by_outcome": {
+            "success": 76570
+          },
+          "per_second": {
+            "0": {
+              "success": 3763,
+              "transport_failure": 77
+            },
+            "1": {
+              "success": 3840
+            },
+            "2": {
+              "success": 3840
+            },
+            "3": {
+              "success": 3840
+            },
+            "4": {
+              "success": 3840
+            },
+            "5": {
+              "success": 3836,
+              "transport_failure": 4
+            },
+            "6": {
+              "success": 3840
+            },
+            "7": {
+              "success": 3839,
+              "transport_failure": 1
+            },
+            "8": {
+              "success": 3840
+            },
+            "9": {
+              "success": 3840
+            },
+            "10": {
+              "success": 3805,
+              "transport_failure": 35
+            },
+            "11": {
+              "success": 3840
+            },
+            "12": {
+              "success": 3840
+            },
+            "13": {
+              "success": 3790,
+              "transport_failure": 50
+            },
+            "14": {
+              "success": 3840
+            },
+            "15": {
+              "success": 3830,
+              "transport_failure": 10
+            },
+            "16": {
+              "success": 3814,
+              "transport_failure": 26
+            },
+            "17": {
+              "success": 3840
+            },
+            "18": {
+              "success": 3840
+            },
+            "19": {
+              "success": 3813,
+              "transport_failure": 27
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 1.499883,
+            "p95": 6.462495,
+            "p99": 6.768539
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests"
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "2661be69a60ecd672eb83f49fc243de1e1aa78406a77dc65426f3b4f252253a8",
+        "backend-0001.jsonl": "099331cb9d3d1b3ca020488362ffaa088fe2f83685f5303e28a43d5804e0fbae",
+        "backend-0002.jsonl": "3774d91a0e36602ec78ae8af2d9eba71ee720e0f972619dda7dbd502b00cbd43",
+        "backend-0003.jsonl": "680f516e5fe3997558dfa7d03ca07f4fceebaa8bd481a688907561ba13a85a52",
+        "backend-0004.jsonl": "0a5f083db5d00fa4b837055c4023b98329f41488167d8b38d2b6e75a90ddf839",
+        "backend-0005.jsonl": "31708fa987dbdad67234a41b83e232c833d914fa48e60be2e2a39d9ff8b04b9f",
+        "backend-0006.jsonl": "27c07825fabda6092db6612ded07e525f56a7e37e69f7ae8e7c9be06a39982a9",
+        "backend-0007.jsonl": "c8542634817ad67c9d3eed736c5ffe80eff3a8641b2f9504e8c6cd5905055f7a",
+        "backend-summary.json": "bfb7412feb3de3c854c04b958a79a61ab59f5effa776c10a4663b58a5393d545",
+        "client-0-0000.jsonl": "721d22bb07b68b1f77427de021dddb866bc99a982f4b7b8d18578d10b8be147d",
+        "client-0-0001.jsonl": "51432e76021bda37bf69266406afbaf947754a432eef59b19a3f49d70f0fd72b",
+        "client-0-0002.jsonl": "b328c7fb413a04c161b1053ef2c4b40e30b17ef2e92cced4eeafc11e43da3d7d",
+        "client-0-0003.jsonl": "ea0246cfd63f048fcb1e522ae98feb22091b2d9bf0ae3e6d624c68feaf91b7e9",
+        "client-0-0004.jsonl": "5dc6c46dd843be9c993066eb92d396f147cc0bb877b9076c1cbbbf3e6fec9ff4",
+        "client-0-0005.jsonl": "aa18aafcbdeb795ba49394862a59459fdaa723987a850bbf90796277f4623cb0",
+        "client-0-0006.jsonl": "3bc7c6d12709238eef670a9be34579aefd7c8cbf0a6e4174e87740240c781d0c",
+        "client-0-0007.jsonl": "61ffae556c15dfe4156ee6b4166343fff7256571d8e19669ee3611aa5942b20c",
+        "client-0-0008.jsonl": "0a92f3edc29e426d4fb9024c2c7a7bbaddb8c13bd09eff70ff8f686a8fcb0ef9",
+        "client-0-0009.jsonl": "572eb1eb3bd8e18ac8ca52afe58e567ba6c36eef355b7213a5052784945cc808",
+        "client-0-0010.jsonl": "f95dee658165377073df2cac07c7d55c7a249f416aea5cb6264c829a6777f4f6",
+        "client-0-0011.jsonl": "0e5a9b8c7de63810e276f2600288462775b49eb55f06c2621aad16d134a806dc",
+        "client-0-summary.json": "0f635b34e27daa4988b0d24f87fc74d174315ae4ef3cfd95c38487a65561d4d9",
+        "client-1-0000.jsonl": "08ce8a6d694195d2bc904b41e2cd9095849aa41edd75cc64f33203a2a2d0e625",
+        "client-1-0001.jsonl": "41151edfb2092edc847fd0fb8af4150666c9a3409b7ec51a46d3f82bd7281740",
+        "client-1-0002.jsonl": "21723a9125ebb31a347eef20b318ea27df5c307c7f2bd83aa64dc94b8f50a67f",
+        "client-1-0003.jsonl": "7146ef8de5ef5a5258a58007749662098bcb674038a537c1c4d10482ec6b528f",
+        "client-1-0004.jsonl": "707d3d914133d142116c7314d0737004ac310962d8e5f70a6e7b0aca1d8bf53a",
+        "client-1-0005.jsonl": "9fc2ecdceab77272cfd439062555173fb86a2735c7886e2ef95cf2c9e4f780ca",
+        "client-1-0006.jsonl": "587d2499f16672f08b25cb0fdd4ba8bdee868d16431db9b25532ac921f8f5c42",
+        "client-1-0007.jsonl": "9c9443e9381dd189b944d07057a0f24d05ba03bc064896263520aded234fa005",
+        "client-1-0008.jsonl": "1ead4e0a1d4e2f3086ed09e8204a40dd42d545c997d911d8ba8271a803c582e2",
+        "client-1-0009.jsonl": "cf832c5e133c1a9bb1d5e447ee33ce3b93dc1031effec3831b047b956c25653c",
+        "client-1-0010.jsonl": "ee7c10690838a7bb78a84ee5a9e4b399f52c4f36d8e05a8254301c93d71cb452",
+        "client-1-0011.jsonl": "c360496ece5a1ac85067645483ca91a80c4971a26a9c31aa5979acb2b1c64dc5",
+        "client-1-summary.json": "fb8aa8a95095604063f1654d0980cf5f951025930ee68ec9bfa600885e0ab90e",
+        "drain.json": "3396482c2d50f2f2c6baca76699abf86d3a98a51c6f7142e64a79896d3ca3c64",
+        "gateway-0.json": "fa0c9a4d9002b56f3e68d607b8cdd5c8fffe74139bd4df0243db48a14be09941",
+        "gateway-1.json": "e4fb9244fe7ab92eca867f09fdb52417b7ef5527d75661b439010172cf7d10fa",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "7f7533db8185efc77d74e1b31325090235fef1472dbc8cd673865ddc0befe427",
+        "log-gateway-1-0000.jsonl": "c11ea004e89c007ec9495170f9f12d1c63ec438f51432cfd2bd8a836a1ff09f6",
+        "processes.json": "b602533b8462ef5fb8d3d7b053dd8290423125c3a5995cdef1ed8270a3a4a939",
+        "resources-0000.jsonl": "4b87264b3323e4e469c51d254d32a6a85459f207ffc826f46389133e49adcb99",
+        "result.json": "f267068527f999dffddef6e08773f118a074153a90e533736a539d4e5f568845",
+        "spec.json": "136633004891148b352325bc7cdedb239adf28586729449f54fe92b48c08ce67"
+      }
+    },
+    {
+      "role": "builder",
+      "input": "build-local/builder/v0.6-s1/evidence/run/F-A-L-1920-r0",
+      "spec": {
+        "id": "F-A-L-1920-r0",
+        "kind": "formal",
+        "path": "L",
+        "workload": "A",
+        "rate": 1920,
+        "repeat": 0,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 11371520,
+        "start": 395512275052532,
+        "targets": [
+          37655
+        ],
+        "measure_start": 395516275052532
+      },
+      "phases": {
+        "w": {
+          "planned": 5760,
+          "outcomes": {
+            "success": 5722,
+            "transport_failure": 38
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 38
+          },
+          "backend_by_outcome": {
+            "success": 5722
+          },
+          "per_second": {
+            "0": {
+              "success": 1882,
+              "transport_failure": 38
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 10.155231,
+            "p95": 16.84027,
+            "p99": 19.01533
+          }
+        },
+        "f": {
+          "planned": 38400,
+          "outcomes": {
+            "success": 38374,
+            "transport_failure": 26
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 26
+          },
+          "backend_by_outcome": {
+            "success": 38374
+          },
+          "per_second": {
+            "0": {
+              "success": 1920
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1920
+            },
+            "3": {
+              "success": 1920
+            },
+            "4": {
+              "success": 1920
+            },
+            "5": {
+              "success": 1920
+            },
+            "6": {
+              "success": 1920
+            },
+            "7": {
+              "success": 1920
+            },
+            "8": {
+              "success": 1920
+            },
+            "9": {
+              "success": 1920
+            },
+            "10": {
+              "success": 1920
+            },
+            "11": {
+              "success": 1920
+            },
+            "12": {
+              "success": 1920
+            },
+            "13": {
+              "success": 1920
+            },
+            "14": {
+              "success": 1903,
+              "transport_failure": 17
+            },
+            "15": {
+              "success": 1920
+            },
+            "16": {
+              "success": 1920
+            },
+            "17": {
+              "success": 1911,
+              "transport_failure": 9
+            },
+            "18": {
+              "success": 1920
+            },
+            "19": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 2.218417,
+            "p95": 3.746338,
+            "p99": 3.924181
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests",
+        "accepted": 44160,
+        "closed": 44160,
+        "close_reasons": {
+          "drained": 44099,
+          "SO_ERROR": 23,
+          "shutdown SHUT_WR": 38
+        },
+        "zero_response_reasons": {
+          "SO_ERROR": 23,
+          "shutdown SHUT_WR": 38,
+          "drained": 3
+        },
+        "errno": {
+          "SO_ERROR:104": 16,
+          "SO_ERROR:32": 7,
+          "shutdown SHUT_WR:107": 38
+        },
+        "sent_c2b": 10182980,
+        "sent_b2c": 51195456
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "69935eab3bb7e8394d44aaa449be91b3e46018750103e1004c85da49c9227153",
+        "backend-0001.jsonl": "fbd469f4d85b5dcaadebf2e528c114c2a63fc13eb6edc1d9382487553fbe31eb",
+        "backend-0002.jsonl": "96639eb1d955dbadbb97f4c05aff61f78493a9e032ed0d4534a5472d38488ebb",
+        "backend-0003.jsonl": "084589ed558617249299a480615f4511860ffa66954b3028c9f545e426ecb2c8",
+        "backend-summary.json": "9ddc44b3c8bc2d5d3889288a60c1ddd42fdf99f2208b2e383849ab807f74f6cc",
+        "client-0-0000.jsonl": "5b352673d82a65685def085ad147d7fac3c007c2820e4494f9bb3969ee855f69",
+        "client-0-0001.jsonl": "45dd1e7059fc502823e4aea154986d88f98398c1c7fe72c561bf6807cc24d9a1",
+        "client-0-0002.jsonl": "54166fae44f980354d8806784a7e0d9f279e1ee8ddb8414fe966ded6c09cdc32",
+        "client-0-0003.jsonl": "f4deda3d8ad3a022d1229f259d52ec6c841038cc505df51ebb253564705086ff",
+        "client-0-0004.jsonl": "8b3fc63d892becbcb85eadeb74a6e74f63a264e6e7c366db72733172a976a1d5",
+        "client-0-0005.jsonl": "bd1a4983cc2d7fa052a8fec692a666d4c7d7a282bc7a60bb2752055c4dff7b55",
+        "client-0-summary.json": "ef1e34bd9c6ec4c52763720eefa292cb93c750a8f3041cf4ba60c307249e46b8",
+        "client-1-0000.jsonl": "2d9035a57599fda8cfeb573c7361a047ce45d94beec8a0dcc38fa0a7e5f7133f",
+        "client-1-0001.jsonl": "7c1793dd9d67138f8ab8db8434702c4421f055feb6db56f6e0e6af1e128b8760",
+        "client-1-0002.jsonl": "8dd0d8b47a02d0f1e8b30ada6366b0d4c975af1fd58a0f8f4b50916837d631e4",
+        "client-1-0003.jsonl": "fa9e2b6e97272ac104dec738feb9134921e93cf326d25d599778b92d8c7e5ae8",
+        "client-1-0004.jsonl": "007a17f1eda8475d9143b0a740c3a259219af70548b7671a95ce0746b5276de0",
+        "client-1-0005.jsonl": "a1486cfe8bee608604b5c93e1b3477f1117fcd96a0a0d6601ee0ab414271e57f",
+        "client-1-summary.json": "134adf814f685cf1753e21f6ab0c3aca1023e71cd401bae211a4b372860018e8",
+        "drain.json": "b092cccfc2eb1b02f1176ab76fa0e1723a51f49b9a113d511fc57de27525cda2",
+        "gateway-0.json": "2745ba4a7722fca48a2c4ebc7cba3ce6c3360722eb4fe7fed9190c84990d766e",
+        "gateway-1.json": "4e1f84ecd5bf08ec67dee2390aafae66a31d94d8df736aa7d2d2eaa826596908",
+        "l4lb.conf": "cbc5459a7ae7ae3ac8745139d5c6cfd444ffc5623efb5a2359f34cd4c2d4c3bc",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "3d8a22e0c9dfee1064f94c26236e7cf6912a4052f7299deae897eaaf10a86493",
+        "log-gateway-1-0000.jsonl": "7772b8011f74b0a8c287c8ee863aa74f222d9165daad8a7283b312273b4ca777",
+        "log-l4lb-0000.jsonl": "80eb71d07d3a2bace201c8946bebd0e646ffbb5ead48f406af8a67f2cb0496c2",
+        "log-l4lb-0001.jsonl": "45f92bfd47c3ef926e4f56c59ae08f6bc3f38c938096a06cfe348b8a9e8dce9f",
+        "log-l4lb-0002.jsonl": "acf4c072c004925981efaba099c0297c8ba67e5eda4979f70697ee5795b3f211",
+        "log-l4lb-0003.jsonl": "8ca68a4462ec4b4647870da025d729c20a8109213499fea25c42dfb16cfec3a3",
+        "log-l4lb-0004.jsonl": "2c3d8d4c2c141eae32af7289c5028a795578217fdadd468d2f3a8bc1f83b00f1",
+        "log-l4lb-0005.jsonl": "e4d019ffeaa1dc3d85b33b0813f16aba22a1b42d7cb2e27648abeb65654e16ec",
+        "processes.json": "840e885feb9120b80342a45465eb03f90eb0c92e2a1ab7ce3627312088097418",
+        "resources-0000.jsonl": "0deb7614f6376a201f21d4fafb8b9d15cfa69c5fa9e40276f1f6315eeff3a094",
+        "result.json": "1069ba9e131b25ef4ab25a7ebb2371f4a807915e8d1eae02333ed8b698e97f5f",
+        "spec.json": "27a994e178f3ac2a007445cc9c7202c8080d909e1e3d1d36f3f5ac15a21e534c"
+      }
+    },
+    {
+      "role": "builder",
+      "input": "build-local/builder/v0.6-s1/evidence/run/F-A-L-1920-r1",
+      "spec": {
+        "id": "F-A-L-1920-r1",
+        "kind": "formal",
+        "path": "L",
+        "workload": "A",
+        "rate": 1920,
+        "repeat": 1,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 11371520,
+        "start": 398145350786466,
+        "targets": [
+          37373
+        ],
+        "measure_start": 398149350786466
+      },
+      "phases": {
+        "w": {
+          "planned": 5760,
+          "outcomes": {
+            "transport_failure": 112,
+            "success": 5648
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 112
+          },
+          "backend_by_outcome": {
+            "success": 5648
+          },
+          "per_second": {
+            "0": {
+              "transport_failure": 112,
+              "success": 1808
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 13.320335,
+            "p95": 22.739715,
+            "p99": 24.286519
+          }
+        },
+        "f": {
+          "planned": 38400,
+          "outcomes": {
+            "success": 38334,
+            "transport_failure": 66
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 66
+          },
+          "backend_by_outcome": {
+            "success": 38334
+          },
+          "per_second": {
+            "0": {
+              "success": 1885,
+              "transport_failure": 35
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1920
+            },
+            "3": {
+              "success": 1920
+            },
+            "4": {
+              "success": 1920
+            },
+            "5": {
+              "success": 1920
+            },
+            "6": {
+              "success": 1920
+            },
+            "7": {
+              "success": 1920
+            },
+            "8": {
+              "success": 1920
+            },
+            "9": {
+              "success": 1920
+            },
+            "10": {
+              "success": 1920
+            },
+            "11": {
+              "success": 1920
+            },
+            "12": {
+              "success": 1920
+            },
+            "13": {
+              "success": 1920
+            },
+            "14": {
+              "success": 1919,
+              "transport_failure": 1
+            },
+            "15": {
+              "success": 1920
+            },
+            "16": {
+              "success": 1920
+            },
+            "17": {
+              "success": 1890,
+              "transport_failure": 30
+            },
+            "18": {
+              "success": 1920
+            },
+            "19": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 5.483598,
+            "p95": 18.53822,
+            "p99": 19.970246
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests",
+        "accepted": 44160,
+        "closed": 44160,
+        "close_reasons": {
+          "shutdown SHUT_WR": 162,
+          "drained": 43992,
+          "SO_ERROR": 6
+        },
+        "zero_response_reasons": {
+          "shutdown SHUT_WR": 162,
+          "drained": 10,
+          "SO_ERROR": 6
+        },
+        "errno": {
+          "shutdown SHUT_WR:107": 162,
+          "SO_ERROR:32": 3,
+          "SO_ERROR:104": 3
+        },
+        "sent_c2b": 10182980,
+        "sent_b2c": 51063102
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "8b94fd18038018aaa83b64fb117debaf5b8b935f6014b299916a9f589736f609",
+        "backend-0001.jsonl": "61b3a878c9f434f687a77a6f273c39e21c334a207c36f7b39fa5d192279054f1",
+        "backend-0002.jsonl": "3a84df945a04419ce7b3bac79d62b7f935792a4cd4e399071b1177ab0a882c40",
+        "backend-0003.jsonl": "d361ab9c9c94457faec735aa58e9b378d7f4e467dc79ec51b034aa392673cffb",
+        "backend-summary.json": "09d4d3f3d567995ccaaf76f41e1db24087533ab792b1bf9ca62228870681efad",
+        "client-0-0000.jsonl": "4776d1ab701208c6b98603ff764f8571cfd7f22134857ed0ff5e43240902b56c",
+        "client-0-0001.jsonl": "421e0237ace1775e7b622b41aea4aaa045bb54028a8fcba1d69c8b7bd7387cae",
+        "client-0-0002.jsonl": "1d68c3b6801fa37dd3252100d3221c6de74f7df697142e312e70c65f525f4cd2",
+        "client-0-0003.jsonl": "a3e97f2d0870510cdb5eccfebc94f0d4ea33299e9be8a4f0cc30271744998b26",
+        "client-0-0004.jsonl": "0546479e4cf106d212a7a36d42adea65482fe223bb87a06c84554fa2c8638163",
+        "client-0-0005.jsonl": "4d11de98b24d623a9d6614d7d609043ccea26c15dc6c5f9046c79a31afa1226f",
+        "client-0-summary.json": "d123f0e142c92dbfd50468cc63be87cbfe019ca2a516194cd81f41e36ce758e0",
+        "client-1-0000.jsonl": "00a75e4f82325af5971af57be0565be84f7f47fa9c74b0956c9c0c1d39cd362f",
+        "client-1-0001.jsonl": "76212e4442a704b89ec9e51c88f6b59ade53087c049d6c1062ced1b11630db02",
+        "client-1-0002.jsonl": "7ad428655ba3e25fd4fa712c0afddc0935d3623e80969f96c2da9ae62dd0aad4",
+        "client-1-0003.jsonl": "a8c8894504a75d04a5afacccc092ab3e9c65bc27f1a7659100513c7d57c60b2c",
+        "client-1-0004.jsonl": "9dc2b8c2ccaafdb4a659b5608e0eb7c0631eb098a71645d3be8367dae066c221",
+        "client-1-0005.jsonl": "2388198541e5f4b7650a2034562c20106a2223c5413b940e655ecd96cba88d07",
+        "client-1-summary.json": "af132349e26c82926e09604e8f40279b58d1a969853bbde63fdf67ce339b7e08",
+        "drain.json": "2a7ff34fd6e13eaa09a5419794f6db578012a2b5386fa28424a331fce8c8b934",
+        "gateway-0.json": "c3c8d5a0d52066d88ac0ce010b6b0d17c1077da4675e523da9e4f09feb3f31c1",
+        "gateway-1.json": "119e254a2287d5d49cfd38b11a5d80fd2f304b367d62ded8d375aab40a2b4d05",
+        "l4lb.conf": "faf0d4e93252cc5ab2c629763c6c2e1128c599efa706e46c0c76a11db1661714",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "ad191f9fd269674f4c246961618e8f7c7b2de723dfaffeb0a4ba28db76cfc9ac",
+        "log-gateway-1-0000.jsonl": "6081da5637b94d311e3798c51ccb8c2c390a48ea051ecf9ab4202e8718efbc69",
+        "log-l4lb-0000.jsonl": "2fd5d861768e0825671112fce16d7d365d7b13225486c89381e07985ba1b6e1f",
+        "log-l4lb-0001.jsonl": "6975a8ab832f8917345dfaa0e34381d69df22a38810da18c3c9fcfb9b55b933d",
+        "log-l4lb-0002.jsonl": "0b73024cd4a043e57b68ce3a1dd8cf07067eccad436b55bacb613ac748f0bc86",
+        "log-l4lb-0003.jsonl": "d0bc410cd258d7c3037be98d1ccb6e896ab9137b8b2751337afcc7bd3020da00",
+        "log-l4lb-0004.jsonl": "ccc7de81c91b809523d5e5f7820674ff9eb600ff022800d13fa2ce0cc2646357",
+        "log-l4lb-0005.jsonl": "7eb829dc8050fc815161f19dbd3ec53f2eb245a8fac5aec33ab2de9155fe6003",
+        "processes.json": "1c682e92239bdeb355cf15950baa21736bb3cb34337e01e9f74c4c287a9de3a6",
+        "resources-0000.jsonl": "b3c840a8df20d7e4dd85ecb2a37a46c2cb92c36abe7e3a6aaf7112a2a406fe40",
+        "result.json": "9067782a061bd290bfd9547307a733932640127830c90bcfef8f0d627bfd177d",
+        "spec.json": "7765974712139c64069a21fed361842443f8ad8ad81dc74a21c122d7b1196ce9"
+      }
+    },
+    {
+      "role": "builder",
+      "input": "build-local/builder/v0.6-s1/evidence/run/F-A-L-1920-r2",
+      "spec": {
+        "id": "F-A-L-1920-r2",
+        "kind": "formal",
+        "path": "L",
+        "workload": "A",
+        "rate": 1920,
+        "repeat": 2,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 11371520,
+        "start": 399913464200858,
+        "targets": [
+          36699
+        ],
+        "measure_start": 399917464200858
+      },
+      "phases": {
+        "w": {
+          "planned": 5760,
+          "outcomes": {
+            "transport_failure": 117,
+            "success": 5643
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 117
+          },
+          "backend_by_outcome": {
+            "success": 5643
+          },
+          "per_second": {
+            "0": {
+              "transport_failure": 101,
+              "success": 1819
+            },
+            "1": {
+              "success": 1904,
+              "transport_failure": 16
+            },
+            "2": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 14.574263,
+            "p95": 37.303544,
+            "p99": 39.276588
+          }
+        },
+        "f": {
+          "planned": 38400,
+          "outcomes": {
+            "success": 38349,
+            "transport_failure": 51
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 51
+          },
+          "backend_by_outcome": {
+            "success": 38349
+          },
+          "per_second": {
+            "0": {
+              "success": 1920
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1920
+            },
+            "3": {
+              "success": 1920
+            },
+            "4": {
+              "success": 1920
+            },
+            "5": {
+              "success": 1920
+            },
+            "6": {
+              "success": 1920
+            },
+            "7": {
+              "success": 1920
+            },
+            "8": {
+              "success": 1920
+            },
+            "9": {
+              "success": 1920
+            },
+            "10": {
+              "success": 1920
+            },
+            "11": {
+              "success": 1920
+            },
+            "12": {
+              "success": 1914,
+              "transport_failure": 6
+            },
+            "13": {
+              "success": 1920
+            },
+            "14": {
+              "success": 1920
+            },
+            "15": {
+              "success": 1875,
+              "transport_failure": 45
+            },
+            "16": {
+              "success": 1920
+            },
+            "17": {
+              "success": 1920
+            },
+            "18": {
+              "success": 1920
+            },
+            "19": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 7.069266,
+            "p95": 8.164763,
+            "p99": 8.183601
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests",
+        "accepted": 44160,
+        "closed": 44160,
+        "close_reasons": {
+          "shutdown SHUT_WR": 148,
+          "drained": 44000,
+          "SO_ERROR": 12
+        },
+        "zero_response_reasons": {
+          "shutdown SHUT_WR": 148,
+          "drained": 8,
+          "SO_ERROR": 12
+        },
+        "errno": {
+          "shutdown SHUT_WR:107": 148,
+          "SO_ERROR:32": 3,
+          "SO_ERROR:104": 9
+        },
+        "sent_c2b": 10182980,
+        "sent_b2c": 51074712
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "a67840f58da4bf113d6ab39d86a850377ab88e7f5f163d7fdc126566c5daf7bb",
+        "backend-0001.jsonl": "b052330fa48b372ee6f53276bcee204135f5b4150ec98021b6ebe6ef35bdf641",
+        "backend-0002.jsonl": "4d15109d7e315e594f9c68eb426928023e3c5c7610f0adda8f0b9c01e7e5c1c9",
+        "backend-0003.jsonl": "f52f0d95e3cd85f439f9285470536c8fd8ed265808d701d34b16843e07ac9dd7",
+        "backend-summary.json": "3e399b765a1219677c47eba2e555380fa3aaad68bc92f6b49d3a64ab31d49a47",
+        "client-0-0000.jsonl": "e327022984bd8e611d15b7ac6cc2f244f3c6b9161d5591665f81707c47ecee2b",
+        "client-0-0001.jsonl": "acd806529ad14e3c56bb18bd140cb05f3ec47d2b12dd77911b2c62052104ca09",
+        "client-0-0002.jsonl": "2e5c5bd260930a97c2397f366771bd704efdf947824ad7d8a7c6e087e01aca74",
+        "client-0-0003.jsonl": "88208df91c2f74198d16cdad5e13bfff8bf01569f94afb8217131e56c7421b4b",
+        "client-0-0004.jsonl": "21e41b9ece45b5f0dc0b3a2b04d96aa99e05b25103a67a9d4760e39fb85cc255",
+        "client-0-0005.jsonl": "f6e61662eb8daf8eec1ffbc75a43c145ac401cc2932aea781cd4b885078d4423",
+        "client-0-summary.json": "430972708ff240dce6506d9bf02463082475a6e4b51b04609fdc4a931c34245c",
+        "client-1-0000.jsonl": "18216c62471059e92e68981fa0a0a2c1e063ebfe74a030481f6ccee53b9ffb89",
+        "client-1-0001.jsonl": "dae3fe04e6ff1220c5ec36db600aba7c7e03fc41ab8e64f7923cdc5da7d0ba3a",
+        "client-1-0002.jsonl": "8a2477618a7ec647c01452bd5f0c02a599ddce79852a77f9b8e23725114d413a",
+        "client-1-0003.jsonl": "2a470dd870555aeda0178403a64b1e2c01033aca8bbffd935a163fc60e172da3",
+        "client-1-0004.jsonl": "f51477ad5bc1e2d35106ff845bd7a44050bc82b9090517632c0578ab2438648a",
+        "client-1-0005.jsonl": "0e586e7dadb47b7a7de81c1236bf510f5d6530775d81a8978be84b62b52b3f20",
+        "client-1-summary.json": "fb8aa8a95095604063f1654d0980cf5f951025930ee68ec9bfa600885e0ab90e",
+        "drain.json": "1a2a69d23a45a4e310318bc8220037c5978c9d6d27247118af5283c653b90c48",
+        "gateway-0.json": "3392be8285060405e9ebeab0584e01caf44b4dec0cefc96e2078a156bef6f58f",
+        "gateway-1.json": "72d0b9324a9a4ae43006f04c612d240f17dcc4432ea39ac9c5ba85973d94f7af",
+        "l4lb.conf": "5a0044265dfdb4f1fbaf9efd3ec9dbd7e6e6a9df75b8afd488bbe077620859b3",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "5e53c7884d59e60853086e83660c029b0292cb9a9f9a8470c7712675bcb6eec0",
+        "log-gateway-1-0000.jsonl": "a968e2032b479e9763fa9eae16422eb63e3ff03d9f20d9e10e87ba27a5e1467c",
+        "log-l4lb-0000.jsonl": "684f12ee9416c1fe1d2a7d10c71d69c4c805e7bf026f4f5a82ade49b49c2bfb9",
+        "log-l4lb-0001.jsonl": "dc3febc55360337a014ded3ae3c4f670ffa1f6fd4f1bd659318fd4012ae23dff",
+        "log-l4lb-0002.jsonl": "f7f62f8f2cc42a7e89b51bcff7609d0e21094de05ee062594cd5be23d1ea6954",
+        "log-l4lb-0003.jsonl": "3a3abdd5217e6548a1746d298bbcc0d5617550a7d337d237c551e782c9fa1df4",
+        "log-l4lb-0004.jsonl": "eb178b3979e9d61fe80d0ca0358cb323af390b34f0acdff36dbd77f7b7f448de",
+        "log-l4lb-0005.jsonl": "e4ce1f0bb5517254b84ac354cc09efca743109cf81692e71734932b64d158938",
+        "processes.json": "6f34ca7462b7426d045b8b30805a75e4619996f594142a1522ae073ad6933c75",
+        "resources-0000.jsonl": "30ef566d87a7fee140cd3984bd672899bb53761f83203c265f05abd6673bb9ff",
+        "result.json": "1f89b7fc2a77790442b4486181f71af78da6330d8eb8193c11897df90d4c059f",
+        "spec.json": "ccd3db7d1e72de2aae2abc6305fa05f5cd7a5a4430848eec53a03acc5a99badf"
+      }
+    },
+    {
+      "role": "builder",
+      "input": "build-local/builder/v0.6-s1/evidence/run/F-A-L-3840-r0",
+      "spec": {
+        "id": "F-A-L-3840-r0",
+        "kind": "formal",
+        "path": "L",
+        "workload": "A",
+        "rate": 3840,
+        "repeat": 0,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 22676480,
+        "start": 396474222878047,
+        "targets": [
+          38089
+        ],
+        "measure_start": 396478222878047
+      },
+      "phases": {
+        "w": {
+          "planned": 11520,
+          "outcomes": {
+            "transport_failure": 196,
+            "success": 11236,
+            "not_sent": 88
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 196,
+            "[\"not_sent\",null,0]": 88
+          },
+          "backend_by_outcome": {
+            "success": 11236
+          },
+          "per_second": {
+            "0": {
+              "transport_failure": 85,
+              "success": 3755
+            },
+            "1": {
+              "success": 3641,
+              "transport_failure": 111,
+              "not_sent": 88
+            },
+            "2": {
+              "success": 3840
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 10.105972,
+            "p95": 13.280409,
+            "p99": 14.071558
+          }
+        },
+        "f": {
+          "planned": 76800,
+          "outcomes": {
+            "success": 76154,
+            "transport_failure": 621,
+            "not_sent": 25
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 621,
+            "[\"not_sent\",null,0]": 25
+          },
+          "backend_by_outcome": {
+            "success": 76154
+          },
+          "per_second": {
+            "0": {
+              "success": 3649,
+              "transport_failure": 166,
+              "not_sent": 25
+            },
+            "1": {
+              "success": 3840
+            },
+            "2": {
+              "success": 3840
+            },
+            "3": {
+              "success": 3839,
+              "transport_failure": 1
+            },
+            "4": {
+              "success": 3840
+            },
+            "5": {
+              "success": 3819,
+              "transport_failure": 21
+            },
+            "6": {
+              "success": 3840
+            },
+            "7": {
+              "success": 3840
+            },
+            "8": {
+              "success": 3840
+            },
+            "9": {
+              "success": 3824,
+              "transport_failure": 16
+            },
+            "10": {
+              "success": 3815,
+              "transport_failure": 25
+            },
+            "11": {
+              "success": 3840
+            },
+            "12": {
+              "success": 3810,
+              "transport_failure": 30
+            },
+            "13": {
+              "success": 3840
+            },
+            "14": {
+              "success": 3840
+            },
+            "15": {
+              "success": 3774,
+              "transport_failure": 66
+            },
+            "16": {
+              "success": 3622,
+              "transport_failure": 218
+            },
+            "17": {
+              "success": 3840
+            },
+            "18": {
+              "success": 3762,
+              "transport_failure": 78
+            },
+            "19": {
+              "success": 3840
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 4.884154,
+            "p95": 19.765331,
+            "p99": 29.240092
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests",
+        "accepted": 88207,
+        "closed": 88207,
+        "close_reasons": {
+          "SO_ERROR": 264,
+          "shutdown SHUT_WR": 493,
+          "drained": 87450
+        },
+        "zero_response_reasons": {
+          "SO_ERROR": 264,
+          "shutdown SHUT_WR": 493,
+          "drained": 60
+        },
+        "errno": {
+          "SO_ERROR:104": 177,
+          "shutdown SHUT_WR:107": 493,
+          "SO_ERROR:32": 87
+        },
+        "sent_c2b": 20353735,
+        "sent_b2c": 101459790
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "dccce81189dbe92248c8c60155e16a937103acc2402e336537bc43e14f4e694d",
+        "backend-0001.jsonl": "3a1ce723b609cf9bb6372585ca65dc440da9aa9c359355929cb479ac55dd3789",
+        "backend-0002.jsonl": "18ce9f20478695ff42f8a4be68a36f65dd5ff1ff2ec16d7e3064114fe4f1e3d7",
+        "backend-0003.jsonl": "9ee2ab6a02fb03417bf198407c0682ffed43dc00fc60c115799866f0dadc7361",
+        "backend-0004.jsonl": "1839981460b5390f39fe1ac22ab566e938ba9a611f3bb754daa119cb620f5f46",
+        "backend-0005.jsonl": "bca1bbf643e48f36c1d0a392a8a055406441786da2057a0d0ae8d248d6a6e8a7",
+        "backend-0006.jsonl": "d7e66be3f16f368c968f09d8921c773013310d9801bf3e1990e310eee01385f0",
+        "backend-summary.json": "19f80d1eb12b093b427fd6a91daac59f9c489ece18d04958bc16a3efb854c41c",
+        "client-0-0000.jsonl": "40b8f58185bf364106aa6c8c236add188dc24ca330f76e789c56d55ee159a7f7",
+        "client-0-0001.jsonl": "45008f0c23ab6f6a4f4f98edee003b500ed3b1442f058a6e4d52bd99079cd4fb",
+        "client-0-0002.jsonl": "df2e5159d1f87ce8e97da177dd8e1ee3c321bc5c33cd461c4fd813608f446ad7",
+        "client-0-0003.jsonl": "ba79fba8de741a4e97a6474e64e0b9a09c72c6399461c960b6b4e4a8f209f411",
+        "client-0-0004.jsonl": "cb8aa016888e69f2ec15026313578e0f19b4f6812ca120186969c1201f50371c",
+        "client-0-0005.jsonl": "a0fea7343f74ece37361265c99adcfeef9eb322a29462f78175e0e906f4a4d2f",
+        "client-0-0006.jsonl": "48db1548bd22bb7acedc0d17a8ec4539705e289a9097af07102e3d5ef1943d6c",
+        "client-0-0007.jsonl": "e47185a4afa5fe81ce4025948b0cec0232ba6041ca85efbec548ede828e3979f",
+        "client-0-0008.jsonl": "d1f98a19322141d170a34f2f20b70626a880039633609bdf2965540d936b7a2f",
+        "client-0-0009.jsonl": "2a0b0e5baff37eb3033b1cf764898af4c90c32283c6b06b5fc7a9e5602ed44e6",
+        "client-0-0010.jsonl": "d8a2a10410d1b99b310a104bcfc9f22cfa0c980a6e067d3351b0e0a5291d1583",
+        "client-0-0011.jsonl": "0640c962710b1751738b0b84ccfa44b2802267d7572975cafea9f957c79a572c",
+        "client-0-summary.json": "daeca11bbb795e2af30e25d6d9598a7260bee74b76836e54487ad92685134c05",
+        "client-1-0000.jsonl": "f8f6dee2fe184fc80330a12a3e4dd5541af85affcbffb08c70068d8cad7b917c",
+        "client-1-0001.jsonl": "20f000caceac3bc842eaabd3ee2c537b5f3f35445f6fcec8d6bec35b935cec1d",
+        "client-1-0002.jsonl": "4452c67aaa70356fdb90e599116fb5e6952c4d7da642fd98efcba1ae6e4d3525",
+        "client-1-0003.jsonl": "31534775da418fe91e30abba5de95fe5b2559b83cec304b83d6399146b05c073",
+        "client-1-0004.jsonl": "7a9d14840c0bc57016c1fa9e1f6b9bae59b15ea45ba3e717403f2d080c1f2905",
+        "client-1-0005.jsonl": "18fa133c7aeb5694f9fef9bc15bf0992565e5ed220dcffce67288a1ca131b1d2",
+        "client-1-0006.jsonl": "78854b6f3464b9e7a887cba228e848c8cb6017ba7cdaf3382ee475b0feb7110e",
+        "client-1-0007.jsonl": "312e6028d11e092642ceb78a48e2b5d633bae0d4553aacc924220717e26ef6be",
+        "client-1-0008.jsonl": "9dbb8a344ea75b817dd4021b90035fd332dddf211e3f4634b43737aeb032eb6c",
+        "client-1-0009.jsonl": "e4e323a5aaccf9800d93b4200f2d1552d3a819e95b94179612cfa0a516d227a3",
+        "client-1-0010.jsonl": "b1c61880b17761a80fd388586d0188b608a9aa704dd083d25c076d5704a07fa5",
+        "client-1-0011.jsonl": "7bf944477e5d87b742ba86f7b137580652c1b4b95b5520420afb967203a43db8",
+        "client-1-summary.json": "daeca11bbb795e2af30e25d6d9598a7260bee74b76836e54487ad92685134c05",
+        "drain.json": "1c59793f08b2fb7c818e61aab4eb5b7cc6655cca62a1d89cf8adf662b46e268c",
+        "gateway-0.json": "fe070b764df40996404c5e83fd35824b4c6db66faff7837ec41d4b0fef626918",
+        "gateway-1.json": "90aba59097115a065af8967bb229c334898cea03a56c5e811704d61ab543b92c",
+        "l4lb.conf": "7f7e66707b049884a8cb1d1a60109ab5462b788d6678d3c4028949c84f8e059e",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "320291c8c273821543187c85cc739bc02626f3f33919b775071fefb98b4b43db",
+        "log-gateway-1-0000.jsonl": "4bdf51c001aad14bc8d69259622d74b8945b23bed6491a79d550c4c591836d24",
+        "log-l4lb-0000.jsonl": "5dc319d7e80f7bdb98359772a82c0d3965ea183e09b95d5394641eac0de5dd14",
+        "log-l4lb-0001.jsonl": "2901ea93aa14e2ca2209a50cbae45e3652a4002141ebd73783d5495588d9c17e",
+        "log-l4lb-0002.jsonl": "dafbd53eb1f799416ceacde77e2fc378168479fb855a906d8f574365dd54e611",
+        "log-l4lb-0003.jsonl": "490ea5659b061f6e2d285f6aea9338c9a894eac6e44febdec18e3c8254925c6d",
+        "log-l4lb-0004.jsonl": "6c37814835ca30a501b35892d13d26250c10a20026ad18eefcc258b18a5940c5",
+        "log-l4lb-0005.jsonl": "ea240ef66dbb00a913bb4d72147e51d0ea6146be50d9b9da1149263af8c13ef9",
+        "log-l4lb-0006.jsonl": "4cb637d2fc7854f002c962a4dd7a98ac9fd011a1f8dd7caa9c0fc7a5ad87e985",
+        "log-l4lb-0007.jsonl": "5d4d04c706964e30a67f25f4df2ac2fed15cb8e36cf7064ee5c23d48aeebf57b",
+        "log-l4lb-0008.jsonl": "350f374a565d080edf76c980a04ec65033e497d1600e847fa00c137387a9f921",
+        "log-l4lb-0009.jsonl": "5cb405ed1673914987c2ca4eff00151f00a86238a783d04b8c1b00a2502a1eaf",
+        "log-l4lb-0010.jsonl": "a31d2a1f1718919614a1220459e64aac3c1db4bb14c9ae301708f2b0dbfddfc0",
+        "log-l4lb-0011.jsonl": "2fa5bf4651e321ef1f7e670263e5d68f92392e665d4b0971b5bc078b879e8189",
+        "processes.json": "db3cc6bb9bf9cc84dfc2a126db36dbd970477b0511874324ce79f77b50b99c4e",
+        "resources-0000.jsonl": "1caa4001b48aa782a777fc70a69960209ea5686bd9864d32c68875f9e2d0ec63",
+        "result.json": "a8297c405f6fa1d7ef8c17e85debd2f020a83d8ded80e9570007054040293fc9",
+        "spec.json": "eb6866157c81d4c5be1081c457b8c3a917e259baa321f7e0edd5a123e50e5b7e"
+      }
+    },
+    {
+      "role": "builder",
+      "input": "build-local/builder/v0.6-s1/evidence/run/F-A-L-3840-r1",
+      "spec": {
+        "id": "F-A-L-3840-r1",
+        "kind": "formal",
+        "path": "L",
+        "workload": "A",
+        "rate": 3840,
+        "repeat": 1,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 22676480,
+        "start": 398222652184969,
+        "targets": [
+          39119
+        ],
+        "measure_start": 398226652184969
+      },
+      "phases": {
+        "w": {
+          "planned": 11520,
+          "outcomes": {
+            "not_sent": 45,
+            "transport_failure": 216,
+            "success": 11259
+          },
+          "errors": {
+            "[\"not_sent\",null,0]": 45,
+            "[\"transport_failure\",\"EOF before any response\",0]": 216
+          },
+          "backend_by_outcome": {
+            "success": 11259
+          },
+          "per_second": {
+            "0": {
+              "not_sent": 45,
+              "transport_failure": 137,
+              "success": 3658
+            },
+            "1": {
+              "success": 3761,
+              "transport_failure": 79
+            },
+            "2": {
+              "success": 3840
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 8.26632,
+            "p95": 32.956218,
+            "p99": 35.478627
+          }
+        },
+        "f": {
+          "planned": 76800,
+          "outcomes": {
+            "not_sent": 135,
+            "transport_failure": 11196,
+            "success": 65469
+          },
+          "errors": {
+            "[\"not_sent\",null,0]": 135,
+            "[\"transport_failure\",\"EOF before any response\",0]": 11196
+          },
+          "backend_by_outcome": {
+            "success": 65469
+          },
+          "per_second": {
+            "0": {
+              "not_sent": 91,
+              "transport_failure": 154,
+              "success": 3595
+            },
+            "1": {
+              "success": 3653,
+              "transport_failure": 187
+            },
+            "2": {
+              "transport_failure": 691,
+              "success": 3149
+            },
+            "3": {
+              "success": 3451,
+              "transport_failure": 389
+            },
+            "4": {
+              "transport_failure": 469,
+              "success": 3371
+            },
+            "5": {
+              "success": 3428,
+              "transport_failure": 412
+            },
+            "6": {
+              "success": 3387,
+              "transport_failure": 453
+            },
+            "7": {
+              "success": 3255,
+              "transport_failure": 585
+            },
+            "8": {
+              "success": 3361,
+              "transport_failure": 479
+            },
+            "9": {
+              "transport_failure": 663,
+              "success": 3143,
+              "not_sent": 34
+            },
+            "10": {
+              "success": 3199,
+              "transport_failure": 641
+            },
+            "11": {
+              "transport_failure": 563,
+              "success": 3277
+            },
+            "12": {
+              "success": 3392,
+              "transport_failure": 448
+            },
+            "13": {
+              "transport_failure": 768,
+              "success": 3072
+            },
+            "14": {
+              "transport_failure": 662,
+              "success": 3178
+            },
+            "15": {
+              "success": 2921,
+              "transport_failure": 911,
+              "not_sent": 8
+            },
+            "16": {
+              "success": 3185,
+              "transport_failure": 655
+            },
+            "17": {
+              "transport_failure": 712,
+              "success": 3128
+            },
+            "18": {
+              "transport_failure": 745,
+              "success": 3093,
+              "not_sent": 2
+            },
+            "19": {
+              "success": 3231,
+              "transport_failure": 609
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 4.688121,
+            "p95": 19.400771,
+            "p99": 29.283575
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests",
+        "accepted": 88140,
+        "closed": 88140,
+        "close_reasons": {
+          "shutdown SHUT_WR": 5522,
+          "drained": 77044,
+          "SO_ERROR": 5574
+        },
+        "zero_response_reasons": {
+          "shutdown SHUT_WR": 5522,
+          "drained": 316,
+          "SO_ERROR": 5574
+        },
+        "errno": {
+          "shutdown SHUT_WR:107": 5522,
+          "SO_ERROR:32": 1851,
+          "SO_ERROR:104": 3723
+        },
+        "sent_c2b": 20338392,
+        "sent_b2c": 89081208
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "58172aa0c6dc19f349557ec30f3a581a2a16bbaa98fd4c328fa991ee9f73806b",
+        "backend-0001.jsonl": "a25b6b18b0586aa2d9e39a2bd862919406c154d49c3677d3e32169582c81640c",
+        "backend-0002.jsonl": "b497aff9302b8a30c42b9d64daf053ae4f666497ef12c3304cc010ddcb431fc1",
+        "backend-0003.jsonl": "be5dde33bc75bc3f76eb539a52c77199ae017eafc09a5e5b20870417a9224789",
+        "backend-0004.jsonl": "f3963aa64784a20cf60f0fa73e261a36c7a08b75d08a32724f8a91eca5dbead0",
+        "backend-0005.jsonl": "786228cd2c4572235e85ea229ec0aa157824b62ed8b24b2b29a0e868c7292ca2",
+        "backend-0006.jsonl": "9c6d4acc5e40ec0979496d22be256437ffb62e3a10ff8c7fde5fa2c9d5be9b86",
+        "backend-summary.json": "49705a4aa8c6eb8009af0bf7542a2b37516b9aca97053d7e4fc32529fb6c5b0e",
+        "client-0-0000.jsonl": "d2ad717efb94994d45f4e067b3d9002ef2d8652525cac4bdf65c6d4964490d11",
+        "client-0-0001.jsonl": "fa75d0d7f06a9a74b8f5cf28672604b31ad7d03677e740362922930e27e495cf",
+        "client-0-0002.jsonl": "5d173183b6800713dbd0725c3ef1fa5a484aa4694e167cb9b45dd93e9e44b13f",
+        "client-0-0003.jsonl": "8fbc78f9233278551d917ee29d2eb30bb8e4a53a6f24e840e94da4fe7f2b7b6a",
+        "client-0-0004.jsonl": "a740333d59015d49f31348bc5d249d02d9b5d9fe8ba3cca5ef85b1a3578d4393",
+        "client-0-0005.jsonl": "6089630140952214b48112e66a1ed6e52ee8dd5e890742c7bb78a54ee1219967",
+        "client-0-0006.jsonl": "64d3cf03e62af8af56b39cb5abdf1d5f10375eac49e84a0487a4098d94d3ce85",
+        "client-0-0007.jsonl": "8b4dfbaea7dda23cdc149d7821319a64864b92442c62a12de7965f698f306b4e",
+        "client-0-0008.jsonl": "51a08380700c5bfca98a5dc4a3e407cd93bd001c35f4d6d1c12108554edeca5a",
+        "client-0-0009.jsonl": "4077198fc96a4caf973f1353892d38e570c41d9ae5897d578b5a92a008c3eadc",
+        "client-0-0010.jsonl": "be7fe24681032ea4743ad4e8d5309a1a6a1f4ffddf77f269d8c97461eaa42221",
+        "client-0-summary.json": "daeca11bbb795e2af30e25d6d9598a7260bee74b76836e54487ad92685134c05",
+        "client-1-0000.jsonl": "5b3bfd822af1fb690ed979962e0ba14267971b907c1eaf09b75c5591688dbec1",
+        "client-1-0001.jsonl": "3164ed792fb767aafc23cee4f7fd1ae45a9067177d63b911d2c087e3b71efe03",
+        "client-1-0002.jsonl": "0f03c8823ffaa3fc4e31afbdc42febae8fc86efe3c1a807b865a20610da05758",
+        "client-1-0003.jsonl": "4ccf559d6c372b125d0b8527d64c7cf1f3fd36cf34619054d2c808c6ac41e46e",
+        "client-1-0004.jsonl": "b823a15fe2a1a040e795d1fd6a18a11861a901b2126e5d9e54588e0c9fe2e670",
+        "client-1-0005.jsonl": "3a4096ac18e7320b01d04f7b100f586791dced9514e28fee9af06261a0f0d745",
+        "client-1-0006.jsonl": "0609adf6dcc88e1ccf9731285d3a5b3fec561e31a03acd4da375849a83c7c4d0",
+        "client-1-0007.jsonl": "62b45e1746a1c44f4a0268da7bb45819a219bdce94c13b8e3889943881a3c683",
+        "client-1-0008.jsonl": "deb8ae5320c847613cd9f090fbffc470db92bbb0bf2109a3b9baa1ba7383e39a",
+        "client-1-0009.jsonl": "b5e58e8814705ee27397c719b6e17425dba2af54074064ed5a89d7382ac4deb4",
+        "client-1-0010.jsonl": "720c67ab677075f6428e3aed3173c6fe3e33097f73c3360d58bc059f579e71f9",
+        "client-1-summary.json": "daeca11bbb795e2af30e25d6d9598a7260bee74b76836e54487ad92685134c05",
+        "drain.json": "0eadd13305d40b10eb33675d42ac72d6682ba01620666c40c9b009a6cdee37ef",
+        "gateway-0.json": "89e3684d11f7874c5b5b998c2574ba6d67658826e3da432562f4b34e2f9f36e5",
+        "gateway-1.json": "bfe3aa077707027ffddfd3836e55e91bea930bcd338c5906c956e66b735d5aae",
+        "l4lb.conf": "9400c0eb252b17d30182739c7f0f78f49ba363b10eed6ec040a0ef8571074dde",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "7b6369d40dc464b29be253baaf64150c265de9df5fddbd50cfab674211f0a28c",
+        "log-gateway-1-0000.jsonl": "1477bcdf6411f266b6fca7b3e6597fd90558fee8b2248fe6906b31b29b731cdc",
+        "log-l4lb-0000.jsonl": "406d9f115a1d88688c894716e9e5f016449ec0343783148d4eea271fe93dd7c5",
+        "log-l4lb-0001.jsonl": "ccfb28b627e99712979901e65037bca3e2d66d145fa58e3ad6ad8f894d6128b9",
+        "log-l4lb-0002.jsonl": "759324abf55f89ca8a2139cffd7df8de7ec6f660b1bedeb6d783a5f9668cb7ee",
+        "log-l4lb-0003.jsonl": "ece2e1d9f6a679e54e1f890ac9620ee599d6dc16c732befaa0e17aeea70bfafd",
+        "log-l4lb-0004.jsonl": "56cb4e70f34327ecf10d81ad63775eecc66f474298a5e21d38f4878744464cb7",
+        "log-l4lb-0005.jsonl": "d65701f32ec26b04ca80481796846a52b741046b3127b394a3fd1bd809fd8dc0",
+        "log-l4lb-0006.jsonl": "4e3ea0765ee27222e742e35a5e77997713447e4df039a05108736a9cad5f7a12",
+        "log-l4lb-0007.jsonl": "3a828247b64af26741f4068aa9af11c400674082ddaecb50e7318ac4ec740a96",
+        "log-l4lb-0008.jsonl": "868a8c78e38cd95c82b952832d074e16db1bb988917aebc2e682348017c3b769",
+        "log-l4lb-0009.jsonl": "752b9a5b302addd92c9fd65c48059157f31f7c9b1946104e5ad31bce2084999c",
+        "log-l4lb-0010.jsonl": "b2e6a066d9eb2071052c31a324671d73fd51bfae24f5263b38b13e7f585364d7",
+        "log-l4lb-0011.jsonl": "934315c31ec13f485b59eb3222a5520a6e822c6239a7ceacc3e6037fe1745610",
+        "monitor-events-0000.jsonl": "ee50a7b78a17bb5c9a9a1a99876f6610b37006eaf4678339ea85a81e2e8c148c",
+        "processes.json": "c5fdb46b692ced10a9e2afdcea568f3ee28d8c44e8bb02af2bc7e05ea81646f8",
+        "resources-0000.jsonl": "eb693b3b43ce18e7e995073ce8fb51f155a87a8b7bc0bd01e1d4d83648db757c",
+        "result.json": "3857d1a779d018599304453569f2d4e4baa21420f562c7bd5d40d78d489493a8",
+        "spec.json": "75313c99ec6679a8299ccbfed8c7d09b825e31e5e922b59a93bacc681610e674"
+      }
+    },
+    {
+      "role": "builder",
+      "input": "build-local/builder/v0.6-s1/evidence/run/F-A-L-3840-r2",
+      "spec": {
+        "id": "F-A-L-3840-r2",
+        "kind": "formal",
+        "path": "L",
+        "workload": "A",
+        "rate": 3840,
+        "repeat": 2,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 22676480,
+        "start": 400093476358617,
+        "targets": [
+          39431
+        ],
+        "measure_start": 400097476358617
+      },
+      "phases": {
+        "w": {
+          "planned": 11520,
+          "outcomes": {
+            "transport_failure": 240,
+            "success": 11250,
+            "not_sent": 30
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 240,
+            "[\"not_sent\",null,0]": 30
+          },
+          "backend_by_outcome": {
+            "success": 11250
+          },
+          "per_second": {
+            "0": {
+              "transport_failure": 167,
+              "success": 3643,
+              "not_sent": 30
+            },
+            "1": {
+              "success": 3840
+            },
+            "2": {
+              "success": 3767,
+              "transport_failure": 73
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 8.176543,
+            "p95": 18.388305,
+            "p99": 23.065078
+          }
+        },
+        "f": {
+          "planned": 76800,
+          "outcomes": {
+            "success": 65781,
+            "transport_failure": 10948,
+            "not_sent": 71
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 10948,
+            "[\"not_sent\",null,0]": 71
+          },
+          "backend_by_outcome": {
+            "success": 65781
+          },
+          "per_second": {
+            "0": {
+              "success": 3659,
+              "transport_failure": 171,
+              "not_sent": 10
+            },
+            "1": {
+              "success": 3830,
+              "transport_failure": 10
+            },
+            "2": {
+              "success": 3298,
+              "transport_failure": 542
+            },
+            "3": {
+              "success": 3212,
+              "transport_failure": 628
+            },
+            "4": {
+              "transport_failure": 452,
+              "success": 3388
+            },
+            "5": {
+              "transport_failure": 886,
+              "success": 2954
+            },
+            "6": {
+              "transport_failure": 733,
+              "success": 3107
+            },
+            "7": {
+              "success": 3254,
+              "transport_failure": 586
+            },
+            "8": {
+              "success": 3420,
+              "transport_failure": 420
+            },
+            "9": {
+              "success": 3697,
+              "transport_failure": 143
+            },
+            "10": {
+              "success": 3323,
+              "transport_failure": 517
+            },
+            "11": {
+              "success": 3446,
+              "transport_failure": 394
+            },
+            "12": {
+              "success": 3642,
+              "transport_failure": 198
+            },
+            "13": {
+              "success": 3186,
+              "transport_failure": 654
+            },
+            "14": {
+              "success": 3242,
+              "transport_failure": 598
+            },
+            "15": {
+              "transport_failure": 492,
+              "success": 3348
+            },
+            "16": {
+              "success": 2772,
+              "transport_failure": 1035,
+              "not_sent": 33
+            },
+            "17": {
+              "transport_failure": 1123,
+              "success": 2717
+            },
+            "18": {
+              "success": 3011,
+              "transport_failure": 829
+            },
+            "19": {
+              "transport_failure": 537,
+              "success": 3275,
+              "not_sent": 28
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 4.946207,
+            "p95": 18.396687,
+            "p99": 25.567944
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests",
+        "accepted": 88219,
+        "closed": 88219,
+        "close_reasons": {
+          "shutdown SHUT_WR": 5124,
+          "SO_ERROR": 5801,
+          "drained": 77294
+        },
+        "zero_response_reasons": {
+          "shutdown SHUT_WR": 5124,
+          "SO_ERROR": 5801,
+          "drained": 263
+        },
+        "errno": {
+          "shutdown SHUT_WR:107": 5124,
+          "SO_ERROR:104": 3957,
+          "SO_ERROR:32": 1844
+        },
+        "sent_c2b": 20356449,
+        "sent_b2c": 89432991
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "d42c32259379a126330aa25a3254018797bf04b9bbe5eff78f6df370b4aa11bc",
+        "backend-0001.jsonl": "74629f921494ae690d0f4587b326b40c0d5ea35c4232d6731a4399bb46c2ff3e",
+        "backend-0002.jsonl": "33b28c2307cf02e11491f8759413df58fa201f0b4e70c6e33f72f87463bfaee6",
+        "backend-0003.jsonl": "95c9b59134a0526b4feb1dbe627c0ac7f5a9cabf24987b85ad9b7761729fbf94",
+        "backend-0004.jsonl": "1e89e9d839b72c3d2b9346d68e3343315555d866b11d28aa430cb1ad46487c7d",
+        "backend-0005.jsonl": "5fcedcae86edf6a0b3e7e2d0bd568843e5e866e2088a4fd6690e6cd6da313d1c",
+        "backend-0006.jsonl": "471202eae8429945b793ed476f3955c47e26f85d6b00fcfde40e461665337fc3",
+        "backend-summary.json": "f44903b69594262cac88a9ea176c2bc8b675a5f48a4d837c9727bb35b5320937",
+        "client-0-0000.jsonl": "c39b4182a44db5caf7824e320e5de2e9f1aaebba076baae44ae9394a88fa2fa0",
+        "client-0-0001.jsonl": "0b821ea2147854fe143d2e3ecf3e33509391d4d8a6cd7cbd52d184070e606dd5",
+        "client-0-0002.jsonl": "10eb06f53b141fb68c237f2f0feda91e657c62f06bd5258a5d7fdffb0f2512c4",
+        "client-0-0003.jsonl": "a1aecdb23cd80e119e3880828dd2efd965af0098cc969440c49d1dda01061a0e",
+        "client-0-0004.jsonl": "72702c3c0d808c3cf446b857c63bac6b5990ce817a254f24c3954b6747b78633",
+        "client-0-0005.jsonl": "516f3457f4f190745a211b2bb4c71ecd6f735ab7b7bff6883d2dd38a2ed8e537",
+        "client-0-0006.jsonl": "fb7e26bfdeaf2a6e06d11bc3d23cca92dd8241bb46ccf16a72147efb27489b05",
+        "client-0-0007.jsonl": "23cd97cefbab78b544a8ee5e06450f79256c3ada33e517b7d239b93e5a84fb34",
+        "client-0-0008.jsonl": "f1ccfec7e56077585a5ad6110f7f3211a836e95204cf75708ffebb6ca7957235",
+        "client-0-0009.jsonl": "4ee3c8939709e7171b6e6e5d90e8168e72483b61195b1355cc709933260880e9",
+        "client-0-0010.jsonl": "f9aa538f601dfeb9cb418ae1e1fbad8b241b03b3b5d5b2c288b05de46ea149f8",
+        "client-0-summary.json": "daeca11bbb795e2af30e25d6d9598a7260bee74b76836e54487ad92685134c05",
+        "client-1-0000.jsonl": "9cf17ba4c7ebb58b5232b3a7c14f750650ff7aacca87c912474fe8d59bd250fa",
+        "client-1-0001.jsonl": "da65ad825209049875625a09222925cac8261b8e67bd4d1b6abb998cc79cc1b0",
+        "client-1-0002.jsonl": "a3f9f31292f745caa0b03a59285296e3ca4b655e5ef4dfa08c431c19c21990c4",
+        "client-1-0003.jsonl": "ef7c15ec61c715cb6123249fddc4e2c56ed2ded322ae9cfd596a95febe9dfa93",
+        "client-1-0004.jsonl": "9ad6213f457fa81a35f35b765d5094e5e0029214b53737969ec7dc53407e47a6",
+        "client-1-0005.jsonl": "f46c46f8381e7716cc4b226c0c4631a892a2cc76a9bdc5b42065d027d61dd2fe",
+        "client-1-0006.jsonl": "d430e3038270945e26b7b55979f5b6f803a8643f142627a86fc519609c0549f4",
+        "client-1-0007.jsonl": "a4a0eed90987cff3349abcba323a3c7a4127329ed39b9c2e45b1ffb92055610b",
+        "client-1-0008.jsonl": "574b50ccadf06148f2dd7df5e819cae72047c0dea3dcaea44ac64f7b1e0dd4e7",
+        "client-1-0009.jsonl": "3ad6a75925d322fad9008b74e9e81e9beba67a34b91a14e885b8e01bb14b6811",
+        "client-1-0010.jsonl": "3c32ac1cd589ba5b361baa460cabf3a06eaced8a74e469ddbb92de7da9154b84",
+        "client-1-summary.json": "daeca11bbb795e2af30e25d6d9598a7260bee74b76836e54487ad92685134c05",
+        "drain.json": "3d7e0d79dea73c64af6c0bb500e604273b2561adf49411cf49ecca876f50730c",
+        "gateway-0.json": "c5526442f62437f85266a764697425fe3cd88425d0c8b0cb8149ec3d55965b87",
+        "gateway-1.json": "9874ab40fb846b8bd7bd266f7737dd79b6d65ca50167bf8f0764f634f065e482",
+        "l4lb.conf": "5760e70d5e40b2086c02386d5e5d32c7965e20f8d97aead0e2cb14102b886771",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "3ce1a62cf9cd21709ea6edf2c42b18f9f9fc2e368ff4efed4991dfb4d7a984d6",
+        "log-gateway-1-0000.jsonl": "cd972a7bb44d2359fcc47a61400f204ec94b877d3f78c488a9da63052b67826a",
+        "log-l4lb-0000.jsonl": "c52b8aa8256c9ba4564bf4b2d3766ce06d86187b37913da90a157303a303aed6",
+        "log-l4lb-0001.jsonl": "c15116fed78303b25c61f8fa24567342e196c107318abd21b0e59c4a1371c350",
+        "log-l4lb-0002.jsonl": "3d1186bcaecc1feaca5bb3ce2811e599bc2759332e944cb7b66621be5ba13bc7",
+        "log-l4lb-0003.jsonl": "1725ff404a2d944f3a6944367c3bf22f027a942d974ee0c04b2e925b7ee95b27",
+        "log-l4lb-0004.jsonl": "a07306215d3dfd96df900a4a57131ebfa9a603f0f108dad012fb71581d154881",
+        "log-l4lb-0005.jsonl": "bf5ffe7ca3759b4ad28a9ac879d33a4bba22607ff2e8872d8c852d569bb87545",
+        "log-l4lb-0006.jsonl": "19f9b5b512642317d9c35dbdf285fd22ee77a6680d9460b7bcf5445ecdd29e0b",
+        "log-l4lb-0007.jsonl": "e007543683550745d8888a0cbfa0652204296779ee97255b6754a4685e4ed500",
+        "log-l4lb-0008.jsonl": "91bb55b50d15ed1ccb24f831bef5aef76b7a7b9c5a48a4fdda528e0e96c62861",
+        "log-l4lb-0009.jsonl": "041364054c0bb7f2022842d28387bb2e42015b50da3c8e69731530f78968adba",
+        "log-l4lb-0010.jsonl": "cf77e35904e38a68ad97f79c78d3fda5ee6c87a961d3706e907aced5e80c90d8",
+        "log-l4lb-0011.jsonl": "c6fdc8931d3febc0728ef68c669a2cda0281a1f435c4565c987431d3a9558171",
+        "processes.json": "7606a9defc4a211099e380c4746ae9df6a1f1fe007d510dd55567ae66e2f842f",
+        "resources-0000.jsonl": "233fb4945b944bbbf38a11ec76c2559cdb98f89193d108d7d3b56b399f04b5d0",
+        "result.json": "e44fe0642ba0f7404e625b522c64fa2584874374f127b10eb3e7e801f14dc9a2",
+        "spec.json": "80c6d511ab0705f9ff9922bdbc89907ca8a557ac333b3809c5e39eb9c067fdc1"
+      }
+    },
+    {
+      "role": "reviewer",
+      "input": "build-local/reviewer/v0.6-s1/evidence/run/F-A-M-1920-r0",
+      "spec": {
+        "id": "F-A-M-1920-r0",
+        "kind": "formal",
+        "path": "M",
+        "workload": "A",
+        "rate": 1920,
+        "repeat": 0,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 11371520,
+        "start": 400917160037630,
+        "targets": [
+          39171,
+          40471
+        ],
+        "measure_start": 400921160037630
+      },
+      "phases": {
+        "w": {
+          "planned": 5760,
+          "outcomes": {
+            "success": 5760
+          },
+          "errors": {},
+          "backend_by_outcome": {
+            "success": 5760
+          },
+          "per_second": {
+            "0": {
+              "success": 1920
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": null,
+            "p95": null,
+            "p99": null
+          }
+        },
+        "f": {
+          "planned": 38400,
+          "outcomes": {
+            "success": 38367,
+            "transport_failure": 33
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 33
+          },
+          "backend_by_outcome": {
+            "success": 38367
+          },
+          "per_second": {
+            "0": {
+              "success": 1887,
+              "transport_failure": 33
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1920
+            },
+            "3": {
+              "success": 1920
+            },
+            "4": {
+              "success": 1920
+            },
+            "5": {
+              "success": 1920
+            },
+            "6": {
+              "success": 1920
+            },
+            "7": {
+              "success": 1920
+            },
+            "8": {
+              "success": 1920
+            },
+            "9": {
+              "success": 1920
+            },
+            "10": {
+              "success": 1920
+            },
+            "11": {
+              "success": 1920
+            },
+            "12": {
+              "success": 1920
+            },
+            "13": {
+              "success": 1920
+            },
+            "14": {
+              "success": 1920
+            },
+            "15": {
+              "success": 1920
+            },
+            "16": {
+              "success": 1920
+            },
+            "17": {
+              "success": 1920
+            },
+            "18": {
+              "success": 1920
+            },
+            "19": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 1.710439,
+            "p95": 2.335577,
+            "p99": 2.965275
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests"
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "accc32d9f8196b046d087c25c0f82c09a51b1fc46198c67a75193a3a67182587",
+        "backend-0001.jsonl": "1cadc29fafdfbfbb80a4dda6d7947262a61a3ea38e679a1cd469fb7c415affd1",
+        "backend-0002.jsonl": "4ba21f3005bea99d5105d35bf927d7bc2dd7ebb80b798e420b0bba067a3dd365",
+        "backend-0003.jsonl": "c37850e3cddc79e58e1cab3a69d3a839b5eecdafbfcbdc1a3ce2d80c72bd46ed",
+        "backend-summary.json": "97859fe357bb251bba084e9e669d951ff9b555287c7c85475fc1a163c2795e4d",
+        "client-0-0000.jsonl": "30f31e24eec49b3ae903dca5133d7435f12e67d98b1efb253e606f2c1b35df43",
+        "client-0-0001.jsonl": "6533df304c4869d13956cbd0d87528c7926d2cada68123be2a51be3b9936187e",
+        "client-0-0002.jsonl": "88711a44f690e4a34a1e9cb46b4fca01b60df4d517deb9e4f394cecf452b9d3b",
+        "client-0-0003.jsonl": "7e3c57d182da6a7bb181766b4635ead96d06ac1a3965f732f894f9260c1b65da",
+        "client-0-0004.jsonl": "997eb69875b5177e71e8fe7d27bd3f5bcf6c74783ff5897a5001c85b5a32c628",
+        "client-0-0005.jsonl": "cd71e352bd27f7583b9f6dd2ed48da679804e77cafc3ae6c6f6d61d6d84fba2e",
+        "client-0-summary.json": "cb7dbca385ce104828b921a527221270821fd442d84989ba0f79765229d627e5",
+        "client-1-0000.jsonl": "f874499e10aacc05dc7321de4d24878ee97f0a8c390c907d5243538f0854a71a",
+        "client-1-0001.jsonl": "f12358a51c45d7390b2798a5e42e9643a4a18fcb262c11beed46302d161d8d77",
+        "client-1-0002.jsonl": "10a58d60aad791436d293cab219d535faeddad1efdcba59e9ee9bdd18e1b9dc8",
+        "client-1-0003.jsonl": "be10f9f238f37d7dac66235a8b181a78bc5103ec87a40e5ca9ca4afed8eb1809",
+        "client-1-0004.jsonl": "927d958c0adf8bc02f615655a6ea267d91ab0fb5d4c1285c723049b25b704cb3",
+        "client-1-0005.jsonl": "04a02131d0d8862258291c15a6e3a8375a2792ca328030edb910f861f6613178",
+        "client-1-summary.json": "89ec687fdd3497b4560e7c2e6de542ab876bef137f297e31a2a157b11b972542",
+        "drain.json": "d3ff6f0c0f4276c2f0e875f8dd99a804baaf09f5f04f0b6bf750252052296d53",
+        "gateway-0.json": "0c03d864477314eab2eb666ad16539e264ada16cf570db790aa2d37e1cbedf14",
+        "gateway-1.json": "0091cd9d9ff63d5252cc7274d5c48330f8f2630acfefa18ef2f2738d423c99bc",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "488398dce283bd5bc03ecd24765258387c5482f2955bef913b971d598f969375",
+        "log-gateway-1-0000.jsonl": "20941d0788bd51006d7f1034a8891b72c0bf219603d312c74e7bd6b3e0493932",
+        "processes.json": "a6dc6dc8cc3af4a853d5d9c12ad0fce1e15d00a2c522d2310f62f38e18cbf0a3",
+        "resources-0000.jsonl": "336f09301dee37132fb8e2c1c1a75bd6c2a6314c38a7ca8d0fc82f56fb8f2440",
+        "result.json": "cb0ab2b44c482e57b8fb4cc2d6a7bae54c25e43baca0516eaa2f1ab3deaa13f3",
+        "spec.json": "1c82a37d67f933db9e7bca5dd13f93c279ea26fba55427457382396149c97dd4"
+      }
+    },
+    {
+      "role": "reviewer",
+      "input": "build-local/reviewer/v0.6-s1/evidence/run/F-A-M-1920-r1",
+      "spec": {
+        "id": "F-A-M-1920-r1",
+        "kind": "formal",
+        "path": "M",
+        "workload": "A",
+        "rate": 1920,
+        "repeat": 1,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 11371520,
+        "start": 401507871143979,
+        "targets": [
+          39629,
+          36639
+        ],
+        "measure_start": 401511871143979
+      },
+      "phases": {
+        "w": {
+          "planned": 5760,
+          "outcomes": {
+            "success": 5760
+          },
+          "errors": {},
+          "backend_by_outcome": {
+            "success": 5760
+          },
+          "per_second": {
+            "0": {
+              "success": 1920
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": null,
+            "p95": null,
+            "p99": null
+          }
+        },
+        "f": {
+          "planned": 38400,
+          "outcomes": {
+            "success": 38370,
+            "transport_failure": 30
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 28,
+            "[\"transport_failure\",\"[Errno 104] Connection reset by peer\",0]": 2
+          },
+          "backend_by_outcome": {
+            "success": 38370
+          },
+          "per_second": {
+            "0": {
+              "success": 1904,
+              "transport_failure": 16
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1920
+            },
+            "3": {
+              "success": 1920
+            },
+            "4": {
+              "success": 1920
+            },
+            "5": {
+              "success": 1920
+            },
+            "6": {
+              "success": 1920
+            },
+            "7": {
+              "success": 1920
+            },
+            "8": {
+              "success": 1920
+            },
+            "9": {
+              "success": 1920
+            },
+            "10": {
+              "success": 1920
+            },
+            "11": {
+              "success": 1920
+            },
+            "12": {
+              "success": 1906,
+              "transport_failure": 14
+            },
+            "13": {
+              "success": 1920
+            },
+            "14": {
+              "success": 1920
+            },
+            "15": {
+              "success": 1920
+            },
+            "16": {
+              "success": 1920
+            },
+            "17": {
+              "success": 1920
+            },
+            "18": {
+              "success": 1920
+            },
+            "19": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 0.325206,
+            "p95": 0.96554,
+            "p99": 1.123665
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests"
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "b3b42650b3dad6c77c51d355d2dbbf5dc16325521ea62e2c0ebcd8c1059b5b23",
+        "backend-0001.jsonl": "8ad2a93270729363294b16996b02d55c89454c8e5f760c99783116ae94388f96",
+        "backend-0002.jsonl": "25a4fc37e491719adef38592f9346b2f282bd9a2ba54ec46f0d0646ab49a32b5",
+        "backend-0003.jsonl": "bf6dc4acca4b802357e1ce9678f0be9d1a34cf5e25db3cbaa16767cbddea2825",
+        "backend-summary.json": "4bff9356ef29a25e99c42234a5bca966c3a374e3ff8e1f8746021ce20b6fe601",
+        "client-0-0000.jsonl": "d5243859c93fcdb374edc94845dc33aa1c0abccdbc2cecafe4574863bc2bb088",
+        "client-0-0001.jsonl": "da61c57799d3f516536066f4265e4b14136ddc41c38dc0f2722178ac8e2fea86",
+        "client-0-0002.jsonl": "6840c15fcf8ec24e108114112c0bd252ac56c0338394a21b721de3cdbc033ed0",
+        "client-0-0003.jsonl": "ce2be19777913b141c48830e7a65f451f383f554c635755f6d245a05ef0a8434",
+        "client-0-0004.jsonl": "84a0a412d59e5c01e96e5e6f8796e0d015c4bcbc7d63ccf339b2935bd53dc9f2",
+        "client-0-0005.jsonl": "c2c96226bf97980172ee89f4e2fd0f0b2413747c2df98978c0f0e90fac91d2f7",
+        "client-0-summary.json": "a9739d361c7f37a55485173f7f64ecec56aa4bd22e843d1b5bba3da6f186be70",
+        "client-1-0000.jsonl": "388e5ed7d7aa8bea37243daeeef563cbc73a73940e632e34c22328f771fa6971",
+        "client-1-0001.jsonl": "cc04f4ec3a2e65c60fa1bf9e76b14ed894279d1a3844eb5a31ec50e0d46ec460",
+        "client-1-0002.jsonl": "e81a8150dcc9e7228720ec47d69a936205676f286ec84fa1dc0daa82a61ff328",
+        "client-1-0003.jsonl": "b53ed37bfc75d438c104825fd6b93d6ab134dfd848ee8f648fb3a2ef68450fb6",
+        "client-1-0004.jsonl": "6385e02c10ac7d8f2df6ea457c4165ceb1c0375f6da90ad3af7e4e62a7670deb",
+        "client-1-0005.jsonl": "45967f7d25d5b8bac39db4a241c7e9316ec8bad6c31187df10f2dc3d85c45eb8",
+        "client-1-summary.json": "882b66ff03511035951010bc9673b2c06b5e8bcfbaee91becadaad57ce62266d",
+        "drain.json": "2b4d1b51a3dd2aed379f3c78c74491113f96970df526054e1ea15dfc1dcd0fb3",
+        "gateway-0.json": "b2d223b24a1c4536ec4642492c83fd1da09a8aec31e4d671f15b4ceeb6c591f9",
+        "gateway-1.json": "d483d58bae0638d606b68328d02e1dfdcc51f6c9e7065f0474eb9b444c87be5b",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "c275235b8d76d60428c475d2a9ae9eb8649f428c9b2f3b7af4d4d0bef811b9d8",
+        "log-gateway-1-0000.jsonl": "8b7199d9022fcbb821ad3d8cdad0291fb9f9436ded599112800bdae76164d073",
+        "processes.json": "09ec814b4b0f2a931e47bc3a6bfd81966d9a312e03a03343d7fd9750dc34a250",
+        "resources-0000.jsonl": "acd11b7550c3e6d63c7060c103ee1894f3fb4ff6f9e421fff0a4158f9a499d9e",
+        "result.json": "e55623c08ae943628e28903ff103f1679c0f047f4949097b4b01857253cb1a4b",
+        "spec.json": "cb98e5e46a1a2178301e5650cb80249ed73e70733b91526ecf8f1ad5fcaed57a"
+      }
+    },
+    {
+      "role": "reviewer",
+      "input": "build-local/reviewer/v0.6-s1/evidence/run/F-A-M-1920-r2",
+      "spec": {
+        "id": "F-A-M-1920-r2",
+        "kind": "formal",
+        "path": "M",
+        "workload": "A",
+        "rate": 1920,
+        "repeat": 2,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 11371520,
+        "start": 402900166341604,
+        "targets": [
+          39415,
+          37421
+        ],
+        "measure_start": 402904166341604
+      },
+      "phases": {
+        "w": {
+          "planned": 5760,
+          "outcomes": {
+            "success": 5732,
+            "transport_failure": 28
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 24,
+            "[\"transport_failure\",\"[Errno 104] Connection reset by peer\",0]": 4
+          },
+          "backend_by_outcome": {
+            "success": 5732
+          },
+          "per_second": {
+            "0": {
+              "success": 1903,
+              "transport_failure": 17
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1909,
+              "transport_failure": 11
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 1.794167,
+            "p95": 8.240169,
+            "p99": 8.257485
+          }
+        },
+        "f": {
+          "planned": 38400,
+          "outcomes": {
+            "success": 38400
+          },
+          "errors": {},
+          "backend_by_outcome": {
+            "success": 38400
+          },
+          "per_second": {
+            "0": {
+              "success": 1920
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1920
+            },
+            "3": {
+              "success": 1920
+            },
+            "4": {
+              "success": 1920
+            },
+            "5": {
+              "success": 1920
+            },
+            "6": {
+              "success": 1920
+            },
+            "7": {
+              "success": 1920
+            },
+            "8": {
+              "success": 1920
+            },
+            "9": {
+              "success": 1920
+            },
+            "10": {
+              "success": 1920
+            },
+            "11": {
+              "success": 1920
+            },
+            "12": {
+              "success": 1920
+            },
+            "13": {
+              "success": 1920
+            },
+            "14": {
+              "success": 1920
+            },
+            "15": {
+              "success": 1920
+            },
+            "16": {
+              "success": 1920
+            },
+            "17": {
+              "success": 1920
+            },
+            "18": {
+              "success": 1920
+            },
+            "19": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": null,
+            "p95": null,
+            "p99": null
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests"
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "b89e7f6e819d34e79de899d413904fbe4c2c5321c6fcb2c8cb3bd7a3d9c1cc18",
+        "backend-0001.jsonl": "952c6bdf1257c11edf13d4802dc81e71eefee0c011b667ce79bdd45d459bb950",
+        "backend-0002.jsonl": "7b25810da60dff12f536a30035689b07ada6cb1c46a01b5ab94747b48bc7fc65",
+        "backend-0003.jsonl": "8d9636af1ec8903d8c247926c48b04f72f9415d0c39170e08d163e2901c8f200",
+        "backend-summary.json": "d451ef01da30be968d762a27e1630dcba24a679a53d9872e5244c1da0e36a554",
+        "client-0-0000.jsonl": "75e17ccd5f09f42ba23c51b8989ed87484029e9ed4234a9b04f22bff75e6c4fd",
+        "client-0-0001.jsonl": "6f691993732c8ada33a47d251a60b6598e1ead7e9ca706078120917fd3d95ef5",
+        "client-0-0002.jsonl": "fcf6ccf216970d350100526a323f43d2cba430b53dadb1382b23a295c9a285ef",
+        "client-0-0003.jsonl": "38155810513290e0c5b1e4cb14f19bcfc761cc3f461c1e4401f89d0f6cd62b37",
+        "client-0-0004.jsonl": "3667528f1689131c2a6193aee69e2dcb610c34e6e69ec22b0ea9819614c2c20a",
+        "client-0-0005.jsonl": "01845620902683356374d8e6d2845faeadee829e3f95c414863cd8144ade970e",
+        "client-0-summary.json": "134adf814f685cf1753e21f6ab0c3aca1023e71cd401bae211a4b372860018e8",
+        "client-1-0000.jsonl": "36d1a01ee1748790935bb0264b545d2f6c00cb11596ce85a920fe312aa350e0a",
+        "client-1-0001.jsonl": "ff96281e3544d311c79feec5da26ceb82676f890e5b890e646cf7625648b377b",
+        "client-1-0002.jsonl": "43a114234d65b80aeba5d25f5d22c710a388410a045d36809b1834667be7f4e0",
+        "client-1-0003.jsonl": "07532f9cedcf05a7d8406dfdcb667c5e9eb57fd444ee53ba61fcd9ce963e1ccb",
+        "client-1-0004.jsonl": "2deb2e8a16fa44b367c7dc5c04666627bce6bc3bdc9732777c9d3df83c36f21a",
+        "client-1-0005.jsonl": "f345dd8cd3214c3e1e8a944423058c2118926c2af3d48483593115add22a8ffb",
+        "client-1-summary.json": "1cf9df4694238ee5d022c842e212ddccc0748651677c473bb80e3ffe74d25faf",
+        "drain.json": "74c4675b0d7083a404adf854ba5133e1ad89cac504b0968a5671fcadc9ea0f9a",
+        "gateway-0.json": "61a449da0a912683c7f1a9fb25f7c027c080b89f9ac35bc0c5fd42516b69c5d8",
+        "gateway-1.json": "7a12fd98db8438eb5cde7073afc490bb25b8536471783873fb4ff310f5c7a37e",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "59ecdaa622e1c7b299eab201d45ae49b0baaace895ff9d047eef815ef4457437",
+        "log-gateway-1-0000.jsonl": "4fb200929c6a7352d66d8769f4e32c6d1068f9fa6060c9abea048dd86349c772",
+        "processes.json": "d778ce302999ea34adbfa3ce9c25cf9e957e236ae80cc278b101ee2023b814bd",
+        "resources-0000.jsonl": "ef4334eeeb3a5aa458e034237e5162ba60dd2cfba9f3fb202b9cb77792fe65b6",
+        "result.json": "0f2502d775f8017a385bdd3d90aced7e2f7a48bc00066fad6f97096f336edcf7",
+        "spec.json": "474fff14b703c0b4c2361f56fa49ecf1236fe9b1a78c27a94033b230f3e0cd77"
+      }
+    },
+    {
+      "role": "reviewer",
+      "input": "build-local/reviewer/v0.6-s1/evidence/run/F-A-M-3840-r0",
+      "spec": {
+        "id": "F-A-M-3840-r0",
+        "kind": "formal",
+        "path": "M",
+        "workload": "A",
+        "rate": 3840,
+        "repeat": 0,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 22676480,
+        "start": 400994393129281,
+        "targets": [
+          38879,
+          37067
+        ],
+        "measure_start": 400998393129281
+      },
+      "phases": {
+        "w": {
+          "planned": 11520,
+          "outcomes": {
+            "transport_failure": 147,
+            "success": 11349,
+            "not_sent": 24
+          },
+          "errors": {
+            "[\"transport_failure\",\"[Errno 104] Connection reset by peer\",0]": 2,
+            "[\"transport_failure\",\"EOF before any response\",0]": 145,
+            "[\"not_sent\",null,0]": 24
+          },
+          "backend_by_outcome": {
+            "success": 11349
+          },
+          "per_second": {
+            "0": {
+              "transport_failure": 147,
+              "success": 3669,
+              "not_sent": 24
+            },
+            "1": {
+              "success": 3840
+            },
+            "2": {
+              "success": 3840
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 5.289001,
+            "p95": 12.623914,
+            "p99": 18.925629
+          }
+        },
+        "f": {
+          "planned": 76800,
+          "outcomes": {
+            "success": 76358,
+            "transport_failure": 442
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 440,
+            "[\"transport_failure\",\"[Errno 104] Connection reset by peer\",0]": 2
+          },
+          "backend_by_outcome": {
+            "success": 76358
+          },
+          "per_second": {
+            "0": {
+              "success": 3715,
+              "transport_failure": 125
+            },
+            "1": {
+              "success": 3763,
+              "transport_failure": 77
+            },
+            "2": {
+              "success": 3840
+            },
+            "3": {
+              "success": 3840
+            },
+            "4": {
+              "success": 3832,
+              "transport_failure": 8
+            },
+            "5": {
+              "success": 3840
+            },
+            "6": {
+              "success": 3840
+            },
+            "7": {
+              "success": 3771,
+              "transport_failure": 69
+            },
+            "8": {
+              "success": 3830,
+              "transport_failure": 10
+            },
+            "9": {
+              "success": 3817,
+              "transport_failure": 23
+            },
+            "10": {
+              "success": 3832,
+              "transport_failure": 8
+            },
+            "11": {
+              "success": 3840
+            },
+            "12": {
+              "success": 3840
+            },
+            "13": {
+              "success": 3755,
+              "transport_failure": 85
+            },
+            "14": {
+              "success": 3840
+            },
+            "15": {
+              "success": 3840
+            },
+            "16": {
+              "success": 3831,
+              "transport_failure": 9
+            },
+            "17": {
+              "success": 3840
+            },
+            "18": {
+              "success": 3840
+            },
+            "19": {
+              "success": 3812,
+              "transport_failure": 28
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 2.300197,
+            "p95": 7.371407,
+            "p99": 10.368761
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests"
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "a059e89a21141af59e99fd2af62e241f34036fee490b51a695b6fdc6a3de20ed",
+        "backend-0001.jsonl": "e0d568b27de2898fcee50f7858249d88817623341fd524780b2bfe05707430dd",
+        "backend-0002.jsonl": "3372d5138bbe857787e9825501a44c406d46cf66764b3665706237c67407a89d",
+        "backend-0003.jsonl": "cb57122f2084a66589b1976a30782ca4820c2cfbac686c06bb1df46a8b7790a2",
+        "backend-0004.jsonl": "efb0e8af664e74832d2c94ee4ac217af91d7bffa025dd4c929cafb2f596cb1d7",
+        "backend-0005.jsonl": "0bb18da264c86e6754a6e80f88e3e72d13d69479d04c3b288b1695a71ecc6109",
+        "backend-0006.jsonl": "693386aaa60749060ebfd02f3cafc523f1bba60f84a907f2a44c42d527acc7af",
+        "backend-summary.json": "5f63986cbba48760404eb66445b12428197fd425ae59cbbedc16f37e8f182275",
+        "client-0-0000.jsonl": "3449dbb9d674a71cb7caa57b4b9193914b7acbd0fb6de06e47491c38647651a0",
+        "client-0-0001.jsonl": "361bf56a972ecdf11e73e63c01bc728f895b34391356ce1e86ed798cf231487a",
+        "client-0-0002.jsonl": "54bd3394d42003dadb1456d166503944a20ca54a16ccccaf315d0b8de7443645",
+        "client-0-0003.jsonl": "dcc5470ef4728e67dd64c4fd70338c2cd480033af800490a82e3feb2b4c2e520",
+        "client-0-0004.jsonl": "1e77d52f30858b640311af22b7f90ea788eb0765dd8bc2bbbd5cf5f61eb49a45",
+        "client-0-0005.jsonl": "b6ffd36e9aa78e746268a4a3b1deb1bafc606867af7c94ee352f8826fd1ff125",
+        "client-0-0006.jsonl": "296d06ad9d40317fe500b2eed01a64b1b0fbfc4344b7e72217eb64386ffc9282",
+        "client-0-0007.jsonl": "66e0410e8ec0bca350cf83caec7ce128cb3a987250590ac73a06172deb1eab4b",
+        "client-0-0008.jsonl": "dcd632e7284b6d540e0bd82ebf81838ae07a84656a430628b6d9e226786f1177",
+        "client-0-0009.jsonl": "06749238277cdf10c770511fab6a61e02965b8cc23b98e44c848a3ddef669534",
+        "client-0-0010.jsonl": "c78020b700b4b74d4402e79eb87c61ab185ffe051b1e81d1c0b4d53ec76049fd",
+        "client-0-0011.jsonl": "5b0a05c052b6b1e7be462e6dd92d80b3c4d1980f7f6c8317e3f58ecf5551a709",
+        "client-0-summary.json": "daeca11bbb795e2af30e25d6d9598a7260bee74b76836e54487ad92685134c05",
+        "client-1-0000.jsonl": "c651bf34231d2375f9f3bdcc183c7e9cbd15f21431c8757fc20ff9c1a5e6c6a7",
+        "client-1-0001.jsonl": "38fa94f6178dcbc8dd43f1bb630487d36cfac4268a62c99f81e762dc51b7075f",
+        "client-1-0002.jsonl": "faba2b930fec510a7ef30d0e1601e52f58bb3fec9c774b97213a3cf276d678d5",
+        "client-1-0003.jsonl": "3be396f90c3972d7ecd6c492216a5f76bfde3f95a629a05dcf10075ac03c61f9",
+        "client-1-0004.jsonl": "ab28396574adf6e82643127ef6f9a8bff3c4359e4f3a9e140481a87c118d28c8",
+        "client-1-0005.jsonl": "1bccdac6f0ae534041a3d8135058d4aed12a03dcf0e775338e1a0de1520089a8",
+        "client-1-0006.jsonl": "9126dce9ecd1fbda216314c88aeca6b8cffda3d157dd2b94c2511bfb71b84630",
+        "client-1-0007.jsonl": "8394b6eab7fd0d3d680a55148281ead35d4f9c0aafc447093a3bc2c0c83f4966",
+        "client-1-0008.jsonl": "b6d9a04c7eb045ded6b55c3f49b4411fcf37bfa8c25663ba84e2a5257c9e8e8a",
+        "client-1-0009.jsonl": "4350b6c0a7b0c7c3c300e32ed96e67a4f8791c21545b3c402ec2e6a74e5547ec",
+        "client-1-0010.jsonl": "bf3b2cf7c007f94366458fed7c08ffcd2d80439fe73a0c7194fe531c23ce0ca9",
+        "client-1-0011.jsonl": "6638dee2d1bc5080fd1d7d9ca8f7dd59c12925f97d1132e7ff0631256bf129b9",
+        "client-1-summary.json": "daeca11bbb795e2af30e25d6d9598a7260bee74b76836e54487ad92685134c05",
+        "drain.json": "2fbd157000149d3d618a135f4c51a9473784e3879e841573f47138b0b268dbeb",
+        "gateway-0.json": "18eb966be32bc13c858e645ea578837bc71d41b3d1befc2f2a92abe88ba479a8",
+        "gateway-1.json": "1b01ee95cb8505aab8f6d046d1f14c810be170486b446fc4beaaf139fafce387",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "29e0f79ec51f90aa975cf398fa92eccdd5bfd6c0ddbecd9884717295af96dd44",
+        "log-gateway-1-0000.jsonl": "b735f1a857a7803f11e41d0a9e287ea1d59a86a5ec66c39eca0115a1346c736b",
+        "processes.json": "671098c87ceec5cacbb4748c9c8ec95a8a379f82f3d66364116b938760da3d7a",
+        "resources-0000.jsonl": "75e2e66a4b1c67d83eba7fb5aa3248c6dcbe464d1f77cfdd3359feba571b2c95",
+        "result.json": "64e209b1367fa59c6cbe105b5149b3762d8b34ee8053dc4b91fb99d20ff56eff",
+        "spec.json": "c2d70d290177d1d078ce515c79b0ec4cbaa955eafd1d7b2e8354e614d4a68419"
+      }
+    },
+    {
+      "role": "reviewer",
+      "input": "build-local/reviewer/v0.6-s1/evidence/run/F-A-M-3840-r1",
+      "spec": {
+        "id": "F-A-M-3840-r1",
+        "kind": "formal",
+        "path": "M",
+        "workload": "A",
+        "rate": 3840,
+        "repeat": 1,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 22676480,
+        "start": 402388505720642,
+        "targets": [
+          39023,
+          40113
+        ],
+        "measure_start": 402392505720642
+      },
+      "phases": {
+        "w": {
+          "planned": 11520,
+          "outcomes": {
+            "success": 11176,
+            "transport_failure": 274,
+            "not_sent": 70
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 272,
+            "[\"transport_failure\",\"[Errno 104] Connection reset by peer\",0]": 2,
+            "[\"not_sent\",null,0]": 70
+          },
+          "backend_by_outcome": {
+            "success": 11176
+          },
+          "per_second": {
+            "0": {
+              "success": 3616,
+              "transport_failure": 179,
+              "not_sent": 45
+            },
+            "1": {
+              "success": 3840
+            },
+            "2": {
+              "success": 3720,
+              "not_sent": 25,
+              "transport_failure": 95
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 3.387288,
+            "p95": 13.301318,
+            "p99": 16.165086
+          }
+        },
+        "f": {
+          "planned": 76800,
+          "outcomes": {
+            "transport_failure": 263,
+            "success": 76524,
+            "not_sent": 13
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 260,
+            "[\"not_sent\",null,0]": 13,
+            "[\"transport_failure\",\"[Errno 104] Connection reset by peer\",0]": 3
+          },
+          "backend_by_outcome": {
+            "success": 76524
+          },
+          "per_second": {
+            "0": {
+              "transport_failure": 174,
+              "success": 3653,
+              "not_sent": 13
+            },
+            "1": {
+              "success": 3840
+            },
+            "2": {
+              "success": 3840
+            },
+            "3": {
+              "success": 3840
+            },
+            "4": {
+              "success": 3839,
+              "transport_failure": 1
+            },
+            "5": {
+              "success": 3840
+            },
+            "6": {
+              "success": 3840
+            },
+            "7": {
+              "success": 3840
+            },
+            "8": {
+              "success": 3829,
+              "transport_failure": 11
+            },
+            "9": {
+              "success": 3840
+            },
+            "10": {
+              "success": 3833,
+              "transport_failure": 7
+            },
+            "11": {
+              "success": 3840
+            },
+            "12": {
+              "success": 3840
+            },
+            "13": {
+              "success": 3817,
+              "transport_failure": 23
+            },
+            "14": {
+              "success": 3840
+            },
+            "15": {
+              "success": 3840
+            },
+            "16": {
+              "success": 3840
+            },
+            "17": {
+              "success": 3840
+            },
+            "18": {
+              "success": 3840
+            },
+            "19": {
+              "success": 3793,
+              "transport_failure": 47
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 4.340241,
+            "p95": 11.221462,
+            "p99": 12.954942
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests"
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "6d1d443cfe6ac4c85d6caf026f112981a30c068b8e4e51966169e560316b082e",
+        "backend-0001.jsonl": "245eb0256079d9fd519c71efedf429b48581efcb5132dbff3f10e7087ad42e0c",
+        "backend-0002.jsonl": "02d21a4c867b63e573da98a8502a5715c805d35789b86fd13b347d32ce02bfdb",
+        "backend-0003.jsonl": "3a68100d5a2c689aac47bb1653c5dc2c613b961eda7931bbb567dff944f0241e",
+        "backend-0004.jsonl": "64785d9d232292aa5e7d3ab99f05c66e5896eb6a27a09d7f2057366161a5d413",
+        "backend-0005.jsonl": "b2d9dd64466090d5442d02035a04ccaef350cc5d39793e66362fa599cb120acd",
+        "backend-0006.jsonl": "db289528fba264ce612a3ceb84e7374812f660587266e91f04a6d5c2bf6d7ac3",
+        "backend-summary.json": "df16fc412614787d37bd30b3eb214d5bf0ebbec48a881715cd1316a1691d3806",
+        "client-0-0000.jsonl": "d669b92b5b36390ee130a8e33b2b42ce5487824a5de1016484a4d499e38f11fe",
+        "client-0-0001.jsonl": "77c73e01a550c079ac801f06fb44ca037d84e0aa0121019d0494e250ca91b76b",
+        "client-0-0002.jsonl": "a342f60182fcfb567efac856e75e2a1d60cbee0dc7ce7b4e5860806d3d13f8b3",
+        "client-0-0003.jsonl": "5fe6eca920d2a7c9528be4d520268e9e5e8a08955a253a3d1c8234da5880b10c",
+        "client-0-0004.jsonl": "4fa619793eb3bc9ea8da8f2eb8beabc7c0ce4641466efabe9582393bd584518f",
+        "client-0-0005.jsonl": "cba5ffebd687c94fe5b866a04c10d1d9974d69716c1b448cd82ee16d53dfed2e",
+        "client-0-0006.jsonl": "6d2189095952c6382f109dc65422d3a4970eadb87d3a14ddff8961cd8b8ea093",
+        "client-0-0007.jsonl": "aff22d108edfcf885738c209f65063bb56959faaeeed0a6c9f7f9e5c728af9ab",
+        "client-0-0008.jsonl": "07c00bec134a0f02b04b0689fc3091451b413dece103f034283766c86cba6566",
+        "client-0-0009.jsonl": "fc12f28bbebf520dba1d54a4927de8cc5796c04202126630239380476eb7773f",
+        "client-0-0010.jsonl": "cb4b8bd0d7161fdde0b7017deb37cf760ea7ad5e6aa4630cc9b61166de20fbcc",
+        "client-0-0011.jsonl": "86f26f65b98ce5e8002975cd89cfd97a8999236f99f0dae59b836cfb101c9852",
+        "client-0-summary.json": "daeca11bbb795e2af30e25d6d9598a7260bee74b76836e54487ad92685134c05",
+        "client-1-0000.jsonl": "1164e602eb3e9fbb7b474fc3bc64d617391c6b3df308a07d429cbef0eacf08b0",
+        "client-1-0001.jsonl": "c634a0edc411393465f84338a9c4252a81df61942bc17c728a297b84d85c303b",
+        "client-1-0002.jsonl": "1f6562abaa902127610ebd5cf3de130cc39fecd9d326218128418b80cb1435ca",
+        "client-1-0003.jsonl": "a529d150951592817f15308b05bd74dd1ad2719e0c645a3a4b45d9518249967d",
+        "client-1-0004.jsonl": "14319fbdfce6345943f9e29a8ccabf079ed5ca1c7b773318151aca1c95c8bdd1",
+        "client-1-0005.jsonl": "f3c9d59cfa401f6dfa5472ddc1baaac578b31311ac8801ecce5ec5cc38f6b7fd",
+        "client-1-0006.jsonl": "77152fbbbbe64a494bd14ae9702073c8e91b863698e63dc25f4418f9b0c15d94",
+        "client-1-0007.jsonl": "d856c5c7a4344ccd8331d4e5475a24a81fd4eb95ddf1097c7bd05d58ba690f58",
+        "client-1-0008.jsonl": "d072470b201717820d9fee364986f5862009816f574ffe24e97e75c3d987cb21",
+        "client-1-0009.jsonl": "67dd0fa9d4438a7f99330aaccd27fd95052a92823751db12ec7f27922a2c6f0f",
+        "client-1-0010.jsonl": "1a8eb295769dee495e1122f51a8506bbd1cd3fbb299cda6b3385e518449f45b9",
+        "client-1-0011.jsonl": "1bdae87d37ec15a539ec60cecb6405c9eca7907c2c49ad82af0d75d82ae08c8a",
+        "client-1-summary.json": "daeca11bbb795e2af30e25d6d9598a7260bee74b76836e54487ad92685134c05",
+        "drain.json": "f8803fa349d09c4eee0cd573f7794bbd30e56afba16dc83fd6b531b493257652",
+        "gateway-0.json": "291235eb77fbdb27ee140f8b88653bdaf8dc6b9fa3b477e6c9f4b35fbf8a0ffe",
+        "gateway-1.json": "20b1a467d6afc910680a22f92bc7e28a06514bb7722c1bca942008757e36e517",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "5f32a506b8ea13f4162990ac21a248302f4a525437fe9e1334bd8c673bcfa0a3",
+        "log-gateway-1-0000.jsonl": "a9beb7c74e9e83289f60ea0b8b21e72112b90c985dce8e1cc28cef71d257c09a",
+        "processes.json": "89cbcce50d91f76d7694f748f09f7ef8dfd400abb4f05156c719736758c792ac",
+        "resources-0000.jsonl": "77c0a30c0ba02d4028a3edf8b7483813903d9635d43c5cf8a21b047756b33f9b",
+        "result.json": "d63286977388610febba788d47f995c85f887864f84e265dfe52431bcba47ae0",
+        "spec.json": "ef440fd580d2f0f0f95ee6fb9ff00664cfcfe66cebc20789aacbb9f9d04cba19"
+      }
+    },
+    {
+      "role": "reviewer",
+      "input": "build-local/reviewer/v0.6-s1/evidence/run/F-A-M-3840-r2",
+      "spec": {
+        "id": "F-A-M-3840-r2",
+        "kind": "formal",
+        "path": "M",
+        "workload": "A",
+        "rate": 3840,
+        "repeat": 2,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 22676480,
+        "start": 402977169420727,
+        "targets": [
+          37415,
+          36735
+        ],
+        "measure_start": 402981169420727
+      },
+      "phases": {
+        "w": {
+          "planned": 11520,
+          "outcomes": {
+            "success": 11454,
+            "transport_failure": 66
+          },
+          "errors": {
+            "[\"transport_failure\",\"[Errno 104] Connection reset by peer\",0]": 8,
+            "[\"transport_failure\",\"EOF before any response\",0]": 58
+          },
+          "backend_by_outcome": {
+            "success": 11454
+          },
+          "per_second": {
+            "0": {
+              "success": 3774,
+              "transport_failure": 66
+            },
+            "1": {
+              "success": 3840
+            },
+            "2": {
+              "success": 3840
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 1.219947,
+            "p95": 2.661745,
+            "p99": 2.998787
+          }
+        },
+        "f": {
+          "planned": 76800,
+          "outcomes": {
+            "transport_failure": 266,
+            "success": 76534
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 265,
+            "[\"transport_failure\",\"[Errno 104] Connection reset by peer\",0]": 1
+          },
+          "backend_by_outcome": {
+            "success": 76534
+          },
+          "per_second": {
+            "0": {
+              "transport_failure": 96,
+              "success": 3744
+            },
+            "1": {
+              "success": 3840
+            },
+            "2": {
+              "success": 3833,
+              "transport_failure": 7
+            },
+            "3": {
+              "transport_failure": 1,
+              "success": 3839
+            },
+            "4": {
+              "success": 3840
+            },
+            "5": {
+              "success": 3840
+            },
+            "6": {
+              "success": 3839,
+              "transport_failure": 1
+            },
+            "7": {
+              "success": 3840
+            },
+            "8": {
+              "success": 3840
+            },
+            "9": {
+              "success": 3821,
+              "transport_failure": 19
+            },
+            "10": {
+              "success": 3840
+            },
+            "11": {
+              "success": 3840
+            },
+            "12": {
+              "success": 3771,
+              "transport_failure": 69
+            },
+            "13": {
+              "success": 3840
+            },
+            "14": {
+              "success": 3840
+            },
+            "15": {
+              "success": 3806,
+              "transport_failure": 34
+            },
+            "16": {
+              "success": 3840
+            },
+            "17": {
+              "success": 3840
+            },
+            "18": {
+              "success": 3801,
+              "transport_failure": 39
+            },
+            "19": {
+              "success": 3840
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 1.963064,
+            "p95": 5.337462,
+            "p99": 5.987596
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests"
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "41066a146d050677414e12b9284f906889e9da7d494844900f6fb81b9ad7ed5b",
+        "backend-0001.jsonl": "a055f81d8a78fb1b1be61ec23eccaa1210a0dcfe06849c1435aff7f3067b3e27",
+        "backend-0002.jsonl": "b880d77448ea0db04b5b1e0b6f9b5fea8fd2ffab86d6cf7e4feb429a824affe1",
+        "backend-0003.jsonl": "268e0692d427b6490516fad22b35a53efa3017affc93e80c69b6a1eacc97ee8f",
+        "backend-0004.jsonl": "1144f8dbfcc451f6cbb1bcbdf55a104933a775d7c3601d8cf430f0643c91ff62",
+        "backend-0005.jsonl": "5d3db6014a6adb603882ead39a18a4dadcd3dae3faed88aaa1bd5d5ec0c91079",
+        "backend-0006.jsonl": "953954ddef9a93d3b2d13afc2cd19ac869537260c2ba743a456b01a587a1f7ab",
+        "backend-0007.jsonl": "a37993dc1c0efbf23f72462c1ebde4838ac35c6f5ef1ce02c9e0619ec8e58fdd",
+        "backend-summary.json": "36351f4f6c3ca84afc3442502d241a19863e020b3f1ab90140f504f643afb3d9",
+        "client-0-0000.jsonl": "c6faa69aa998daab6133c58c52625c4c45c5b44434a6c60d8a771cbaf2939368",
+        "client-0-0001.jsonl": "29b413f0013f23ba1034e30c23433395b59180609c53887cab382050e7fad23e",
+        "client-0-0002.jsonl": "b366ef0bae02e4c4e8b45fdf4d9c44032a24cb9ff95302c6f7d9e9d8e7bbaf92",
+        "client-0-0003.jsonl": "4c0a0cdd131a36b8aa514272f9060e91333b0871dbddf5c4c0ddbd9152c68c28",
+        "client-0-0004.jsonl": "11ba2c16f6a6712426507094fb40b1e13700ea205b8c1fc589c0e8a99453ad4a",
+        "client-0-0005.jsonl": "c4bc09e92536afd054d497443c81ef2c3f739ec178cc6ecdb1e1975d6abb4028",
+        "client-0-0006.jsonl": "dae89f05d8ac87677b97f79f96fd7a881ebcf34bd3880be547a2f0f6af0ac4b9",
+        "client-0-0007.jsonl": "a5e8f8ef7bb63f057e0cc72ac415cf5d3d6daa3d084780fa382698de38fcd5b1",
+        "client-0-0008.jsonl": "bd7b9f9ba0abb739f0d837d9af43d2e0b6b9a1e768d2ddd464dcdd637d75971d",
+        "client-0-0009.jsonl": "196e06cbc61acf7c8760538da14b2cc60e90a641fb2e7160e4c2ab4875e549c5",
+        "client-0-0010.jsonl": "552da75c537c0607fe381dbecd05e264c84381cf575bd0ed1815dfda2df9e9de",
+        "client-0-0011.jsonl": "67636d9700d19c811cc458b1d2e19cdb96ccff69b1940038534c232278eba537",
+        "client-0-summary.json": "20b9b342780643a372b6813d8cb90c405a50b3dc5d21b3f3d2ffcc43ffa766f2",
+        "client-1-0000.jsonl": "17e2ce7824e3747f151e8adb9b2e943a936729c42a5816f09f4347c96440abec",
+        "client-1-0001.jsonl": "163fabe14f39657972898b351f113d0bf8a7dff1e1fea07c455c363fd1486377",
+        "client-1-0002.jsonl": "6ec5cf6abe633d72ce8eaa42d8c489245989a0e9ff155e879638f28210967599",
+        "client-1-0003.jsonl": "4076da6fc43c375415cbf460b795918d66ddee36d0630342c9b0b4670d4b30af",
+        "client-1-0004.jsonl": "df5c9ce80c6e26b8aff2eb65a1cef410f49584cbda1094f4594a1ba614ff1d94",
+        "client-1-0005.jsonl": "a34c12a1a2971eae703caad6c0365de42edae5d518aa05925b15afa3bf5b3ee3",
+        "client-1-0006.jsonl": "52190ae090cc08e2be3ea212857cce8939b3eac8bfe022f772d2c9ad5b51dc60",
+        "client-1-0007.jsonl": "79704f65844fcae4ce64df4f7301c8325f366f9aa5ec903c5b82e0419690ac1b",
+        "client-1-0008.jsonl": "cb8f243dd58688c5bf8607192d09f985191f55bd8ee9bd6e65c2eed456cc11fb",
+        "client-1-0009.jsonl": "2789a72182142e3823fa8ffaa606bd26f81e8c133d57ff984ae4a559fc64b643",
+        "client-1-0010.jsonl": "545c173fa4e6ef19f50d0c3f49b1c7ac7eecfcf84189c3d6a3b068f803340ef3",
+        "client-1-0011.jsonl": "e23d20d8e862f060613855b4e1c543465387acc5b42f0013225d816b94a6e9df",
+        "client-1-summary.json": "fb8aa8a95095604063f1654d0980cf5f951025930ee68ec9bfa600885e0ab90e",
+        "drain.json": "6ecc871708acb0cb88c036c7afb7a9d8b9ca92c84534cca135e06dc1e9596d2e",
+        "gateway-0.json": "396724a337d1b7ee2656b9435112305dfe720a0481db6c703c18e39a9673f93e",
+        "gateway-1.json": "7b6f6e17960675aad0d68eb97aab4e8ae4f78a3b35de42c5d6e752d11382df9f",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "043836e1b81901d8e6edac5cf927b4ef0ca14604a8cf9c371a9104d2eb31f410",
+        "log-gateway-1-0000.jsonl": "0e91638b8b54475f86f7105460c24eafbccc0061e9efa5c19076d6c859912b88",
+        "processes.json": "062811aa24b1ace7bad83a52b5c8d2586134aaf87c59e2c892aa8c7711ee0d5c",
+        "resources-0000.jsonl": "bd7efd56d6ffdf5d2a189687fe9cedcecf7ff9413ff6fd3b734575ee6ce230b2",
+        "result.json": "4fc9515e8512d2e9161a920cde97a6dffd38b7a81e1b10b4c6cfe8f1a950d93c",
+        "spec.json": "70fc82c94ef8b98838de8b84ee7c226f750c799a8ede2a9ebdfe45b435a03543"
+      }
+    },
+    {
+      "role": "reviewer",
+      "input": "build-local/reviewer/v0.6-s1/evidence/run/F-A-L-1920-r0",
+      "spec": {
+        "id": "F-A-L-1920-r0",
+        "kind": "formal",
+        "path": "L",
+        "workload": "A",
+        "rate": 1920,
+        "repeat": 0,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 11371520,
+        "start": 400943755581093,
+        "targets": [
+          37167
+        ],
+        "measure_start": 400947755581093
+      },
+      "phases": {
+        "w": {
+          "planned": 5760,
+          "outcomes": {
+            "success": 5742,
+            "transport_failure": 18
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 18
+          },
+          "backend_by_outcome": {
+            "success": 5742
+          },
+          "per_second": {
+            "0": {
+              "success": 1902,
+              "transport_failure": 18
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 3.907485,
+            "p95": 6.334259,
+            "p99": 6.334259
+          }
+        },
+        "f": {
+          "planned": 38400,
+          "outcomes": {
+            "success": 38342,
+            "transport_failure": 58
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 58
+          },
+          "backend_by_outcome": {
+            "success": 38342
+          },
+          "per_second": {
+            "0": {
+              "success": 1905,
+              "transport_failure": 15
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1920
+            },
+            "3": {
+              "success": 1920
+            },
+            "4": {
+              "success": 1920
+            },
+            "5": {
+              "success": 1920
+            },
+            "6": {
+              "success": 1920
+            },
+            "7": {
+              "success": 1920
+            },
+            "8": {
+              "success": 1920
+            },
+            "9": {
+              "success": 1920
+            },
+            "10": {
+              "success": 1920
+            },
+            "11": {
+              "success": 1920
+            },
+            "12": {
+              "success": 1905,
+              "transport_failure": 15
+            },
+            "13": {
+              "success": 1920
+            },
+            "14": {
+              "success": 1920
+            },
+            "15": {
+              "success": 1892,
+              "transport_failure": 28
+            },
+            "16": {
+              "success": 1920
+            },
+            "17": {
+              "success": 1920
+            },
+            "18": {
+              "success": 1920
+            },
+            "19": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 3.634049,
+            "p95": 7.348856,
+            "p99": 9.530694
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests",
+        "accepted": 44160,
+        "closed": 44160,
+        "close_reasons": {
+          "drained": 44089,
+          "shutdown SHUT_WR": 47,
+          "SO_ERROR": 24
+        },
+        "zero_response_reasons": {
+          "drained": 5,
+          "shutdown SHUT_WR": 47,
+          "SO_ERROR": 24
+        },
+        "errno": {
+          "shutdown SHUT_WR:107": 47,
+          "SO_ERROR:104": 15,
+          "SO_ERROR:32": 9
+        },
+        "sent_c2b": 10182980,
+        "sent_b2c": 51181524
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "871b067475ad6ae33452ec4bc6562feb718d61dd2f444ddae76299321db7615e",
+        "backend-0001.jsonl": "d5cd60e4a83d3b3b1359967b55873e205d373770417b5c8faadd929e92754a4e",
+        "backend-0002.jsonl": "7c14b28a71889efa19ebc41bf1f4324075f1e7eebef02a9547db00b24a09b0da",
+        "backend-0003.jsonl": "877ddd656f9a938db4eb3df30740775b346f172d0425ed98bb8dd229f8de381f",
+        "backend-summary.json": "5a3d66be85df4c3e655e5e4abfa7665984aab3051d448c870e3972a49d0668bb",
+        "client-0-0000.jsonl": "8239d817713c3727e5ea87a5bb7654efbca72e0e788bc2216f1a02b381cc9260",
+        "client-0-0001.jsonl": "9213d0a4377e9c81719c761ef4e571db291149521b2f09697f68fea6d5437c10",
+        "client-0-0002.jsonl": "017d2d0d299e004b963d4e9e6068fc113ea37781e207f79b79aaef4ba388be92",
+        "client-0-0003.jsonl": "760a75df11a8a3fbaaea4f3a243791d972044ced24a64a565245b59e4117740a",
+        "client-0-0004.jsonl": "71301ac8be73b2415e28983a586763de00c8d00c5103fec1a557cab7cec531a4",
+        "client-0-0005.jsonl": "8540f7907896464cc05c26ae9fa549864409521abd29b0b424412de95bf45dce",
+        "client-0-summary.json": "8cb945a77bcb9e0716675d905c7715760f2ee08ec1df92265cf676cc2b591883",
+        "client-1-0000.jsonl": "2893b40f22db655132946f16576e057772dca64ba04a38418007be9ff1716c56",
+        "client-1-0001.jsonl": "177fa1ec2f0dca6061f09fe3278e7ed702379feb332e6c84c35cca1cb6dd360c",
+        "client-1-0002.jsonl": "94c7b3287aa561b9e855f9b5c7fc76f021341a9f153552a30da3cc1352da8214",
+        "client-1-0003.jsonl": "55574a4ce6e633e3fd0550413bdcae543ed457e3cf5bc56018cd34e03ab2688a",
+        "client-1-0004.jsonl": "62e73c70514c75891fdc03ae6ad267e4b5cb531fb103d8f2dc6d0b6b3c7bb088",
+        "client-1-0005.jsonl": "2f9d54f8744850312870cc2f5209128aebe3c7405dfeedb98c0b81c276315d01",
+        "client-1-summary.json": "077b001be4646b8bf28694a1cc83f72f4ad84107fb61601a49221fc18e06beb5",
+        "drain.json": "8d21ab661d885337e66ed19e9b2e02827b8c65afd1695dada7e849dcb62b2059",
+        "gateway-0.json": "80122be69c1f591430eb391d6df59c9a31255781d795af75c93b2dd2a4f08079",
+        "gateway-1.json": "4dcdac1ce224512028089841960a175be359c37bfb010626833e03ea8739d714",
+        "l4lb.conf": "cc78afc2a3efd45968a6e15c1be02e5e726e574407d46e51f45a8a78492d6813",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "8ea637947caaab6c89daff51df1e455a630f229d57628c30a0e734b95d5b07af",
+        "log-gateway-1-0000.jsonl": "ab90ddecd2be67c5c695a9f53278a4fee0a8e4543f6de4e6484dfab69f2d3447",
+        "log-l4lb-0000.jsonl": "6272dd0fe6357c033ea174bcba4d1c7b774f4f5b3c5e1fe1536beb9efdd2b055",
+        "log-l4lb-0001.jsonl": "3690e6d525fcbe43ec09f704c705baa38a511b128a972bdaf546a4b272aaa503",
+        "log-l4lb-0002.jsonl": "af83110fa0960889a67ae4ef098d12a453db18172998ed8b872896fb3675a107",
+        "log-l4lb-0003.jsonl": "7005a8b6ee9bd9873c43ce0098ad22b53b44176fe1e7df45cb3ba8652961d256",
+        "log-l4lb-0004.jsonl": "56b2e77a0a6b4eb134e98ae09fbc485cf08e02977343e98a7e70fd2254b1b769",
+        "log-l4lb-0005.jsonl": "dd1a7988a2df1511ccb45c32d659d039100945e542f770e421807f27f78c56d8",
+        "processes.json": "8efc02d0a16b9184fda5f4ebdef0a43b93dea0091522d767ed09e62b7ac07c84",
+        "resources-0000.jsonl": "89e7731ff1d4b603a6c899271b52c025cd0b7a105788f00639c542615ad6c437",
+        "result.json": "70bbec3c9cef0eafb5675c7302d7925abd454febbc1b36c03a978eec9a2b835d",
+        "spec.json": "ea839351813d9a0314dd676bee46d94b5474e8604c8d887a35a3a299ec57946b"
+      }
+    },
+    {
+      "role": "reviewer",
+      "input": "build-local/reviewer/v0.6-s1/evidence/run/F-A-L-1920-r1",
+      "spec": {
+        "id": "F-A-L-1920-r1",
+        "kind": "formal",
+        "path": "L",
+        "workload": "A",
+        "rate": 1920,
+        "repeat": 1,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 11371520,
+        "start": 401534496667755,
+        "targets": [
+          40087
+        ],
+        "measure_start": 401538496667755
+      },
+      "phases": {
+        "w": {
+          "planned": 5760,
+          "outcomes": {
+            "success": 5706,
+            "transport_failure": 54
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 54
+          },
+          "backend_by_outcome": {
+            "success": 5706
+          },
+          "per_second": {
+            "0": {
+              "success": 1920
+            },
+            "1": {
+              "success": 1866,
+              "transport_failure": 54
+            },
+            "2": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 5.032555,
+            "p95": 6.637649,
+            "p99": 6.763536
+          }
+        },
+        "f": {
+          "planned": 38400,
+          "outcomes": {
+            "success": 38400
+          },
+          "errors": {},
+          "backend_by_outcome": {
+            "success": 38400
+          },
+          "per_second": {
+            "0": {
+              "success": 1920
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1920
+            },
+            "3": {
+              "success": 1920
+            },
+            "4": {
+              "success": 1920
+            },
+            "5": {
+              "success": 1920
+            },
+            "6": {
+              "success": 1920
+            },
+            "7": {
+              "success": 1920
+            },
+            "8": {
+              "success": 1920
+            },
+            "9": {
+              "success": 1920
+            },
+            "10": {
+              "success": 1920
+            },
+            "11": {
+              "success": 1920
+            },
+            "12": {
+              "success": 1920
+            },
+            "13": {
+              "success": 1920
+            },
+            "14": {
+              "success": 1920
+            },
+            "15": {
+              "success": 1920
+            },
+            "16": {
+              "success": 1920
+            },
+            "17": {
+              "success": 1920
+            },
+            "18": {
+              "success": 1920
+            },
+            "19": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": null,
+            "p95": null,
+            "p99": null
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests",
+        "accepted": 44160,
+        "closed": 44160,
+        "close_reasons": {
+          "drained": 44111,
+          "shutdown SHUT_WR": 47,
+          "SO_ERROR": 2
+        },
+        "zero_response_reasons": {
+          "drained": 5,
+          "shutdown SHUT_WR": 47,
+          "SO_ERROR": 2
+        },
+        "errno": {
+          "shutdown SHUT_WR:107": 47,
+          "SO_ERROR:32": 2
+        },
+        "sent_c2b": 10182980,
+        "sent_b2c": 51207066
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "b639c3f0c45632a43a6d70cdce74545acbb78be68dd7a3f0ff922918fbcfa8a7",
+        "backend-0001.jsonl": "b60cbe338f48d575578ad484fec6ac922ffcbfb615e1d777980b3d8e01556bb5",
+        "backend-0002.jsonl": "4a164a07611d6ccf4f4620e0a724eef33d0fa9347a4e07b27b55201a3ae9d59d",
+        "backend-0003.jsonl": "9c2fec6d7fe4da21c510a09a8ed88500a5d90802f3407ab74835805277b3755f",
+        "backend-summary.json": "f4ec637a1457e5f1de98d9b8a5899b9a3e3732a38706ad25ad684128bfd3f6e7",
+        "client-0-0000.jsonl": "12e4959d7df04322da4235559a4d957a3c2b81e6c93f133aeb069df4ca123f7c",
+        "client-0-0001.jsonl": "cda048f3c912288fb20b49f070cde13b1fa37508b0b4e7b45b6c362fd7d96710",
+        "client-0-0002.jsonl": "d7794bc5a436dba68afee37276a1680d23a7c76c970e81e57744599901fefdf0",
+        "client-0-0003.jsonl": "3e0d765f3cdb2f802bd00e480be66ff009e57a5c8c63daa6937d680caf8e3cba",
+        "client-0-0004.jsonl": "34270f020cce04c03232ded13da3116915e186993a2b024e1a9e69004b08b38f",
+        "client-0-0005.jsonl": "28052ce55e1db6fea67a1af2ccae6847beab1b55fb52f25da82ec5cb4a5addac",
+        "client-0-summary.json": "046be855793f67246041cc728ac7aa26ffe30e7a517fcdf902071bd4cd5bf2a4",
+        "client-1-0000.jsonl": "b16512f6dace576161ba9405511467ef7204919630fc01d90b2e08f58d33fc4b",
+        "client-1-0001.jsonl": "0f3a4aee965d3c1b0da510fb831031c6b64a709e5012d0fb25c3d3dbeb8fcad2",
+        "client-1-0002.jsonl": "276cc5df49fbfcd974a2772fd51376831f96f9601938cd2783775d1c30bcfe2f",
+        "client-1-0003.jsonl": "4e9898391794ef5a8f9567c9b3b697e69eff1cfe559ff2bccdf11674f9c5fad0",
+        "client-1-0004.jsonl": "a3e9988ff97f02bc5dbe00a01095f1fa95eccff390735d8cdc5dd60e2e5e0e2b",
+        "client-1-0005.jsonl": "f9eea2433c33452b7743912c9a01c0c90c1d0c611b1172eefef66ff0d2c5174d",
+        "client-1-summary.json": "046be855793f67246041cc728ac7aa26ffe30e7a517fcdf902071bd4cd5bf2a4",
+        "drain.json": "b24c47f3eb88e889c861cef27bb4aab24e7d62b4c59b8bf01a9584841b166b95",
+        "gateway-0.json": "d7341103945a8f10965f9dd7fd47d752717da45d6df376127e938d0f371ab5eb",
+        "gateway-1.json": "70f88c584a902f5e451cdd23b1f0e70abf36180769b5a2aeecbee724cd625e37",
+        "l4lb.conf": "94dc8c294d41cd9578a95f44285c02b7adf339faf237cb8c8bb83bcf26a6811d",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "3aa634022f3914847a8c319adf2cddde5e0734c5248d24bda911710fa43a73ed",
+        "log-gateway-1-0000.jsonl": "e095e524aed17e27dcf5ee5967f4d0c26ec8ab2909633db2272c29570d91122b",
+        "log-l4lb-0000.jsonl": "4976624815240852424abd71541faf63a61922f7ed146afccdd8b3d98c8cabfb",
+        "log-l4lb-0001.jsonl": "01c50ecc7a910ce3085cb98e1fb1d7dbb274f0c31a805633e6983172830f23df",
+        "log-l4lb-0002.jsonl": "e0018cb1bc124adff9e59d0607fbfacd38f34276fb37e42ff2ce0a5bc28c91de",
+        "log-l4lb-0003.jsonl": "2799b9bfe1f79d5ea49f5937a4bf4c9c63820ea872d40129aa267232b6c00e75",
+        "log-l4lb-0004.jsonl": "795870f6d8ac5c02aa6f30224a52bf4802d70d54eb77cbb14407c5841927ed14",
+        "log-l4lb-0005.jsonl": "6ea009de2f297e50775aa320c3e6a72308ce4d565405c695a6a470a63980183d",
+        "processes.json": "d87d535f902e60006ba983e0cf37b28f7ecea5cd83399b44872d1fa17d805aa5",
+        "resources-0000.jsonl": "7d25fbb31b1c26d2c992de41daaa9fad098f70865c5c7747f233d77af434517d",
+        "result.json": "47a6a666055548c23536529a4a80d436a6c6b5150be6b8cd7aa3da22748c6fed",
+        "spec.json": "e10d030d8cc6d16f72653282b35312111bae431e2113581ff65f78aad3ad36f5"
+      }
+    },
+    {
+      "role": "reviewer",
+      "input": "build-local/reviewer/v0.6-s1/evidence/run/F-A-L-1920-r2",
+      "spec": {
+        "id": "F-A-L-1920-r2",
+        "kind": "formal",
+        "path": "L",
+        "workload": "A",
+        "rate": 1920,
+        "repeat": 2,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 11371520,
+        "start": 402824218116370,
+        "targets": [
+          37485
+        ],
+        "measure_start": 402828218116370
+      },
+      "phases": {
+        "w": {
+          "planned": 5760,
+          "outcomes": {
+            "success": 5678,
+            "transport_failure": 82
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 82
+          },
+          "backend_by_outcome": {
+            "success": 5678
+          },
+          "per_second": {
+            "0": {
+              "success": 1838,
+              "transport_failure": 82
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 18.803177,
+            "p95": 35.720625,
+            "p99": 39.386544
+          }
+        },
+        "f": {
+          "planned": 38400,
+          "outcomes": {
+            "success": 38378,
+            "transport_failure": 22
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 22
+          },
+          "backend_by_outcome": {
+            "success": 38378
+          },
+          "per_second": {
+            "0": {
+              "success": 1905,
+              "transport_failure": 15
+            },
+            "1": {
+              "success": 1920
+            },
+            "2": {
+              "success": 1918,
+              "transport_failure": 2
+            },
+            "3": {
+              "success": 1920
+            },
+            "4": {
+              "success": 1920
+            },
+            "5": {
+              "success": 1920
+            },
+            "6": {
+              "success": 1920
+            },
+            "7": {
+              "success": 1920
+            },
+            "8": {
+              "success": 1920
+            },
+            "9": {
+              "success": 1920
+            },
+            "10": {
+              "success": 1920
+            },
+            "11": {
+              "success": 1920
+            },
+            "12": {
+              "success": 1920
+            },
+            "13": {
+              "success": 1920
+            },
+            "14": {
+              "success": 1920
+            },
+            "15": {
+              "success": 1920
+            },
+            "16": {
+              "success": 1920
+            },
+            "17": {
+              "success": 1915,
+              "transport_failure": 5
+            },
+            "18": {
+              "success": 1920
+            },
+            "19": {
+              "success": 1920
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 4.849367,
+            "p95": 14.254207,
+            "p99": 14.853426
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests",
+        "accepted": 44160,
+        "closed": 44160,
+        "close_reasons": {
+          "drained": 44057,
+          "shutdown SHUT_WR": 89,
+          "SO_ERROR": 14
+        },
+        "zero_response_reasons": {
+          "shutdown SHUT_WR": 89,
+          "SO_ERROR": 14,
+          "drained": 1
+        },
+        "errno": {
+          "shutdown SHUT_WR:107": 89,
+          "SO_ERROR:32": 5,
+          "SO_ERROR:104": 9
+        },
+        "sent_c2b": 10182980,
+        "sent_b2c": 51149016
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "fa53a30271c88700b4135dae9e7624f60a111b5764be6c0b5120fd36d112091f",
+        "backend-0001.jsonl": "3cde1cd4d38c7b82e96859c3cfe376361301df9837d18649bdeb294a1a464817",
+        "backend-0002.jsonl": "9909d9ded772559035515ae82e609a85bbc19e092cda6cc5105272a90f7c72ae",
+        "backend-0003.jsonl": "28db747632b885e109acafbe7b287a9788cafc9677e2b1770ce20677e5167c1e",
+        "backend-summary.json": "bdcf18c02d2b026bb515b662675bdb8c7925a045cbba1ae647c6229ab202be78",
+        "client-0-0000.jsonl": "cda7eb5dd0d21d9e815e11d6165dd64d9532b5efefd98d32a116f5e1acf2f892",
+        "client-0-0001.jsonl": "c27b9b09c85ebc178c09e1416d52cb2f29330dbcf11901d29491649e3a866ee5",
+        "client-0-0002.jsonl": "5bd40600a4194242b670e14eb5bed56a70445fb3e307d829ceb28fcda6c9ad07",
+        "client-0-0003.jsonl": "420210e231d520b6e0ea7fbd4a330751479525a1404813e779e5b7f45bd696cd",
+        "client-0-0004.jsonl": "801145ef899c71f6084c2cea0dea2093b23226f9714929b515c6c71ff5f7df5b",
+        "client-0-0005.jsonl": "9b2f3edd6d138d0779b43b411204d69a0bf13b0b3cc3ee30446e04eac8e2879d",
+        "client-0-summary.json": "f4e59c9df304aaea782d3a2cf8573773909f4ff4a5564722d1e96d9e86cb6be7",
+        "client-1-0000.jsonl": "f165b8baa668ade7dcd6fdec85e5ce33f69e93f5a8ce2852fd39500f81dbeb9a",
+        "client-1-0001.jsonl": "6d725a72d6f746c5b38c5279f40da728fcde2b02a7063cf3b015ce25a86fe379",
+        "client-1-0002.jsonl": "420c67215bd380d4beb2c1473800163ac7e7b377ce5ab7becd5eff58dbc40d55",
+        "client-1-0003.jsonl": "d9a3eb940666eaa3f40282a657831954935a7bcf9edbbf9805e13074b27015e8",
+        "client-1-0004.jsonl": "ead557ee05a403871bc7a3d1c766111a3e1e2aaec6ea8d4c10ac443239455afd",
+        "client-1-0005.jsonl": "ba2e013f1de7e7557cd235ef23bc866e06f20ab803e154eb89011220a318cff4",
+        "client-1-summary.json": "f4e59c9df304aaea782d3a2cf8573773909f4ff4a5564722d1e96d9e86cb6be7",
+        "drain.json": "07e5d32ab3fe43412b66e21220fd985346e7020d25b8c21572d5ebe44de1285f",
+        "gateway-0.json": "13f4adc5e790e197f368d6d9f0a4eeb88ca1ad97de63a0dd38e1d91c62bc2813",
+        "gateway-1.json": "301ed9e3f3af7fdf081f13dd737d20357927912f32feda50da1c4e82a98f9550",
+        "l4lb.conf": "10bbbde2d1456f20ffc4aabb4e714b7ba158f0cd426c69c76bc046dfefc27d95",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "32758311d47ff8d4d12d8a7778fd88cebffd7eb12ef360e4de6e729809b22a1e",
+        "log-gateway-1-0000.jsonl": "002acfbce2e85871763f4e038921a6667b447707e1310ecc52e162638a52b643",
+        "log-l4lb-0000.jsonl": "4b07c829341424cf1961c5fed7a3b745c50d7488c128366b5e8c419a46ce6fdd",
+        "log-l4lb-0001.jsonl": "1bd86a7a3e40c479bac3663ab3d00951e5a009257b747994cab80d65aa208b81",
+        "log-l4lb-0002.jsonl": "3468523473e599c498b138a1310be1aa21867cc911fa2ee305f26335829ca5fb",
+        "log-l4lb-0003.jsonl": "f3734681463b0c1f771e14c9510b5d5c3a235781b6b87b0e21c30333393edbe1",
+        "log-l4lb-0004.jsonl": "92babac343c6e75af24e3029ee823c6c4006b8550c65103b7cf3de14bd6e96c3",
+        "log-l4lb-0005.jsonl": "0c821dbf5659e815ed95ac40353797555b6ab5be104c89acb73c040b4dc1a0c1",
+        "processes.json": "3791dd61fa33132d908774b3f36efc2ae3218155713fe5f8452e5a63e8dfba37",
+        "resources-0000.jsonl": "aeeb2a3bd27867cc06fb26ac3878db33a515ef23ebac9a11ab2de6d46864aad9",
+        "result.json": "28dc314b8368a6c54fc8bec6043e6f90000e73135c6c8d3302fc7c0870c4d085",
+        "spec.json": "be2aa674d4b37cbdb379be978116949b8f725dc2bc0c716b59f2d79e5af090ef"
+      }
+    },
+    {
+      "role": "reviewer",
+      "input": "build-local/reviewer/v0.6-s1/evidence/run/F-A-L-3840-r0",
+      "spec": {
+        "id": "F-A-L-3840-r0",
+        "kind": "formal",
+        "path": "L",
+        "workload": "A",
+        "rate": 3840,
+        "repeat": 0,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 22676480,
+        "start": 401021580368192,
+        "targets": [
+          39375
+        ],
+        "measure_start": 401025580368192
+      },
+      "phases": {
+        "w": {
+          "planned": 11520,
+          "outcomes": {
+            "transport_failure": 243,
+            "success": 11195,
+            "not_sent": 82
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 243,
+            "[\"not_sent\",null,0]": 82
+          },
+          "backend_by_outcome": {
+            "success": 11195
+          },
+          "per_second": {
+            "0": {
+              "transport_failure": 142,
+              "success": 3698
+            },
+            "1": {
+              "success": 3840
+            },
+            "2": {
+              "success": 3657,
+              "not_sent": 82,
+              "transport_failure": 101
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 12.223949,
+            "p95": 15.794597,
+            "p99": 17.732011
+          }
+        },
+        "f": {
+          "planned": 76800,
+          "outcomes": {
+            "success": 66113,
+            "transport_failure": 10661,
+            "not_sent": 26
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 10661,
+            "[\"not_sent\",null,0]": 26
+          },
+          "backend_by_outcome": {
+            "success": 66113
+          },
+          "per_second": {
+            "0": {
+              "success": 3826,
+              "transport_failure": 14
+            },
+            "1": {
+              "success": 3834,
+              "transport_failure": 6
+            },
+            "2": {
+              "success": 3839,
+              "transport_failure": 1
+            },
+            "3": {
+              "success": 3085,
+              "transport_failure": 755
+            },
+            "4": {
+              "success": 3173,
+              "transport_failure": 667
+            },
+            "5": {
+              "success": 3313,
+              "transport_failure": 527
+            },
+            "6": {
+              "success": 3436,
+              "transport_failure": 404
+            },
+            "7": {
+              "success": 3307,
+              "transport_failure": 533
+            },
+            "8": {
+              "transport_failure": 512,
+              "success": 3328
+            },
+            "9": {
+              "transport_failure": 444,
+              "success": 3396
+            },
+            "10": {
+              "transport_failure": 599,
+              "success": 3241
+            },
+            "11": {
+              "success": 3445,
+              "transport_failure": 395
+            },
+            "12": {
+              "success": 3254,
+              "transport_failure": 586
+            },
+            "13": {
+              "success": 3371,
+              "transport_failure": 469
+            },
+            "14": {
+              "transport_failure": 797,
+              "success": 3043
+            },
+            "15": {
+              "success": 3117,
+              "transport_failure": 723
+            },
+            "16": {
+              "success": 2759,
+              "transport_failure": 1081
+            },
+            "17": {
+              "transport_failure": 944,
+              "success": 2896
+            },
+            "18": {
+              "success": 3296,
+              "transport_failure": 544
+            },
+            "19": {
+              "transport_failure": 660,
+              "success": 3154,
+              "not_sent": 26
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 5.151756,
+            "p95": 18.613247,
+            "p99": 25.345532
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests",
+        "accepted": 88212,
+        "closed": 88212,
+        "close_reasons": {
+          "SO_ERROR": 5457,
+          "shutdown SHUT_WR": 5184,
+          "drained": 77571
+        },
+        "zero_response_reasons": {
+          "SO_ERROR": 5457,
+          "shutdown SHUT_WR": 5184,
+          "drained": 263
+        },
+        "errno": {
+          "SO_ERROR:32": 1792,
+          "shutdown SHUT_WR:107": 5184,
+          "SO_ERROR:104": 3665
+        },
+        "sent_c2b": 20354834,
+        "sent_b2c": 89754588
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "1ddde71f4b2f23f1585997bf93cbefaccb5d1c23a8176e0cdf6d9f41e5adc6a6",
+        "backend-0001.jsonl": "1f23c2875ed7d9591eaeff2d7a83f621a34898d0b871fab721d712cc1d4a496a",
+        "backend-0002.jsonl": "d3cdd3e37cc60e07415827232c310716e8943a3f2ccbda079acb9f028718e19b",
+        "backend-0003.jsonl": "b37ce2b772f7755b483bc320b4657c626246a580973ca0456a1dccf0521c7c6c",
+        "backend-0004.jsonl": "62d7ab10dbf6d8dab68a8d641d6dabe80a3439deca8a64d53f036cccaae0519d",
+        "backend-0005.jsonl": "37ac65644c6828d3666aa2072e1946babec3cec55310850dfd850de2ec6537e5",
+        "backend-0006.jsonl": "ddd81252974f25de469e0386ef6d16426b4c88f3b709ed828d263fc8457dcf25",
+        "backend-summary.json": "5702a6be9056b7f9cb817bc73147e2d9bfea1b65d25c6946647e36b84ef78872",
+        "client-0-0000.jsonl": "66af6eadd0922750607c5a36b6c4fa6aeb1994e3f2ecc934dbdaa2e00a732324",
+        "client-0-0001.jsonl": "6aaa485585944b6b42427d81ab600b401d26cb5fa5db1ef894a1bfa32fe8140d",
+        "client-0-0002.jsonl": "7f037455c89f7c0efcff81eb4258489d195f47273821f0d763e7c449068efdab",
+        "client-0-0003.jsonl": "740e0aee4f707b75957cd8398cb21aa975c3787176e057effdd4b8b05260995d",
+        "client-0-0004.jsonl": "5df27f605d08a12382b6e69cd5d93b5d5115cdddca16542bdda055b5f598953a",
+        "client-0-0005.jsonl": "0c7402bb061fd10b1c91cef914eed4530caece0aaf854b07f81f120b399894f3",
+        "client-0-0006.jsonl": "96e78909e390343fd0a05b99cf52911057692158d7ea5b822e7a07d86882b790",
+        "client-0-0007.jsonl": "4b863238612e0bac2fff1f3559bd5ef4f7cc3500c702e2872eb5817bcf854960",
+        "client-0-0008.jsonl": "079c2958c00b0ed4f4ac8e263747ec9384113b44d8dedfa26d457d804638951e",
+        "client-0-0009.jsonl": "ef2885ed35a2e56d3c23216b690bc56530897cd04f5e0c71d14b1a61301dface",
+        "client-0-0010.jsonl": "9931a5cb662924646d71887711fc79b141f8131c7a384474902702a25e818441",
+        "client-0-summary.json": "daeca11bbb795e2af30e25d6d9598a7260bee74b76836e54487ad92685134c05",
+        "client-1-0000.jsonl": "ccf16e825fa01ddfcf598a79702a9d8efbbdf744736915b694da10b9317ceffd",
+        "client-1-0001.jsonl": "f8cf516c76041b1069d622d5fbeea817c84666251691fce366fc75368483e535",
+        "client-1-0002.jsonl": "a4964dfa179a3a6d9b394bcc622584ef7503231933d80a764f08eb21e8040fb8",
+        "client-1-0003.jsonl": "3fc12d82e1d19119498061aafa7f9a35df6f2d88f43136c66f6c05120fe209ae",
+        "client-1-0004.jsonl": "67396c07d553fa367225427dbf7a07d64a9a0613e7bdcc17b6f41af24e50785b",
+        "client-1-0005.jsonl": "e269ff742499659029683ecfa98e28c98e2adeefdb04485e5c55fed577a4e56a",
+        "client-1-0006.jsonl": "633bd284775c392797be68bb1e2b9e7200f525c9368dd3bb30bc30da6e6bc8f9",
+        "client-1-0007.jsonl": "a65762a14428f57bf75347f958f253ec741a6681702709b6919ca6d32c869c73",
+        "client-1-0008.jsonl": "431cf3013a15603b3a5e5a2738db0279c61845d30f029af45049e3a49a4df314",
+        "client-1-0009.jsonl": "48320c8c91ef6c42723612b14cce716592207391e97efe4b58bd38ebb739020e",
+        "client-1-0010.jsonl": "891ab1843f9c45a24bda652365f7f2bb429fa7430298d34fd4daabb44b270789",
+        "client-1-summary.json": "daeca11bbb795e2af30e25d6d9598a7260bee74b76836e54487ad92685134c05",
+        "drain.json": "7e95f0783baca4d6dce14138997dcf8b38f7cfdf8a0d9823b0b7f65f37546539",
+        "gateway-0.json": "c712b15c6adc4c156c05a550fe51c1797e8879a4015ade8520fc10de3042aa21",
+        "gateway-1.json": "37ff502577ebf3a7beaba5f233bd1b0d7c809b767709a211a8ec93b41ae15208",
+        "l4lb.conf": "026b94285545332cbad91e20739cd12e85acf0ba1223e0e7c38a95b16baf9dd1",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "35fa0ca5ba629b62bf0649d320585052a23dde4f0e70904fcde894486824511f",
+        "log-gateway-1-0000.jsonl": "1b580e31993b5736137db02d08b1b8248b8948c443133fa15fa2431c299b2da6",
+        "log-l4lb-0000.jsonl": "e20588f36b47c3593ac8526cce8451f4a567b3822b4cff7b8cf1582b26c1a40e",
+        "log-l4lb-0001.jsonl": "03f4069fc90ece62ea5dce8f6e10726b816481eca1564dfd69d54501ea75434f",
+        "log-l4lb-0002.jsonl": "2ec0065204b0cf61f267aba2eabeb28fbca65c2e8f71a8bb46405e83bb33b213",
+        "log-l4lb-0003.jsonl": "254530bba7e07875d7f73a08134309fd8b6619b73a4761164434111e1e74d4c9",
+        "log-l4lb-0004.jsonl": "e45da2ca2738bb655303c9eb11f22317a424ce2d0790a58d4d1794819166fcaa",
+        "log-l4lb-0005.jsonl": "eed349132193ea50e989af17d482fbe09895ed15b0f11e08065f46b60c1cc4da",
+        "log-l4lb-0006.jsonl": "3d480d335060458bb94b66e275909df72b2f0bf499903af6e49f4a1d7ac5efb4",
+        "log-l4lb-0007.jsonl": "80d8da074103e495f70f78882c47426d88850175420d6fc3d3afc036b3783b70",
+        "log-l4lb-0008.jsonl": "f64f731eeeb336c3ff4eabefc44a42170bb3dbbb8c43445c8c67cbc46721c50d",
+        "log-l4lb-0009.jsonl": "91ae13a03b5c53e94c47383ff6405cd88e28ee05f14411a383aae8ea05c14587",
+        "log-l4lb-0010.jsonl": "edd4bb2b83d745c4bf03c7c9b3a8249b420a133f4a8a2053de88d1ffe3fc583f",
+        "log-l4lb-0011.jsonl": "a04b3a525b1ae309995001fdc55b4192aa160e0395096b626ea06baa05e4533f",
+        "processes.json": "99579fbe2b6891dc55bbb38b440bc4820ca76730c6d84f8d85c7b9961333b188",
+        "resources-0000.jsonl": "547acb7b08149d89315e7b10401052e2386a0843312cc0c944019725f913f826",
+        "result.json": "ee40cecccd5c63a66cda31a3bfe12d1e4bf95a452666b6486a8d26a3b9583583",
+        "spec.json": "1ca681a30477d35f8aa2406206e93f969748ed3a364253f52f99a619e7c21b23"
+      }
+    },
+    {
+      "role": "reviewer",
+      "input": "build-local/reviewer/v0.6-s1/evidence/run/F-A-L-3840-r1",
+      "spec": {
+        "id": "F-A-L-3840-r1",
+        "kind": "formal",
+        "path": "L",
+        "workload": "A",
+        "rate": 3840,
+        "repeat": 1,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 22676480,
+        "start": 401611778845492,
+        "targets": [
+          38751
+        ],
+        "measure_start": 401615778845492
+      },
+      "phases": {
+        "w": {
+          "planned": 11520,
+          "outcomes": {
+            "not_sent": 86,
+            "transport_failure": 286,
+            "success": 11148
+          },
+          "errors": {
+            "[\"not_sent\",null,0]": 86,
+            "[\"transport_failure\",\"EOF before any response\",0]": 286
+          },
+          "backend_by_outcome": {
+            "success": 11148
+          },
+          "per_second": {
+            "0": {
+              "not_sent": 72,
+              "transport_failure": 187,
+              "success": 3581
+            },
+            "1": {
+              "success": 3840
+            },
+            "2": {
+              "success": 3727,
+              "not_sent": 14,
+              "transport_failure": 99
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 11.946463,
+            "p95": 33.120763,
+            "p99": 34.672429
+          }
+        },
+        "f": {
+          "planned": 76800,
+          "outcomes": {
+            "transport_failure": 12821,
+            "success": 63869,
+            "not_sent": 110
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 12821,
+            "[\"not_sent\",null,0]": 110
+          },
+          "backend_by_outcome": {
+            "success": 63869
+          },
+          "per_second": {
+            "0": {
+              "transport_failure": 94,
+              "success": 3746
+            },
+            "1": {
+              "success": 3840
+            },
+            "2": {
+              "success": 3497,
+              "transport_failure": 343
+            },
+            "3": {
+              "success": 3118,
+              "transport_failure": 722
+            },
+            "4": {
+              "success": 3345,
+              "transport_failure": 495
+            },
+            "5": {
+              "transport_failure": 847,
+              "success": 2993
+            },
+            "6": {
+              "transport_failure": 748,
+              "success": 3092
+            },
+            "7": {
+              "transport_failure": 681,
+              "success": 3159
+            },
+            "8": {
+              "success": 3370,
+              "transport_failure": 470
+            },
+            "9": {
+              "success": 2919,
+              "transport_failure": 914,
+              "not_sent": 7
+            },
+            "10": {
+              "transport_failure": 574,
+              "success": 3262,
+              "not_sent": 4
+            },
+            "11": {
+              "transport_failure": 708,
+              "success": 3132
+            },
+            "12": {
+              "success": 3237,
+              "transport_failure": 603
+            },
+            "13": {
+              "transport_failure": 699,
+              "success": 3141
+            },
+            "14": {
+              "transport_failure": 706,
+              "success": 3134
+            },
+            "15": {
+              "transport_failure": 620,
+              "success": 3220
+            },
+            "16": {
+              "transport_failure": 853,
+              "success": 2943,
+              "not_sent": 44
+            },
+            "17": {
+              "success": 2906,
+              "transport_failure": 934
+            },
+            "18": {
+              "transport_failure": 1077,
+              "success": 2763
+            },
+            "19": {
+              "success": 3052,
+              "transport_failure": 733,
+              "not_sent": 55
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 5.002077,
+            "p95": 18.642113,
+            "p99": 26.706003
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests",
+        "accepted": 88124,
+        "closed": 88124,
+        "close_reasons": {
+          "shutdown SHUT_WR": 6908,
+          "drained": 75393,
+          "SO_ERROR": 5823
+        },
+        "zero_response_reasons": {
+          "shutdown SHUT_WR": 6908,
+          "SO_ERROR": 5823,
+          "drained": 376
+        },
+        "errno": {
+          "shutdown SHUT_WR:107": 6908,
+          "SO_ERROR:104": 3827,
+          "SO_ERROR:32": 1996
+        },
+        "sent_c2b": 20334568,
+        "sent_b2c": 87094737
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "3cc0e9f146735f43ce5d0e6d42f2f40d594d7faef985a11425f63c5022141ee0",
+        "backend-0001.jsonl": "1bcb4bb689e0df42126c4de525217155a049688a35a5dba5030be5144f4f8442",
+        "backend-0002.jsonl": "17ae832d575c398b98e0def6bd48b7454f8d1a18922494690c49106dd526ad86",
+        "backend-0003.jsonl": "4604c8db20ead75d941d146957c61e226e10884b43723941b3b972fa7aaed829",
+        "backend-0004.jsonl": "58c0ce8aa51219f2c0fa1378ee7ce504273d75a061f65122a4ca851ddfd881c8",
+        "backend-0005.jsonl": "2aaef52dd5a5f718b29de32bd04ebb91121598fd0ec3ad85a85f3315a6fd21a7",
+        "backend-summary.json": "1270243b67aa59b010b56637f134f1a6602a6ec8b89608f9508e98a3d645081e",
+        "client-0-0000.jsonl": "af55206b3cba452acdb7aacfb0bfa2485b0a876c77040f65fdc7dbef84209564",
+        "client-0-0001.jsonl": "bf0d7061e813388326bdd15da0b78a13eafb2b0b7a55acdf20432b8866df4c89",
+        "client-0-0002.jsonl": "e708d4937100af38287646a86cdcbbe1791eceb3c3d8b76478bb35b3313ec430",
+        "client-0-0003.jsonl": "27f995e10ffc7e9ec81830dc4b01a65b6454257f8be4b088db4eb238e4b28e9d",
+        "client-0-0004.jsonl": "c5495b0bea342cfa19bfec10e1363272af3367ad13d9d96b280bf4c0abacc5e6",
+        "client-0-0005.jsonl": "d9409e2f48cea6927e900a440cacc207e2433d14973415f7aa84c393b7ba7854",
+        "client-0-0006.jsonl": "2cd80a63e41e9abf7e0de85740cc8cbb1562b34a6112a09863acb39de1c4e84f",
+        "client-0-0007.jsonl": "76f4e5535da74c1f1156701d6215dc097dc774c46570346dc3e7354135225697",
+        "client-0-0008.jsonl": "f81b2f7302cbe97293707c0d3477bf995749099d4701f369e7b4a6d397ad3a80",
+        "client-0-0009.jsonl": "6962178b2f29c9b16a0ab66aa61b7a626aeebec7c7170be867606376eaca8ef6",
+        "client-0-0010.jsonl": "a0d5d686ab2e78c0227a014cf180cac94a743d667c5b3ddf7ff4455a50c61b7e",
+        "client-0-summary.json": "daeca11bbb795e2af30e25d6d9598a7260bee74b76836e54487ad92685134c05",
+        "client-1-0000.jsonl": "73b9f67a3497d6d2ebb4e92893dd24066efe85b168ab7dc477306218ac0dd11b",
+        "client-1-0001.jsonl": "4a1bef3a9220abbf148ebcd93b20a3bd1a9f1261288cb15d50e686801b6da8ae",
+        "client-1-0002.jsonl": "206121ce3cce18309e688cef74495a9ceeded6425413b25aa0802686ba309a90",
+        "client-1-0003.jsonl": "650ab89c43135df386c4ee7f4e3c59765b4b3aa3f698352ed6c63a397da791d8",
+        "client-1-0004.jsonl": "5c4fe0ca1a6150f83b8122204a53dc24d681342aaf9ba38ca353a321edca258a",
+        "client-1-0005.jsonl": "3e40daac6644dc1898a2ac4a1da99624fcd94aa1a6522432f9f2b981ed8186d3",
+        "client-1-0006.jsonl": "89beedf4f4a5a5ddf77f3470f87664e68a46e339cd4459998b3411c49ad921db",
+        "client-1-0007.jsonl": "7429d57cda6238d7ddf5bd2b9a476f331b7a25e3c86cf618039541442c37663e",
+        "client-1-0008.jsonl": "e77701685b2915b77d4b41874c1f771b38b0a91371f6e8c3eca3220fc2d5e434",
+        "client-1-0009.jsonl": "9fda0cbfeb2d262e2f04fc84bb3d83a2d0b03001b15987579a44a613c164be2e",
+        "client-1-0010.jsonl": "fca00d9429f23413fdc5af6ff17d98247f690f37ab14c39afe8ea6b8ec8b464a",
+        "client-1-summary.json": "daeca11bbb795e2af30e25d6d9598a7260bee74b76836e54487ad92685134c05",
+        "drain.json": "1526070d1be4d6ce7e7cf39859cff202106e43cc6a672bc1702b5805e7ff6ed8",
+        "gateway-0.json": "e57d38481d6b35444d9563b628d6feecc819d6a7bef46c7568fa5a01f388ecfa",
+        "gateway-1.json": "63f5e63f98746ad82208282231f4d1f0f24ebf7fcfdaed1be717ae812a15ccf6",
+        "l4lb.conf": "bcf3f871c706b582c822fdff5ae3ffe3b1dd05563fb6333894e463fb5c45e885",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "b786efe350f78c418e7bdc156a222295ab90bdaf02f44183d5dbcb78f1ab6bcc",
+        "log-gateway-1-0000.jsonl": "1477bcdf6411f266b6fca7b3e6597fd90558fee8b2248fe6906b31b29b731cdc",
+        "log-l4lb-0000.jsonl": "5b2ff4744b1b46d282fd11ff71863a83c4dc30e29df9e01a2d63d51e4f52d22b",
+        "log-l4lb-0001.jsonl": "de37dface183c3116066b62a8ad4ec27b60dda11777e7903744e02c82002f06d",
+        "log-l4lb-0002.jsonl": "1465d1515281a718e11d7ab527c7a0e21cdc5635e5b3946f6acc557c8dfc5fe4",
+        "log-l4lb-0003.jsonl": "4fb5b278c70466aeba40dd9a66ef42208145d8181d9ad176ae824a72f108ee56",
+        "log-l4lb-0004.jsonl": "a411fe8f74784ed744897b3844860d4f75148110d73d8d30bf7f2efa9760539f",
+        "log-l4lb-0005.jsonl": "77ceb3c8473c7f0078e7ff48dc23080490f7d8ad97abf0be98ffa20466451042",
+        "log-l4lb-0006.jsonl": "e9ed1b903d22b0a91f70baba7368c983adc170fe57b03c534d7ffd6bf0870bee",
+        "log-l4lb-0007.jsonl": "4a0d60f4904872fce780250d570995eb3e1ebbe33a94fcd5f001f7b3d642d225",
+        "log-l4lb-0008.jsonl": "4f3a0ec6428e5312f85c67bd658e22aa0898d61923e116076feb7029a42374c3",
+        "log-l4lb-0009.jsonl": "6ee21f10d59875c4db19a571b1f10bf8a0d8be8c89a4c69bf83d9d949cfbe823",
+        "log-l4lb-0010.jsonl": "6381062229afeeac5c2909359b0b083e233f147d011ac56f842daf7a9508c206",
+        "log-l4lb-0011.jsonl": "c4bd875bcf4572784b67c3369da9e8380f13e39197793b5a55e390ef3d95264b",
+        "monitor-events-0000.jsonl": "0b578739693d88020d038a0b385e9700131369f079aa364d9743ecb26b6f86ff",
+        "processes.json": "d178cc28db6c1c48f86b60534cf9ad0c86cf17b77873fa25b3c08c1dd9bce4b2",
+        "resources-0000.jsonl": "cc6ecaa9968a63bf56a09af35734df4bc3e08cdac1da8a784afd494674dfb49c",
+        "result.json": "079695aa476d0d9c3d5f1726f85ff11a3375e97d35b9e44fa2795838c4202777",
+        "spec.json": "ccfac072c9562e639498fa71665dea01fc58de53d72a668c444b04abed634433"
+      }
+    },
+    {
+      "role": "reviewer",
+      "input": "build-local/reviewer/v0.6-s1/evidence/run/F-A-L-3840-r2",
+      "spec": {
+        "id": "F-A-L-3840-r2",
+        "kind": "formal",
+        "path": "L",
+        "workload": "A",
+        "rate": 3840,
+        "repeat": 2,
+        "warm": 3,
+        "duration": 20,
+        "workers": 2,
+        "backend_workers": 1,
+        "slots": 128,
+        "capacity": 32,
+        "reuse": false,
+        "nodelay": 1,
+        "stream_aggregate_bytes": 4194304,
+        "sample_interval": 0.1,
+        "client_bytes": 22676480,
+        "start": 403004378217203,
+        "targets": [
+          40171
+        ],
+        "measure_start": 403008378217203
+      },
+      "phases": {
+        "w": {
+          "planned": 11520,
+          "outcomes": {
+            "not_sent": 68,
+            "transport_failure": 176,
+            "success": 11276
+          },
+          "errors": {
+            "[\"not_sent\",null,0]": 68,
+            "[\"transport_failure\",\"EOF before any response\",0]": 176
+          },
+          "backend_by_outcome": {
+            "success": 11276
+          },
+          "per_second": {
+            "0": {
+              "not_sent": 68,
+              "transport_failure": 160,
+              "success": 3612
+            },
+            "1": {
+              "success": 3824,
+              "transport_failure": 16
+            },
+            "2": {
+              "success": 3840
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 21.248202,
+            "p95": 34.128164,
+            "p99": 36.435891
+          }
+        },
+        "f": {
+          "planned": 76800,
+          "outcomes": {
+            "success": 64344,
+            "transport_failure": 12396,
+            "not_sent": 60
+          },
+          "errors": {
+            "[\"transport_failure\",\"EOF before any response\",0]": 12396,
+            "[\"not_sent\",null,0]": 60
+          },
+          "backend_by_outcome": {
+            "success": 64344
+          },
+          "per_second": {
+            "0": {
+              "success": 3664,
+              "transport_failure": 132,
+              "not_sent": 44
+            },
+            "1": {
+              "success": 3840
+            },
+            "2": {
+              "success": 3528,
+              "transport_failure": 312
+            },
+            "3": {
+              "success": 3326,
+              "transport_failure": 514
+            },
+            "4": {
+              "success": 2861,
+              "transport_failure": 979
+            },
+            "5": {
+              "success": 3245,
+              "transport_failure": 595
+            },
+            "6": {
+              "success": 3110,
+              "transport_failure": 730
+            },
+            "7": {
+              "success": 3391,
+              "transport_failure": 449
+            },
+            "8": {
+              "success": 3259,
+              "transport_failure": 581
+            },
+            "9": {
+              "transport_failure": 339,
+              "success": 3501
+            },
+            "10": {
+              "transport_failure": 585,
+              "success": 3255
+            },
+            "11": {
+              "success": 3011,
+              "transport_failure": 829
+            },
+            "12": {
+              "transport_failure": 411,
+              "success": 3429
+            },
+            "13": {
+              "success": 3003,
+              "transport_failure": 837
+            },
+            "14": {
+              "transport_failure": 947,
+              "success": 2893
+            },
+            "15": {
+              "transport_failure": 910,
+              "success": 2930
+            },
+            "16": {
+              "success": 2984,
+              "transport_failure": 856
+            },
+            "17": {
+              "success": 2917,
+              "transport_failure": 923
+            },
+            "18": {
+              "not_sent": 16,
+              "transport_failure": 738,
+              "success": 3086
+            },
+            "19": {
+              "success": 3111,
+              "transport_failure": 729
+            }
+          },
+          "failure_connected_lifetime_ms": {
+            "p50": 5.254254,
+            "p95": 19.004469,
+            "p99": 26.160008
+          }
+        }
+      },
+      "l4": {
+        "scope": "all phases; session IDs do not identify HTTP requests",
+        "accepted": 88192,
+        "closed": 88192,
+        "close_reasons": {
+          "shutdown SHUT_WR": 5846,
+          "drained": 75942,
+          "SO_ERROR": 6404
+        },
+        "zero_response_reasons": {
+          "shutdown SHUT_WR": 5846,
+          "drained": 322,
+          "SO_ERROR": 6404
+        },
+        "errno": {
+          "shutdown SHUT_WR:107": 5846,
+          "SO_ERROR:104": 4306,
+          "SO_ERROR:32": 2098
+        },
+        "sent_c2b": 20350356,
+        "sent_b2c": 87794820
+      },
+      "input_sha256": {
+        "backend-0000.jsonl": "332cb404d48023d3932aeba0ba0099b5331c1cf450bdedd25ba212c6a93a188b",
+        "backend-0001.jsonl": "ae42cfd6a957a80169eb4d3903ac99d1787a61aa9d27baa581ff5161f926dd45",
+        "backend-0002.jsonl": "c6db5919e4338aaa489febf62fa0edd21642ac6d18558c947a4346436131592c",
+        "backend-0003.jsonl": "7b9b792f445a2df552940acb0ab7f0f3d372b073cea6e88de6ef9813200a2aa7",
+        "backend-0004.jsonl": "92a8d71fc1ddb8c9fb9582aeb1321ac5ef5ba43c4dc80d7c8e76f698e8207fb6",
+        "backend-0005.jsonl": "13f58a46d765fbf3b349d7ee9e1cca2a70f4c370ec938513520046858cce7018",
+        "backend-0006.jsonl": "e414c6d7b443e3906c83c6d40324e419f3f289dc9d5841354c32fa28ebd34610",
+        "backend-summary.json": "b27bf9d2e5b88b48d1e66c55dd55e050c9fb05a5bd2c8070a943f87bd09d7430",
+        "client-0-0000.jsonl": "b9fbc576dab244b2985b006117a08c3d4afc46e1914784134b2dcb04a530df83",
+        "client-0-0001.jsonl": "337b52eddb90e1ae20a08d7f822397fa840126986f8205cc4e0309955963b4cd",
+        "client-0-0002.jsonl": "7187c61beeb3052949f3a91a968f6922763f648e2cb7fe75fb508bcbdfeb9ead",
+        "client-0-0003.jsonl": "fe9c379698c1e923e4fed053c04ecb7a824f7b53bd2c4f958e007d1e2617eb32",
+        "client-0-0004.jsonl": "0ac4094ede9041dc32b2233d98383eb396028931972065c7a232f401743ba14f",
+        "client-0-0005.jsonl": "24aa9cece9380d778fa4bcbe6ffbff2be22f4e26e806d490a3fc9da02faaf558",
+        "client-0-0006.jsonl": "f0c7be10b5997122000d219dfa2ea9986e854c54e322c193c3d5f3f5fd79eacc",
+        "client-0-0007.jsonl": "7c9e656a439e52a11df70d8bdcb38d3d1d692a5e50e19d013099fbc7186e372c",
+        "client-0-0008.jsonl": "9c152d8b035dba4385407fd6f038e5c860afd8892b8ce3603792bfc9da5bd25b",
+        "client-0-0009.jsonl": "a6880ffbe3b887a7a33f549f341590e3f0da7cf66169af9410ff3424d1e23566",
+        "client-0-0010.jsonl": "90d9f7b6b1b35bfea8b5db608c6072b3427fa93a6375682f0561681b2b40c7cb",
+        "client-0-summary.json": "daeca11bbb795e2af30e25d6d9598a7260bee74b76836e54487ad92685134c05",
+        "client-1-0000.jsonl": "f0fa8996009a7320b62f5377fba44380b933e77e1a3f73c6df5553fd04e1b574",
+        "client-1-0001.jsonl": "65b63beee9581cd7ce42f78545f0ab292e8aa6abc02677463ba46e77c5b45d1e",
+        "client-1-0002.jsonl": "8759fdc21d29aa9d87fa74a7da837365e3d07d952254599e2443efbbf2cbcc49",
+        "client-1-0003.jsonl": "cf6cbcef8d3c41a4835b26abb38f5b98147ffd5ebb1907d3f0925ec59bab8f3c",
+        "client-1-0004.jsonl": "40b83d432eb44b7079e5e62bd37183554d97153cf0dea045939c2d428f3db1a1",
+        "client-1-0005.jsonl": "1e300b47be973a24963c5c397efa5e7efc8e98c59d2343b4941257a4270a64a9",
+        "client-1-0006.jsonl": "4407bb3ba5c9f803e977b7506b69c8f820ab70d0129d6dbaca01e89de766f238",
+        "client-1-0007.jsonl": "ae00a8f0f6d66ab5291d7ae67c69d5c26a90bb1a088223b426d84bf705ace649",
+        "client-1-0008.jsonl": "4b54485f03c93787df7f51ea226b090b554f0131e890c1ef2b6c0236cf1543b3",
+        "client-1-0009.jsonl": "aeedfc5595ae7e125a4bbcc0602351e98474e928197328c16a2b5b880b99a5be",
+        "client-1-0010.jsonl": "7abb6ed42eb10523250185ab9a5c87fd4853e049ced50128dc6e9a0dc96daf87",
+        "client-1-summary.json": "daeca11bbb795e2af30e25d6d9598a7260bee74b76836e54487ad92685134c05",
+        "drain.json": "af1f0b96f2bb0b5ed26329bc9664cb1f7b8a748bbfb2be83b467772ed4e61426",
+        "gateway-0.json": "6451495857a306c42dcb3cf390ff40bcd8602d1c14fb0c20b14ab53d8b883a90",
+        "gateway-1.json": "a62ff23144f093376882c15428c95bb6b86015564852c71a1c8754ba7639e1ad",
+        "l4lb.conf": "5fc024658a871e5d4c172d7b660725f28b1d9fb534e599e59a0cf0e5b73cd68c",
+        "log-backend-0-0000.jsonl": "3dfa3fb239f56c778a1e9b33eb31328349edd155a95806dac4378904e88527e5",
+        "log-gateway-0-0000.jsonl": "6fccb9a965332975a13fb893982df57c3ecced7c6dcf0814b09914ffc16fb0de",
+        "log-gateway-1-0000.jsonl": "e1ac5f14a4955649e6aa9183bc22da022f2abfcc1fafd0a6b4c68c016e767036",
+        "log-l4lb-0000.jsonl": "6a571a5762308cc9d6447829511a0ace29105bc0d72972f952a5d98dc9ef66b4",
+        "log-l4lb-0001.jsonl": "f43a1841c34996105f8068f5922d1b4f09d3c25c30a10ba26d65b3ec651bae9a",
+        "log-l4lb-0002.jsonl": "83fd915a9bcf53ede3c9f28997c3137d286fef7e9ba6feef5b166a98e1052355",
+        "log-l4lb-0003.jsonl": "3f741c748751369d3bcb90a460215024325ab0c63da860c686adf21f97f99ba2",
+        "log-l4lb-0004.jsonl": "ed1385c146b021244d4918fa2b568953856cc0b185d1aabf6b00eea2f6df4f6b",
+        "log-l4lb-0005.jsonl": "08a353975798f0a74b38e06d2d1d1dc056e558aa881c4f433b80452773ec4dd4",
+        "log-l4lb-0006.jsonl": "5b9eff64b3e4f19344e14035b02cecce167c8368992945a6f23267b0f9ff125d",
+        "log-l4lb-0007.jsonl": "e5063080243c0b44c5c7738b32ee28dd46aca21d31cab0349667f2703125dcdd",
+        "log-l4lb-0008.jsonl": "3ada420148f31004cf99e93fabfcf92f92ef082ce505657c1d23bbd344a2b74e",
+        "log-l4lb-0009.jsonl": "4877e1b94fcfa1bc99551cd9e28f534b41fae3c47d932b5d1a8343c912138e93",
+        "log-l4lb-0010.jsonl": "40629e0a57ea52c77b901edfad92e861ec382f0ded9b8071c9aa35011114e78f",
+        "log-l4lb-0011.jsonl": "c4163a46c183e5bfc0e811229bab09581f3dd8671cafcd3a1933f115c98c6199",
+        "processes.json": "4936af270e21dbb65bc5972bf5f1342a64aacdcb99dce6e081111ae9319af7fb",
+        "resources-0000.jsonl": "6e90f270afc6492824765f3d56f5922887bdc16f11f44af5187593bca54077d2",
+        "result.json": "505bd619ceb759318e29a64cfbb396e08c70aee560fcf19be35a2a2f7534e42e",
+        "spec.json": "bd7c9f3ed9b41d669c61a40f78da48b5c9ee15010778272c0cbb3e93c0526cb4"
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # V0.6/S1：容量摸底与瓶颈定位
 
-Approved / 待实现（本次仅规划）。2026-10-29，依据用户同意V0.6方向并要求文档规划，由Leader在既有技术决策授权内采纳。本文件批准测量方法、边界和实施门槛，不表示已执行压测；正式试验清单必须在校准后、正式数据采集前冻结。
+Approved / 测量工具与有界诊断已独立接受，产品容量归因及S2入口BLOCKED。2026-10-29，依据用户同意V0.6方向并要求文档规划，由Leader在既有技术决策授权内采纳。用户后续以“开始s1点工作”授权执行，见[启动报告002](../../reports/V0.6/S1-report-002.md)。本文件保留原测量方法、边界和实施门槛；正式清单已按校准证据冻结，实际结果与限制见[收口报告003](../../reports/V0.6/S1-report-003.md)。
 
 ## 1. 已知问题和范围
 
@@ -59,7 +59,7 @@ REQ-08：角色路径 `build-local/ROLE/v0.6-s1/{tmp,cache,evidence,gateway,l4lb
 
 只停止自有PID，TERM一次，5s后KILL并wait；异常退出、超时、预算触发均非零并保存已发生结果/未开始ID，禁止把已发送任务伪记未开始。长期趋势若未测不得称无泄漏。调高准入时要核对当前 `GatewayConfig` 支持的1–256范围及真实资源预留，不能只改一个数就把拒绝当性能问题。
 
-交付路径（均为规划，尚不存在工具/结果）：`tests/capacity/`、`docs/performance/V0.6/S1-manifest.json`、`S1-results.md`、`S1-bottlenecks.md`，Builder/Reviewer/Leader各阶段报告。实际CLI在实现时固定并写操作说明；不得把计划命令冒称现成工具。
+交付路径（完成状态以各角色报告为准）：`tests/capacity/`、`docs/performance/V0.6/S1-manifest.json`、`S1-results.md`、`S1-bottlenecks.md`，Builder/Reviewer/Leader各阶段报告。实际CLI在实现时固定并写操作说明；不得把计划命令冒称现成工具。
 
 ## 6. 验收与进入条件
 
