@@ -1,0 +1,1062 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -192,3 +192,20 @@
+   add_test(NAME v12_benchmark_schema COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/tests/v12_benchmark_test.py")
+   set_tests_properties(v12_benchmark_schema PROPERTIES TIMEOUT 20)
+ endif()
++
++# Gateway仓库S2-trace隔离实验补丁；默认关闭，不是L4产品修复。
++option(L4LB_CONNECTION_TRACE "Compile isolated bounded connection observations" OFF)
++if(L4LB_CONNECTION_TRACE)
++  add_library(l4lb_connection_trace src/diagnostics/ConnectionTrace.cpp)
++  target_include_directories(l4lb_connection_trace PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
++  add_compile_definitions(L4LB_CONNECTION_TRACE=1)
++  target_link_libraries(l4lb_net PUBLIC l4lb_connection_trace)
++  target_link_libraries(l4lb_health PUBLIC l4lb_connection_trace)
++  get_property(traceTargets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
++  foreach(traceTarget IN LISTS traceTargets)
++    get_target_property(traceType ${traceTarget} TYPE)
++    if(traceType STREQUAL "EXECUTABLE")
++      target_link_libraries(${traceTarget} PRIVATE l4lb_connection_trace)
++    endif()
++  endforeach()
++endif()
+--- /dev/null
++++ b/src/diagnostics/ConnectionTrace.cpp
+@@ -0,0 +1,236 @@
++#include "diagnostics/ConnectionTrace.h"
++
++#include <arpa/inet.h>
++#include <fcntl.h>
++#include <signal.h>
++#include <sys/socket.h>
++#include <sys/time.h>
++#include <unistd.h>
++
++#include <algorithm>
++#include <chrono>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <stdexcept>
++#include <system_error>
++
++namespace connection_diagnosis {
++namespace {
++constexpr std::uint32_t kPublished = 1U << 8;
++constexpr std::uint32_t kRemoved = 1U << 9;
++
++void writeArtifact(const std::string& path,
++                   const void* data,
++                   std::size_t size,
++                   std::uint64_t deadline) {
++  const int fd = ::open(path.c_str(), O_CREAT | O_EXCL | O_WRONLY | O_CLOEXEC, 0600);
++  if (fd < 0) throw std::system_error(errno, std::generic_category(), "trace open");
++  const auto* bytes = static_cast<const char*>(data);
++  try {
++    while (size) {
++      if (ConnectionTrace::monotonicNs() >= deadline)
++        throw std::runtime_error("trace export deadline");
++      const auto count = ::write(fd, bytes, size);
++      if (count < 0 && errno == EINTR) continue;
++      if (count <= 0) throw std::system_error(errno, std::generic_category(), "trace write");
++      bytes += count;
++      size -= static_cast<std::size_t>(count);
++    }
++    if (::close(fd) < 0) throw std::runtime_error("trace close");
++  } catch (...) {
++    ::close(fd);
++    throw;
++  }
++}
++}  // namespace
++
++ConnectionTrace::ConnectionTrace(std::string directory, std::size_t capacity)
++    : directory_(std::move(directory)) {
++  if (directory_.empty()) return;
++  if (!capacity || capacity > kCapacity) throw std::invalid_argument("trace capacity");
++  records_ = std::make_unique<Record[]>(capacity);
++  header_.capacity = capacity;
++  header_.pid = static_cast<std::uint64_t>(::getpid());
++  header_.identityNs = monotonicNs();
++}
++
++ConnectionTrace::~ConnectionTrace() {
++  if (!enabled() || exported_) return;
++  try {
++    exportRecords();
++  } catch (...) {
++    // 导出失败必须令控制器看到非零退出，不能把缺证据当作成功。
++    ::_exit(74);
++  }
++}
++
++ConnectionTrace* ConnectionTrace::processTrace() {
++  const char* directory = std::getenv("CONNECTION_TRACE_DIR");
++  static ConnectionTrace trace(directory ? directory : "");
++  return trace.enabled() ? &trace : nullptr;
++}
++
++std::uint64_t ConnectionTrace::monotonicNs() noexcept {
++  return static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
++                                        std::chrono::steady_clock::now().time_since_epoch())
++                                        .count());
++}
++
++Record* ConnectionTrace::acceptRecord(std::uint32_t kind,
++                                      int fd,
++                                      std::uint64_t acceptedNs,
++                                      std::uint32_t active,
++                                      std::uint64_t reservedBytes) noexcept {
++  if (!enabled()) return nullptr;
++  ++header_.accepts;
++  if (header_.count == header_.capacity) {
++    ++header_.dropped;
++    return nullptr;
++  }
++  auto* record = &records_[header_.count++];
++  record->generation = header_.accepts;
++  record->kind = kind;
++  record->times[0] = acceptedNs;
++  record->active = active;
++  record->closing = static_cast<std::uint32_t>(header_.closing);
++  record->finished = static_cast<std::uint32_t>(header_.finished);
++  record->reservedBytes = reservedBytes;
++  observeEndpoint(record, fd, 0);
++  return record;
++}
++
++void ConnectionTrace::observeEndpoint(Record* record, int fd, std::size_t pair) noexcept {
++  if (!record || pair > 1) return;
++  const int savedError = errno;
++  for (std::size_t side = 0; side < 2; ++side) {
++    sockaddr_in address{};
++    socklen_t length = sizeof(address);
++    ++header_.queries;
++    const int result = side == 0 ? getsockname(fd, reinterpret_cast<sockaddr*>(&address), &length)
++                                 : getpeername(fd, reinterpret_cast<sockaddr*>(&address), &length);
++    if (result != 0 || address.sin_family != AF_INET) {
++      ++header_.queryFailures;
++      continue;
++    }
++    const auto index = pair * 2 + side;
++    record->endpoints[index] = {ntohl(address.sin_addr.s_addr), ntohs(address.sin_port), 0};
++    record->flags |= 1U << index;
++  }
++  errno = savedError;
++}
++
++void ConnectionTrace::classifyAccept(Record* record,
++                                     Outcome outcome,
++                                     std::uint64_t session) noexcept {
++  if (!record) return;
++  if (record->outcome) {
++    ++header_.duplicates;
++    return;
++  }
++  record->outcome = static_cast<std::uint32_t>(outcome);
++  record->session = session;
++  if (outcome == Outcome::kPublished) {
++    record->flags |= kPublished;
++    ++header_.active;
++    if (record->times[static_cast<std::size_t>(Time::kFinished)])
++      ++header_.finished;
++    else if (record->times[static_cast<std::size_t>(Time::kClosing)])
++      ++header_.closing;
++  }
++}
++
++void ConnectionTrace::recordTime(Record* record, Time event, std::uint64_t time) noexcept {
++  if (!record) return;
++  auto& value = record->times[static_cast<std::size_t>(event)];
++  if (value) return;  // 同一阶段重复通知幂等，不重复推进计数。
++  value = time;
++  if (event == Time::kClosing && (record->flags & kPublished) && !record->times[7])
++    ++header_.closing;
++}
++
++void ConnectionTrace::finishRecord(Record* record,
++                                   std::uint64_t time,
++                                   std::uint32_t reason) noexcept {
++  if (!record || record->times[7]) return;
++  record->times[7] = time;
++  record->reason = reason;
++  if ((record->flags & kPublished) && !(record->flags & kRemoved)) {
++    if (record->times[6]) --header_.closing;
++    ++header_.finished;
++  }
++}
++
++void ConnectionTrace::removeRecord(Record* record, std::uint64_t time) noexcept {
++  if (!record || (record->flags & kRemoved)) return;
++  record->times[8] = time;
++  record->flags |= kRemoved;
++  if (record->flags & kPublished) {
++    --header_.active;
++    if (record->times[7])
++      --header_.finished;
++    else if (record->times[6])
++      --header_.closing;
++  }
++}
++
++void ConnectionTrace::firstObservation(Record* record,
++                                       std::uint32_t side,
++                                       int error,
++                                       std::uint64_t time) noexcept {
++  if (!record || record->times[9]) return;
++  record->times[9] = time;
++  record->firstSide = side;
++  record->error = static_cast<std::uint32_t>(error);
++}
++
++void ConnectionTrace::setReason(Record* record, const char* reason) noexcept {
++  if (!record) return;
++  std::size_t index = 0;
++  for (; index < record->reasonText.size() - 1 && reason[index]; ++index)
++    record->reasonText[index] = reason[index];
++  if (reason[index]) record->flags |= 1U << 10;
++}
++
++void ConnectionTrace::finishTeardown(std::uint64_t time) noexcept {
++  // 仅停止后调用；不在接入拒绝或事件热路径扫描记录。
++  for (std::size_t index = 0; index < header_.count; ++index)
++    if ((records_[index].flags & kPublished) && !(records_[index].flags & kRemoved))
++      removeRecord(&records_[index], time);
++}
++
++void ConnectionTrace::exportRecords() {
++  if (!enabled() || exported_) return;
++  header_.exportBeginNs = monotonicNs();
++  const auto deadline = header_.exportBeginNs + 10'000'000'000ULL;
++  // 独立进程定时器打断可能阻塞的文件写；仅导出阶段启用，不接触请求deadline。
++  struct sigaction action {};
++  action.sa_handler = SIG_DFL;
++  sigemptyset(&action.sa_mask);
++  if (::sigaction(SIGALRM, &action, nullptr) < 0) throw std::runtime_error("trace alarm action");
++  sigset_t alarms;
++  sigemptyset(&alarms);
++  sigaddset(&alarms, SIGALRM);
++  if (::sigprocmask(SIG_UNBLOCK, &alarms, nullptr) < 0)
++    throw std::runtime_error("trace alarm mask");
++  itimerval timer{};
++  timer.it_value.tv_sec = 10;
++  if (::setitimer(ITIMER_REAL, &timer, nullptr) < 0) throw std::runtime_error("trace alarm start");
++  std::fprintf(stderr,
++               "TRACE_EXPORT_BEGIN %llu\n",
++               static_cast<unsigned long long>(header_.exportBeginNs));
++  constexpr std::size_t kRecordsPerFile = 4096;
++  for (std::size_t offset = 0; offset < header_.count; offset += kRecordsPerFile) {
++    const auto count = std::min(kRecordsPerFile, static_cast<std::size_t>(header_.count) - offset);
++    writeArtifact(directory_ + "/trace-" + std::to_string(offset / kRecordsPerFile) + ".bin",
++                  records_.get() + offset,
++                  count * sizeof(Record),
++                  deadline);
++  }
++  header_.exportEndNs = monotonicNs();
++  writeArtifact(directory_ + "/header.bin", &header_, sizeof(header_), deadline);
++  timer.it_value.tv_sec = 0;
++  if (::setitimer(ITIMER_REAL, &timer, nullptr) < 0) throw std::runtime_error("trace alarm stop");
++  exported_ = true;
++}
++}  // namespace connection_diagnosis
+--- /dev/null
++++ b/src/diagnostics/ConnectionTrace.h
+@@ -0,0 +1,114 @@
++#pragma once
++
++#include <array>
++#include <cstddef>
++#include <cstdint>
++#include <memory>
++#include <string>
++
++namespace connection_diagnosis {
++struct Endpoint {
++  std::uint32_t address = 0;
++  std::uint16_t port = 0;
++  std::uint16_t reserved = 0;
++};
++
++// 固定256字节原位补齐，未观察到的字段保持0并由flags区分。
++struct Record {
++  std::uint64_t generation = 0;
++  std::uint64_t session = 0;
++  std::array<std::uint64_t, 12> times{};
++  std::array<Endpoint, 4> endpoints{};
++  std::array<std::uint64_t, 2> sent{};
++  std::uint64_t reservedBytes = 0;
++  std::uint32_t active = 0;
++  std::uint32_t closing = 0;
++  std::uint32_t finished = 0;
++  std::uint32_t kind = 0;
++  std::uint32_t outcome = 0;
++  std::uint32_t reason = 0;
++  std::uint32_t firstSide = 0;
++  std::uint32_t error = 0;
++  std::uint32_t flags = 0;
++  std::array<char, 32> reasonText{};
++  std::array<std::byte, 20> padding{};
++};
++static_assert(sizeof(Record) == 256);
++
++struct Header {
++  std::uint64_t magic = 0x314543415254374cULL;
++  std::uint64_t version = 1;
++  std::uint64_t recordBytes = sizeof(Record);
++  std::uint64_t capacity = 0;
++  std::uint64_t count = 0;
++  std::uint64_t dropped = 0;
++  std::uint64_t accepts = 0;
++  std::uint64_t duplicates = 0;
++  std::uint64_t queries = 0;
++  std::uint64_t queryFailures = 0;
++  std::uint64_t active = 0;
++  std::uint64_t closing = 0;
++  std::uint64_t finished = 0;
++  std::uint64_t pid = 0;
++  std::uint64_t identityNs = 0;
++  std::uint64_t exportBeginNs = 0;
++  std::uint64_t exportEndNs = 0;
++  std::array<std::uint64_t, 15> padding{};
++};
++static_assert(sizeof(Header) == 256);
++
++enum class Time : std::size_t {
++  kAccept,
++  kRequest,
++  kConnecting,
++  kConnected,
++  kSent,
++  kOutput,
++  kClosing,
++  kFinished,
++  kRemoved,
++  kFirstObservation
++};
++enum class Outcome : std::uint32_t {
++  kPending,
++  kPublished,
++  kConnectionLimit,
++  kReservation,
++  kConstruction,
++  kOther
++};
++
++class ConnectionTrace {
++ public:
++  static constexpr std::size_t kCapacity = 131071;
++  explicit ConnectionTrace(std::string directory = {}, std::size_t capacity = kCapacity);
++  ~ConnectionTrace();
++  ConnectionTrace(const ConnectionTrace&) = delete;
++  ConnectionTrace& operator=(const ConnectionTrace&) = delete;
++
++  static ConnectionTrace* processTrace();
++  static std::uint64_t monotonicNs() noexcept;
++  bool enabled() const { return records_ != nullptr; }
++  const Header& header() const { return header_; }
++  Record* acceptRecord(std::uint32_t kind,
++                       int fd,
++                       std::uint64_t acceptedNs,
++                       std::uint32_t active,
++                       std::uint64_t reservedBytes) noexcept;
++  void observeEndpoint(Record* record, int fd, std::size_t pair) noexcept;
++  void classifyAccept(Record* record, Outcome outcome, std::uint64_t session = 0) noexcept;
++  void recordTime(Record* record, Time event, std::uint64_t time) noexcept;
++  void finishRecord(Record* record, std::uint64_t time, std::uint32_t reason) noexcept;
++  void removeRecord(Record* record, std::uint64_t time) noexcept;
++  void firstObservation(Record* record, std::uint32_t side, int error, std::uint64_t time) noexcept;
++  void setReason(Record* record, const char* reason) noexcept;
++  void finishTeardown(std::uint64_t time) noexcept;
++  void exportRecords();
++
++ private:
++  std::string directory_;
++  Header header_;
++  std::unique_ptr<Record[]> records_;
++  bool exported_ = false;
++};
++}  // namespace connection_diagnosis
+--- a/src/health/TcpHealthChecker.cpp
++++ b/src/health/TcpHealthChecker.cpp
+@@ -26,12 +26,28 @@
+       options_(std::move(options)),
+       epollFd_(epoll_create1(EPOLL_CLOEXEC)),
+       probes_(endpoints.size()) {
++#ifdef L4LB_CONNECTION_TRACE
++  trace_ = connection_diagnosis::ConnectionTrace::processTrace();
++#endif
+   if (endpoints.empty() || endpoints.size() > 256 || options_.interval.count() <= 0 ||
+       options_.timeout.count() <= 0)
+     throw std::invalid_argument("invalid health checker options");
+ 
+   if (epollFd_.fd() < 0) throwHealthSystemError("health epoll_create1");
+ }
++
++#ifdef L4LB_CONNECTION_TRACE
++TcpHealthChecker::~TcpHealthChecker() {
++  if (!trace_) return;
++  for (auto& probe : probes_) {
++    if (!probe.traceRecord) continue;
++    trace_->finishRecord(probe.traceRecord,
++                         connection_diagnosis::ConnectionTrace::monotonicNs(),
++                         0);
++    trace_->removeRecord(probe.traceRecord, connection_diagnosis::ConnectionTrace::monotonicNs());
++  }
++}
++#endif
+ 
+ Clock::time_point TcpHealthChecker::currentTime() const {
+   return options_.now ? options_.now() : Clock::now();
+@@ -49,6 +65,19 @@
+                                             int error,
+                                             Clock::time_point time) {
+   auto& probe = probes_[backendIndex];
++#ifdef L4LB_CONNECTION_TRACE
++  if (probe.traceRecord) {
++    trace_->setReason(probe.traceRecord, reason);
++    trace_->firstObservation(probe.traceRecord,
++                             2,
++                             error,
++                             connection_diagnosis::ConnectionTrace::monotonicNs());
++    trace_->finishRecord(probe.traceRecord,
++                         connection_diagnosis::ConnectionTrace::monotonicNs(),
++                         static_cast<std::uint32_t>(error));
++    trace_->removeRecord(probe.traceRecord, connection_diagnosis::ConnectionTrace::monotonicNs());
++  }
++#endif
+   // 先撤销身份，旧就绪事件即使 fd 被复用也无法完成新代次。
+   probe.token = 0;
+   if (probe.fd.fd() >= 0) epoll_ctl(epollFd_.fd(), EPOLL_CTL_DEL, probe.fd.fd(), nullptr);
+@@ -62,6 +91,9 @@
+ 
+ void TcpHealthChecker::startBackendProbe(std::size_t backendIndex, Clock::time_point time) {
+   auto& probe = probes_[backendIndex];
++#ifdef L4LB_CONNECTION_TRACE
++  probe.traceRecord = nullptr;
++#endif
+   probe.fd =
+       net::Fd(options_.socketCall ? options_.socketCall()
+                                   : socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0));
+@@ -77,6 +109,16 @@
+   socketAddress.sin_addr.s_addr =
+       htonl((unsigned(addressBytes[0]) << 24) | (unsigned(addressBytes[1]) << 16) |
+             (unsigned(addressBytes[2]) << 8) | addressBytes[3]);
++#ifdef L4LB_CONNECTION_TRACE
++  if (trace_) {
++    probe.traceRecord = trace_->acceptRecord(3,
++                                             probe.fd.fd(),
++                                             connection_diagnosis::ConnectionTrace::monotonicNs(),
++                                             0,
++                                             0);
++    trace_->classifyAccept(probe.traceRecord, connection_diagnosis::Outcome::kPublished);
++  }
++#endif
+   int probeSetupResult = options_.connectCall
+                              ? options_.connectCall(probe.fd.fd(),
+                                                     reinterpret_cast<sockaddr*>(&socketAddress),
+@@ -84,6 +126,15 @@
+                              : connect(probe.fd.fd(),
+                                        reinterpret_cast<sockaddr*>(&socketAddress),
+                                        sizeof(socketAddress));
++#ifdef L4LB_CONNECTION_TRACE
++  if (probe.traceRecord) {
++    trace_->observeEndpoint(probe.traceRecord, probe.fd.fd(), 0);
++    probe.traceRecord->endpoints[1] = {ntohl(socketAddress.sin_addr.s_addr),
++                                       ntohs(socketAddress.sin_port),
++                                       0};
++    probe.traceRecord->flags |= 1U << 1;
++  }
++#endif
+   if (probeSetupResult == 0) {
+     completeBackendProbe(backendIndex, true, "connected", 0, time);
+     return;
+--- a/src/health/TcpHealthChecker.h
++++ b/src/health/TcpHealthChecker.h
+@@ -10,6 +10,9 @@
+ #include "config/Config.h"
+ #include "health/HealthState.h"
+ #include "net/Fd.h"
++#ifdef L4LB_CONNECTION_TRACE
++#include "diagnostics/ConnectionTrace.h"
++#endif
+ 
+ namespace l4lb::health {
+ using Clock = std::chrono::steady_clock;
+@@ -40,6 +43,10 @@
+ 
+   TcpHealthChecker(const std::vector<Endpoint>& endpoints, TcpHealthCheckOptions options = {});
+ 
++#ifdef L4LB_CONNECTION_TRACE
++  ~TcpHealthChecker();
++#endif
++
+   void setHealthChangeCallback(HealthChangeCallback healthChangeCallback) {
+     healthChangeCallback_ = std::move(healthChangeCallback);
+   }
+@@ -56,6 +63,9 @@
+ 
+  private:
+   struct Probe {
++#ifdef L4LB_CONNECTION_TRACE
++    connection_diagnosis::Record* traceRecord = nullptr;
++#endif
+     HealthState state;
+     net::Fd fd;
+     std::uint64_t token = 0;
+@@ -72,6 +82,9 @@
+                             Clock::time_point time);
+   void startBackendProbe(std::size_t backendIndex, Clock::time_point time);
+ 
++#ifdef L4LB_CONNECTION_TRACE
++  connection_diagnosis::ConnectionTrace* trace_ = nullptr;
++#endif
+   std::vector<Endpoint> endpoints_;
+   HealthChangeCallback healthChangeCallback_;
+ 
+--- a/src/net/TcpReactor.cpp
++++ b/src/net/TcpReactor.cpp
+@@ -17,6 +17,9 @@
+ #include <vector>
+ 
+ #include "net/Fd.h"
++#ifdef L4LB_CONNECTION_TRACE
++#include "diagnostics/ConnectionTrace.h"
++#endif
+ 
+ namespace l4lb::net {
+ namespace {
+@@ -62,6 +65,9 @@
+ };
+ 
+ struct Session {
++#ifdef L4LB_CONNECTION_TRACE
++  connection_diagnosis::Record* traceRecord = nullptr;
++#endif
+   std::uint64_t id;
+   Endpoint backend;
+   EndpointState ends[2];
+@@ -133,6 +139,9 @@
+   void dispatchEndpointEvent(std::uint64_t token, std::uint32_t events);
+   void processSessionDeadlines();
+ 
++#ifdef L4LB_CONNECTION_TRACE
++  connection_diagnosis::ConnectionTrace* trace_ = nullptr;
++#endif
+   const TcpReactorCallbacks& callbacks_;
+   const TcpReactorOptions& options_;
+ 
+@@ -159,6 +168,9 @@
+       signalFd_(signalfd(-1, signalMask_.blockedSignals(), SFD_NONBLOCK | SFD_CLOEXEC)),
+       epollFd_(epoll_create1(EPOLL_CLOEXEC)),
+       listenerFd_(socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0)) {
++#ifdef L4LB_CONNECTION_TRACE
++  trace_ = connection_diagnosis::ConnectionTrace::processTrace();
++#endif
+   if (signalFd_.fd() < 0) throwTcpSystemError("signalfd");
+   if (epollFd_.fd() < 0) throwTcpSystemError("epoll_create1");
+   if (listenerFd_.fd() < 0) throwTcpSystemError("socket listener");
+@@ -412,6 +424,16 @@
+   auto owner = std::move(sessionIt->second);
+   sessions_.erase(sessionIt);
+   auto& session = *owner;
++#ifdef L4LB_CONNECTION_TRACE
++  if (session.traceRecord) {
++    session.traceRecord->sent = {session.sent[0], session.sent[1]};
++    trace_->setReason(session.traceRecord, reason.c_str());
++    trace_->finishRecord(session.traceRecord,
++                         connection_diagnosis::ConnectionTrace::monotonicNs(),
++                         static_cast<std::uint32_t>(error));
++    trace_->removeRecord(session.traceRecord, connection_diagnosis::ConnectionTrace::monotonicNs());
++  }
++#endif
+ 
+   for (auto& end : session.ends) tokens_.unregisterEndpoint(end.token);
+ 
+@@ -478,35 +500,85 @@
+       throwTcpSystemError("accept4");
+     }
+ 
+-    resourceWarning_ = false;
+-    if (sessions_.size() >= options_.maxSessions) {
+-      reportStatEvent(StatKind::kRejected);
+-      reportObservation("capacity-reject");
+-      continue;
+-    }
+-
+-    auto backend = callbacks_.backendSelector()();
+-    if (!backend) {
+-      reportStatEvent(StatKind::kRejected);
+-      continue;
+-    }
+-
+-    auto sessionOwner = std::make_unique<Session>();
+-    sessionOwner->id = nextSessionId_++;
+-    sessionOwner->backend = *backend;
+-    sessionOwner->ends[0].fd = std::move(front);
+-    auto id = sessionOwner->id;
+-    sessions_.emplace(id, std::move(sessionOwner));
+-    reportStatEvent(StatKind::kCreated);
+-    auto& session = *sessions_.at(id);
+-    callbacks_.sessionCallback()({id, session.backend, true, "accepted"});
+-
++#ifdef L4LB_CONNECTION_TRACE
++    auto* traceRecord =
++        trace_ ? trace_->acceptRecord(2,
++                                      front.fd(),
++                                      connection_diagnosis::ConnectionTrace::monotonicNs(),
++                                      static_cast<std::uint32_t>(sessions_.size()),
++                                      0)
++               : nullptr;
++#endif
++#ifdef L4LB_CONNECTION_TRACE
+     try {
+-      connectSessionBackend(session, id);
+-    } catch (const SessionFailure& error) {
+-      reportStatEvent(StatKind::kError);
+-      closeSession(id, error.operation, error.error);
+-    }
++#endif
++      resourceWarning_ = false;
++      if (sessions_.size() >= options_.maxSessions) {
++#ifdef L4LB_CONNECTION_TRACE
++        if (traceRecord) {
++          trace_->classifyAccept(traceRecord, connection_diagnosis::Outcome::kConnectionLimit);
++          trace_->finishRecord(traceRecord,
++                               connection_diagnosis::ConnectionTrace::monotonicNs(),
++                               0);
++        }
++#endif
++        reportStatEvent(StatKind::kRejected);
++        reportObservation("capacity-reject");
++        continue;
++      }
++
++      auto backend = callbacks_.backendSelector()();
++      if (!backend) {
++#ifdef L4LB_CONNECTION_TRACE
++        if (traceRecord) {
++          trace_->classifyAccept(traceRecord, connection_diagnosis::Outcome::kOther);
++          trace_->finishRecord(traceRecord,
++                               connection_diagnosis::ConnectionTrace::monotonicNs(),
++                               0);
++        }
++#endif
++        reportStatEvent(StatKind::kRejected);
++        continue;
++      }
++
++      auto sessionOwner = std::make_unique<Session>();
++#ifdef L4LB_CONNECTION_TRACE
++      sessionOwner->traceRecord = traceRecord;
++#endif
++      sessionOwner->id = nextSessionId_++;
++      sessionOwner->backend = *backend;
++      sessionOwner->ends[0].fd = std::move(front);
++      auto id = sessionOwner->id;
++      sessions_.emplace(id, std::move(sessionOwner));
++#ifdef L4LB_CONNECTION_TRACE
++      if (traceRecord)
++        trace_->classifyAccept(traceRecord, connection_diagnosis::Outcome::kPublished, id);
++#endif
++      reportStatEvent(StatKind::kCreated);
++      auto& session = *sessions_.at(id);
++      callbacks_.sessionCallback()({id, session.backend, true, "accepted"});
++
++      try {
++        connectSessionBackend(session, id);
++      } catch (const SessionFailure& error) {
++        reportStatEvent(StatKind::kError);
++        closeSession(id, error.operation, error.error);
++      }
++#ifdef L4LB_CONNECTION_TRACE
++    } catch (const std::bad_alloc&) {
++      if (traceRecord && !traceRecord->outcome) {
++        trace_->classifyAccept(traceRecord, connection_diagnosis::Outcome::kConstruction);
++        trace_->finishRecord(traceRecord, connection_diagnosis::ConnectionTrace::monotonicNs(), 0);
++      }
++      throw;
++    } catch (...) {
++      if (traceRecord && !traceRecord->outcome) {
++        trace_->classifyAccept(traceRecord, connection_diagnosis::Outcome::kOther);
++        trace_->finishRecord(traceRecord, connection_diagnosis::ConnectionTrace::monotonicNs(), 0);
++      }
++      throw;
++    }
++#endif
+   }
+ }
+ 
+@@ -518,6 +590,12 @@
+     session.ends[side].token = tokens_.registerEndpoint(id, side);
+ 
+   auto socketAddress = makeSocketAddress(session.backend);
++#ifdef L4LB_CONNECTION_TRACE
++  if (session.traceRecord)
++    trace_->recordTime(session.traceRecord,
++                       connection_diagnosis::Time::kConnecting,
++                       connection_diagnosis::ConnectionTrace::monotonicNs());
++#endif
+   int connectResult = options_.connectCall
+                           ? options_.connectCall(session.ends[1].fd.fd(),
+                                                  reinterpret_cast<sockaddr*>(&socketAddress),
+@@ -525,8 +603,28 @@
+                           : connect(session.ends[1].fd.fd(),
+                                     reinterpret_cast<sockaddr*>(&socketAddress),
+                                     sizeof(socketAddress));
++#ifdef L4LB_CONNECTION_TRACE
++  if (session.traceRecord) {
++    trace_->observeEndpoint(session.traceRecord, session.ends[1].fd.fd(), 1);
++    session.traceRecord->endpoints[3] = {ntohl(socketAddress.sin_addr.s_addr),
++                                         ntohs(socketAddress.sin_port),
++                                         0};
++    session.traceRecord->flags |= 1U << 3;
++    if (connectResult != 0 && errno != EINPROGRESS)
++      trace_->firstObservation(session.traceRecord,
++                               2,
++                               errno,
++                               connection_diagnosis::ConnectionTrace::monotonicNs());
++  }
++#endif
+   if (connectResult == 0) {
+     session.connecting = false;
++#ifdef L4LB_CONNECTION_TRACE
++    if (session.traceRecord)
++      trace_->recordTime(session.traceRecord,
++                         connection_diagnosis::Time::kConnected,
++                         connection_diagnosis::ConnectionTrace::monotonicNs());
++#endif
+     session.deadline.lastIoTime = Clock::now();
+     reportObservation("connect-immediate", &session);
+   } else if (errno == EINPROGRESS)
+@@ -592,6 +690,13 @@
+         reportObservation("send-eagain", &session, source);
+         break;
+       }
++#ifdef L4LB_CONNECTION_TRACE
++      if (session.traceRecord)
++        trace_->firstObservation(session.traceRecord,
++                                 2 - source,
++                                 errno,
++                                 connection_diagnosis::ConnectionTrace::monotonicNs());
++#endif
+       throw SessionFailure{"send", errno};
+     }
+     if (sentBytes == 0) throw SessionFailure{"send zero", EIO};
+@@ -622,9 +727,23 @@
+     if (receivedBytes < 0) {
+       if (errno == EINTR) continue;
+       if (errno == EAGAIN || errno == EWOULDBLOCK) break;
++#ifdef L4LB_CONNECTION_TRACE
++      if (session.traceRecord)
++        trace_->firstObservation(session.traceRecord,
++                                 source + 1,
++                                 errno,
++                                 connection_diagnosis::ConnectionTrace::monotonicNs());
++#endif
+       throw SessionFailure{"recv", errno};
+     }
+     if (!receivedBytes) {
++#ifdef L4LB_CONNECTION_TRACE
++      if (session.traceRecord)
++        trace_->firstObservation(session.traceRecord,
++                                 source + 1,
++                                 0,
++                                 connection_diagnosis::ConnectionTrace::monotonicNs());
++#endif
+       end.eof = true;
+       reportObservation("eof", &session, source);
+       break;
+@@ -659,7 +778,16 @@
+       do {
+         shutdownResult = shutdown(target.fd.fd(), SHUT_WR);
+       } while (shutdownResult < 0 && errno == EINTR && !consumeStopSignals());
+-      if (shutdownResult < 0) throw SessionFailure{"shutdown SHUT_WR", errno};
++      if (shutdownResult < 0) {
++#ifdef L4LB_CONNECTION_TRACE
++        if (session.traceRecord)
++          trace_->firstObservation(session.traceRecord,
++                                   2 - side,
++                                   errno,
++                                   connection_diagnosis::ConnectionTrace::monotonicNs());
++#endif
++        throw SessionFailure{"shutdown SHUT_WR", errno};
++      }
+       target.shutdown = true;
+       reportObservation("shutdown", &session, 1 - side);
+     }
+@@ -691,9 +819,24 @@
+       reportObservation("error-event", &session, side, events);
+       int error = readSocketError(session.ends[side].fd.fd());
+       reportObservation("so-error", &session, side, error);
+-      if (error) throw SessionFailure{"SO_ERROR", error};
++      if (error) {
++#ifdef L4LB_CONNECTION_TRACE
++        if (session.traceRecord)
++          trace_->firstObservation(session.traceRecord,
++                                   side + 1,
++                                   error,
++                                   connection_diagnosis::ConnectionTrace::monotonicNs());
++#endif
++        throw SessionFailure{"SO_ERROR", error};
++      }
+       if (connectingEvent) {
+         session.connecting = false;
++#ifdef L4LB_CONNECTION_TRACE
++        if (session.traceRecord)
++          trace_->recordTime(session.traceRecord,
++                             connection_diagnosis::Time::kConnected,
++                             connection_diagnosis::ConnectionTrace::monotonicNs());
++#endif
+         session.deadline.lastIoTime = Clock::now();
+       }
+     }
+--- a/tests/metrics_tcp_test.cpp
++++ b/tests/metrics_tcp_test.cpp
+@@ -1,3 +1,5 @@
++#include <poll.h>
++
+ #include <filesystem>
+ #include <iostream>
+ 
+@@ -10,11 +12,46 @@
+   if (!ok) throw std::runtime_error(why);
+ }
+ 
++void waitAcceptReadable(int listenerFd) {
++  const auto deadline = Clock::now() + std::chrono::seconds(1);
++  for (;;) {
++    const auto remaining = deadline - Clock::now();
++    check(remaining > Clock::duration::zero(), "accept readiness timeout");
++    const auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(remaining);
++    pollfd readiness{listenerFd, POLLIN, 0};
++    const int result = poll(&readiness, 1, static_cast<int>(milliseconds.count()) + 1);
++    if (result < 0 && errno == EINTR) continue;
++    check(result == 1 && (readiness.revents & POLLIN) &&
++              !(readiness.revents & (POLLERR | POLLHUP | POLLNVAL)),
++          "accept readiness unavailable");
++    return;
++  }
++}
++
++void waitBackendWritable(int backendFd) {
++  const auto deadline = Clock::now() + std::chrono::seconds(1);
++  for (;;) {
++    const auto remaining = deadline - Clock::now();
++    check(remaining > Clock::duration::zero(), "backend writable timeout");
++    pollfd readiness{backendFd, POLLOUT, 0};
++    const auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(remaining);
++    const int result = poll(&readiness, 1, static_cast<int>(milliseconds.count()) + 1);
++    if (result < 0 && errno == EINTR) continue;
++    check(result == 1 && (readiness.revents & POLLOUT) &&
++              !(readiness.revents & (POLLERR | POLLHUP | POLLNVAL)),
++          "backend writable unavailable");
++    int error = 0;
++    socklen_t length = sizeof(error);
++    check(getsockopt(backendFd, SOL_SOCKET, SO_ERROR, &error, &length) == 0 && error == 0,
++          "backend connection not established");
++    return;
++  }
++}
++
+ Endpoint local(int fd) {
+   sockaddr_in a{};
+   socklen_t length = sizeof(a);
+-  check(getsockname(fd, reinterpret_cast<sockaddr*>(&a), &length) == 0,
+-        "getsockname");
++  check(getsockname(fd, reinterpret_cast<sockaddr*>(&a), &length) == 0, "getsockname");
+   Endpoint e{{127, 0, 0, 1}, ntohs(a.sin_port)};
+   return e;
+ }
+@@ -23,9 +60,8 @@
+   static void runTcpReactor() {
+     metrics::MetricsCollector counts(Protocol::kTcp, 1);
+     TcpReactorCallbacks cb;
+-    cb.setStatisticsCallback([&](StatEvent e) {
+-      check(counts.recordStatEvent(e), "TCP model lifecycle");
+-    });
++    cb.setStatisticsCallback(
++        [&](StatEvent e) { check(counts.recordStatEvent(e), "TCP model lifecycle"); });
+     cb.setReadyCallback([] {});
+     cb.setSessionCallback([](const SessionEvent&) {});
+     cb.setDiagnosticCallback([](const std::string&, int) {});
+@@ -43,21 +79,19 @@
+       TcpReactor reactor({{127, 0, 0, 1}, 0}, cb, opt);
+       Fd front(socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0));
+       a = makeSocketAddress(local(reactor.listenerFd_.fd()));
+-      check(
+-          connect(front.fd(), reinterpret_cast<sockaddr*>(&a), sizeof(a)) == 0,
+-          "client connect");
++      check(connect(front.fd(), reinterpret_cast<sockaddr*>(&a), sizeof(a)) == 0, "client connect");
++      waitAcceptReadable(reactor.listenerFd_.fd());
+       reactor.acceptClientSessions();
+-      check(counts.snapshot().sessionsCreatedTotal == 1 &&
+-                counts.snapshot().sessionsActive == 1,
++      check(counts.snapshot().sessionsCreatedTotal == 1 && counts.snapshot().sessionsActive == 1,
+             "real created point");
+       auto& s = *reactor.sessions_.begin()->second;
++      waitBackendWritable(s.ends[1].fd.fd());
+       s.connecting = false;
+       std::memcpy(s.pending[0].writable(), "abcdefghijk", 11);
+       s.pending[0].commitWrittenBytes(11);
+       std::size_t budget = 7;
+       reactor.writeBufferedDirection(s, 0, budget);
+-      check(counts.snapshot().bytesC2bTotal == 7 &&
+-                counts.snapshot().sessionsActive == 1,
++      check(counts.snapshot().bytesC2bTotal == 7 && counts.snapshot().sessionsActive == 1,
+             "TCP bytes must be immediate before close");
+       budget = 4;
+       reactor.writeBufferedDirection(s, 0, budget);
+@@ -65,8 +99,7 @@
+       auto id = s.id;
+       reactor.closeSession(id, "drained", 0);
+       reactor.closeSession(id, "drained", 0);
+-      check(counts.snapshot().bytesC2bTotal == 11 &&
+-                counts.snapshot().sessionsClosedTotal == 1 &&
++      check(counts.snapshot().bytesC2bTotal == 11 && counts.snapshot().sessionsClosedTotal == 1 &&
+                 counts.snapshot().sessionsActive == 0,
+             "close no byte duplicate");
+       int attempts = 0;
+@@ -75,8 +108,7 @@
+         return -1;
+       };
+       reactor.acceptClientSessions();
+-      check(counts.snapshot().errorsTotal == 3,
+-            "each ignored accept failure counts");
++      check(counts.snapshot().errorsTotal == 3, "each ignored accept failure counts");
+       attempts = 0;
+       unsigned logged = 0;
+       cb.setDiagnosticCallback([&](const std::string&, int) { ++logged; });
+@@ -96,21 +128,19 @@
+       reactor.processSessionDeadlines();
+       opt.maxSessions = 0;
+       Fd rejected(socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0));
+-      check(connect(rejected.fd(), reinterpret_cast<sockaddr*>(&a),
+-                    sizeof(a)) == 0,
++      check(connect(rejected.fd(), reinterpret_cast<sockaddr*>(&a), sizeof(a)) == 0,
+             "reject client");
++      waitAcceptReadable(reactor.listenerFd_.fd());
+       reactor.acceptClientSessions();
+       check(counts.snapshot().rejectedTotal == 1, "TCP capacity reject");
+       opt.maxSessions = 1024;
+       Fd timed(socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0));
+-      check(
+-          connect(timed.fd(), reinterpret_cast<sockaddr*>(&a), sizeof(a)) == 0,
+-          "timeout client");
++      check(connect(timed.fd(), reinterpret_cast<sockaddr*>(&a), sizeof(a)) == 0, "timeout client");
++      waitAcceptReadable(reactor.listenerFd_.fd());
+       reactor.acceptClientSessions();
+       opt.connectTimeout = std::chrono::milliseconds(0);
+       reactor.processSessionDeadlines();
+-      check(counts.snapshot().timeoutsTotal == 1 &&
+-                counts.snapshot().errorsTotal == 5,
++      check(counts.snapshot().timeoutsTotal == 1 && counts.snapshot().errorsTotal == 5,
+             "timeout not error");
+       opt.connectTimeout = std::chrono::seconds(5);
+       opt.connectCall = [](int, const sockaddr*, socklen_t) {
+@@ -118,23 +148,20 @@
+         return -1;
+       };
+       Fd failed(socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0));
+-      check(
+-          connect(failed.fd(), reinterpret_cast<sockaddr*>(&a), sizeof(a)) == 0,
+-          "failed client");
++      check(connect(failed.fd(), reinterpret_cast<sockaddr*>(&a), sizeof(a)) == 0, "failed client");
++      waitAcceptReadable(reactor.listenerFd_.fd());
+       reactor.acceptClientSessions();
+-      check(counts.snapshot().errorsTotal == 6 &&
+-                counts.snapshot().sessionsActive == 0,
++      check(counts.snapshot().errorsTotal == 6 && counts.snapshot().sessionsActive == 0,
+             "SessionFailure counted once");
+       opt.connectCall = {};
+       Fd stop(socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0));
+-      check(connect(stop.fd(), reinterpret_cast<sockaddr*>(&a), sizeof(a)) == 0,
+-            "stop client");
++      check(connect(stop.fd(), reinterpret_cast<sockaddr*>(&a), sizeof(a)) == 0, "stop client");
++      waitAcceptReadable(reactor.listenerFd_.fd());
+       reactor.acceptClientSessions();
+       check(counts.snapshot().sessionsActive == 1, "stop active before unwind");
+     }
+     auto s = counts.snapshot();
+-    check(s.sessionsActive == 0 &&
+-              s.sessionsCreatedTotal == s.sessionsClosedTotal &&
++    check(s.sessionsActive == 0 && s.sessionsCreatedTotal == s.sessionsClosedTotal &&
+               s.errorsTotal == 6,
+           "destructor cleanup counted once");
+   }
+@@ -150,8 +177,7 @@
+   auto before = count_fds();
+   try {
+     l4lb::net::ReactorTestAccess::runTcpReactor();
+-    if (count_fds() != before)
+-      throw std::runtime_error("metrics reactor fd leak");
++    if (count_fds() != before) throw std::runtime_error("metrics reactor fd leak");
+     std::cout << "PASS TCP actual "
+                  "send/lifecycle/accept/errors/timeouts/cleanup points\n";
+     return 0;
+--- a/tests/v04_shutdown_product.py
++++ b/tests/v04_shutdown_product.py
+@@ -27,6 +27,24 @@
+             return
+         time.sleep(.005)
+     raise RuntimeError('state barrier timeout')
++
++
++def backpressure_ready(periodic, submitted, blocked):
++    if len(periodic) < 2 or not all(blocked):
++        return None
++    keys = ('bytes_c2b_total', 'bytes_b2c_total')
++    previous, current = periodic[-2:]
++    if any(current[key] <= 8 or current[key] != previous[key] for key in keys):
++        return None
++    outstanding = [submitted[i] + 8 - current[key] for i, key in enumerate(keys)]
++    if not all(value > 0 for value in outstanding):
++        return None
++    return {'periodic': [previous, current], 'outstanding': outstanding,
++            'currently_blocked': list(blocked)}
++
++
++def preparation_budget_ok(submitted, elapsed):
++    return elapsed < 16 and all(value < 16 * 1024 * 1024 for value in submitted)
+ 
+ 
+ class Backend:
+@@ -143,20 +161,29 @@
+             sources = [client, backend.business]
+             submitted = [0, 0]
+             blocked = [False, False]
+-            deadline = time.monotonic() + 8
+-            while not all(blocked):
+-                require(time.monotonic() < deadline, 'both producer sockets backpressured')
++            preparation_started = time.monotonic()
++            while True:
++                require(preparation_budget_ok(submitted, time.monotonic() - preparation_started),
++                        'bounded backpressure preparation deadline/bytes')
+                 for side, source in enumerate(sources):
++                    remaining = 16 * 1024 * 1024 - submitted[side]
+                     try:
+-                        n = source.send(pattern[side])
++                        n = source.send(pattern[side][:remaining])
++                        require(n > 0, 'positive source submission')
+                         submitted[side] += n
++                        blocked[side] = False
+                     except BlockingIOError:
+                         blocked[side] = True
+-            # A metrics plateau is a readiness condition, not a sleep guess.
+-            def plateau():
+-                s = [x for x in snapshots() if x['phase'] == 'periodic']
+-                return len(s) >= 2 and s[-1]['bytes_c2b_total'] > 8 and s[-1]['bytes_b2c_total'] > 8 and all(s[-1][key] == s[-2][key] for key in ('bytes_c2b_total', 'bytes_b2c_total'))
+-            until(plateau, 8)
++                periodic = [x for x in snapshots() if x['phase'] == 'periodic']
++                readiness = backpressure_ready(periodic, submitted, blocked)
++                if readiness is not None:
++                    require(preparation_budget_ok(submitted, time.monotonic() - preparation_started),
++                            'backpressure readiness observed before hard limit')
++                    result['preparation'] = readiness
++                    break
++                require(preparation_budget_ok(submitted, time.monotonic() - preparation_started),
++                        'backpressure precondition absent at limit')
++                time.sleep(.005)
+             result['source_submitted'] = submitted
+         if name == 'io-error':
+             client.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack('ii', 1, 0))

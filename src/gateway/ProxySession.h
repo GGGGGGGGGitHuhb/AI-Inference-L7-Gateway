@@ -1,6 +1,9 @@
 #pragma once
 #include <memory>
 #include <string>
+#ifdef GATEWAY_CONNECTION_TRACE
+#include "diagnostics/ConnectionTrace.h"
+#endif
 
 #include "admission/AdmissionController.h"
 #include "app/GatewayConfig.h"
@@ -99,6 +102,10 @@ class ProxySession {
   void checkOutputBudget(const http::HttpMessage& message,
                          std::size_t limit) const;
 
+#ifdef GATEWAY_CONNECTION_TRACE
+  connection_diagnosis::ConnectionTrace* trace_ = nullptr;
+  connection_diagnosis::Record* traceRecord_ = nullptr;
+#endif
   CapacityLease reservation_;
   BufferBudget& budget_;
 

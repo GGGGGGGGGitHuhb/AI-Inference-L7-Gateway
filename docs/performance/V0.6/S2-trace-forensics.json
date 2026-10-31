@@ -1,0 +1,145 @@
+{
+  "original_result_sha256": "0098c988ef144bc562b5af7009abfd14105cc5a20d54046c37b457edec942bef",
+  "ledger_sha256": "ece993fdb271bee523a5722e019b9cad937e475e3dfbc5cf6f7ec26346901a81",
+  "tool_and_complete_sources_unchanged": true,
+  "all_recorded_pids_absent": true,
+  "processes": [
+    {
+      "name": "gateway-0",
+      "pid": 33777,
+      "returncode": 0,
+      "capture_bytes": 55,
+      "capture_blocks": 2,
+      "capture_write_ns": 109736,
+      "capture_read_wait_ns": 97729248,
+      "capture_loss_bytes": 0,
+      "export_begin_ns": 5845425408758,
+      "export_expected": true,
+      "deadline_killed": false,
+      "cleanup_seconds": 0.006334650000098918,
+      "cleanup_error": null
+    },
+    {
+      "name": "l4lb",
+      "pid": 33785,
+      "returncode": 0,
+      "capture_bytes": 464,
+      "capture_blocks": 5,
+      "capture_write_ns": 151758,
+      "capture_read_wait_ns": 1424068184,
+      "capture_loss_bytes": 0,
+      "export_begin_ns": null,
+      "export_expected": true,
+      "deadline_killed": false,
+      "cleanup_seconds": 0.00448543999937101,
+      "cleanup_error": null
+    },
+    {
+      "name": "reset-peer",
+      "pid": 33783,
+      "returncode": -15,
+      "capture_bytes": 6,
+      "capture_blocks": 1,
+      "capture_write_ns": 95091,
+      "capture_read_wait_ns": 1479536508,
+      "capture_loss_bytes": 0,
+      "export_begin_ns": null,
+      "export_expected": false,
+      "deadline_killed": false,
+      "cleanup_seconds": 0.0023535399996035267,
+      "cleanup_error": null
+    },
+    {
+      "name": "gateway-0",
+      "pid": 33780,
+      "returncode": 0,
+      "capture_bytes": 55,
+      "capture_blocks": 2,
+      "capture_write_ns": 202539,
+      "capture_read_wait_ns": 81627270,
+      "capture_loss_bytes": 0,
+      "export_begin_ns": 5845527300809,
+      "export_expected": true,
+      "deadline_killed": false,
+      "cleanup_seconds": 0.0049922930002139765,
+      "cleanup_error": null
+    }
+  ],
+  "resources": {
+    "N-connection-limit": {
+      "samples": 2,
+      "peak_rss": 31641600,
+      "peak_fds": 10
+    },
+    "N-peer-reset": {
+      "samples": 14,
+      "peak_rss": 87257088,
+      "peak_fds": 25
+    },
+    "N-reservation": {
+      "samples": 1,
+      "peak_rss": 27455488,
+      "peak_fds": 6
+    }
+  },
+  "reset_record": {
+    "generation": 3,
+    "session": 1,
+    "times": [
+      5847008843159,
+      0,
+      5847009205454,
+      5847010624523,
+      0,
+      0,
+      0,
+      5847024471767,
+      5847024472118,
+      5847012940930,
+      0,
+      0
+    ],
+    "endpoints": [
+      [
+        "127.0.0.1",
+        38007
+      ],
+      [
+        "127.0.0.1",
+        38232
+      ],
+      [
+        "127.0.0.1",
+        36624
+      ],
+      [
+        "127.0.0.1",
+        37195
+      ]
+    ],
+    "sent": [
+      228,
+      0
+    ],
+    "reserved": 0,
+    "active": 0,
+    "closing": 0,
+    "finished": 0,
+    "kind": 2,
+    "outcome": 1,
+    "reason": 104,
+    "first_side": 2,
+    "error": 104,
+    "flags": 783,
+    "reason_text": "SO_ERROR",
+    "process": [
+      33785,
+      5845619297145
+    ]
+  },
+  "tuple_match": "unique",
+  "peer_id_match": true,
+  "peer_tuple_match": true,
+  "original_observed_reset": true,
+  "note": "Read-only derived evidence. Third cell remains failed due reset-peer exit -15; no performance ran. Duplicate TERM is a source-supported candidate, not proven signal timing."
+}

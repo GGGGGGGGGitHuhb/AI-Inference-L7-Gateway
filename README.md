@@ -1,6 +1,6 @@
 # AI Inference L7 Gateway
 
-> 当前状态（2026-10-31）：**V0.6/S2前置诊断已独立接受，产品优化入口仍BLOCKED。** 双后端与CPU亲和性对照未稳定解决L4高档失败；下一步需直接记录接入拒绝与连接关闭来源。产品代码保持，未发布。见[诊断结果](docs/performance/V0.6/S2-preflight-results.md)与[收口报告](docs/leader/reports/V0.6/S2-preflight-report-002.md)。
+> 当前状态（2026-10-31）：**V0.6/S2直接归因取证因测试工具退出异常首错停止，观察设施未验收，产品优化入口仍BLOCKED。** 三项控制通过两项；第三项测试后端SIGTERM退出，15项性能对照均未开始。没有新性能或主因结论，未发布。见[本轮结果](docs/performance/V0.6/S2-trace-results.md)与[收口报告](docs/leader/reports/V0.6/S2-trace-report-003.md)。
 
 面向在线文本推理服务的独立 C++ 七层网关项目，计划围绕流式代理、资源控制和请求调度建立可复现的工程实验。
 
@@ -12,7 +12,7 @@
 
 V0.1/S3与V0.1基础代理已完成开发验收。 S3经一次有限规范纠正后取得[Reviewer002 PASS](docs/reviewer/reports/V0.1/S3-report-002.md)，唯一空行规范发现关闭，无未解决发现或债项；收口见[Leader002](docs/leader/reports/V0.1/S3-report-002.md)。累计返工：S1 2/2、S2 1/2、S3 1/2，各阶段独立记录。
 
-当前执行分支 `codex/v0.6-s2-preflight`，起点为c51af0e。V0.1～V0.5已完成开发验收；V0.6/S1及S2前置诊断已交付，S2产品优化因直接归因证据不足暂不进入，没有正式发布。
+当前执行分支 `codex/v0.6-s2-trace`，起点为7546020。V0.1～V0.5已完成开发验收；V0.6/S1及S2前置诊断已交付，S2产品优化因直接归因证据不足暂不进入，没有正式发布。
 
 已验收：独立离线构建、最小复用组件、受限HTTP/1.1与文本JSON、单静态上游非流式代理、硬限额和分类deadline、信号停止，以及有界上游顺序复用与初始合成成本基线。下游继续每连接单请求；V0.2/S1新增SSE字节增量链路已独立验收；V0.3/S1多实例路由与健康、S2准入排队已验收，真实GPU收益仍未验证；L4LB联调与组合成本测量已完成V0.5验收，V0.6/S1容量诊断已交付。S1与S2历史验收见[Leader S1-004](docs/leader/reports/V0.1/S1-report-004.md)、[Leader S2-003](docs/leader/reports/V0.1/S2-report-003.md)。
 

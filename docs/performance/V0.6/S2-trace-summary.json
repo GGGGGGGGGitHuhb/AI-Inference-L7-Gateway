@@ -1,0 +1,170 @@
+{
+  "status": "failed",
+  "error": "RuntimeError(\"['close reset-peer:-15']\")",
+  "elapsed_seconds": 1.7810809290003817,
+  "attempted_ids": [
+    "N-connection-limit",
+    "N-reservation",
+    "N-peer-reset"
+  ],
+  "verified_ids": [
+    "N-connection-limit",
+    "N-reservation"
+  ],
+  "not_started_ids": [
+    "L-1920-U-r0",
+    "L-1920-O-r0",
+    "L-1920-T-r0",
+    "L-1920-O-r1",
+    "L-1920-T-r1",
+    "L-1920-U-r1",
+    "L-1920-T-r2",
+    "L-1920-U-r2",
+    "L-1920-O-r2",
+    "L-3840-U-r0",
+    "L-3840-T-r0",
+    "L-3840-T-r1",
+    "L-3840-U-r1",
+    "L-3840-U-r2",
+    "L-3840-T-r2"
+  ],
+  "gates": {},
+  "completed": [
+    {
+      "spec": {
+        "id": "N-connection-limit",
+        "stage": "negative",
+        "variant": "T",
+        "negative": "connection-limit"
+      },
+      "metrics": {
+        "passed": true,
+        "planned_connections": 2,
+        "record": {
+          "generation": 2,
+          "session": 0,
+          "times": [
+            5845423586446,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            5845423591294,
+            0,
+            0,
+            0,
+            0
+          ],
+          "endpoints": [
+            [
+              "127.0.0.1",
+              39511
+            ],
+            [
+              "127.0.0.1",
+              38880
+            ],
+            [
+              "0.0.0.0",
+              0
+            ],
+            [
+              "0.0.0.0",
+              0
+            ]
+          ],
+          "sent": [
+            0,
+            0
+          ],
+          "reserved": 16777216,
+          "active": 1,
+          "closing": 0,
+          "finished": 0,
+          "kind": 1,
+          "outcome": 2,
+          "reason": 0,
+          "first_side": 0,
+          "error": 0,
+          "flags": 3,
+          "reason_text": "",
+          "process": [
+            33777,
+            5845355865796
+          ]
+        },
+        "trace_records": 2
+      }
+    },
+    {
+      "spec": {
+        "id": "N-reservation",
+        "stage": "negative",
+        "variant": "T",
+        "negative": "reservation"
+      },
+      "metrics": {
+        "passed": true,
+        "planned_connections": 2,
+        "record": {
+          "generation": 2,
+          "session": 0,
+          "times": [
+            5845526389553,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            5845526392894,
+            0,
+            0,
+            0,
+            0
+          ],
+          "endpoints": [
+            [
+              "127.0.0.1",
+              39889
+            ],
+            [
+              "127.0.0.1",
+              39624
+            ],
+            [
+              "0.0.0.0",
+              0
+            ],
+            [
+              "0.0.0.0",
+              0
+            ]
+          ],
+          "sent": [
+            0,
+            0
+          ],
+          "reserved": 16777216,
+          "active": 1,
+          "closing": 0,
+          "finished": 0,
+          "kind": 1,
+          "outcome": 3,
+          "reason": 0,
+          "first_side": 0,
+          "error": 0,
+          "flags": 3,
+          "reason_text": "",
+          "process": [
+            33780,
+            5845461414732
+          ]
+        },
+        "trace_records": 2
+      }
+    }
+  ]
+}

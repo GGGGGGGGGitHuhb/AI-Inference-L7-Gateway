@@ -80,6 +80,14 @@ void ProxySession::finishSession(FinishReason reason) noexcept {
   if (reason == FinishReason::kStopped) outcomeCode_ = "gateway_stopping";
   if (reason != FinishReason::kCount) finishReason_ = reason;
   budget_.recordFinish(finishReason_);
+#ifdef GATEWAY_CONNECTION_TRACE
+  if (traceRecord_) {
+    trace_->setReason(traceRecord_, outcomeCode_);
+    trace_->finishRecord(traceRecord_,
+                         connection_diagnosis::ConnectionTrace::monotonicNs(),
+                         static_cast<std::uint32_t>(finishReason_));
+  }
+#endif
   phase_ = Phase::kFinished;
   releaseStream();
   if (timerId_) {
@@ -269,6 +277,12 @@ void ProxySession::readDownstream() {
         return;
       }
       if (result.status == http::ParseStatus::kComplete) {
+#ifdef GATEWAY_CONNECTION_TRACE
+        if (traceRecord_)
+          trace_->recordTime(
+              traceRecord_, connection_diagnosis::Time::kRequest,
+              connection_diagnosis::ConnectionTrace::monotonicNs());
+#endif
         beginUpstream();
         return;
       }
@@ -408,6 +422,11 @@ void ProxySession::dispatchUpstream() {
     selectedPool_ = pools_->at(requestLease_.index()).get();
   }
   dispatchedAt_ = io_.now();
+#ifdef GATEWAY_CONNECTION_TRACE
+  if (traceRecord_)
+    trace_->recordTime(traceRecord_, connection_diagnosis::Time::kConnecting,
+                       connection_diagnosis::ConnectionTrace::monotonicNs());
+#endif
   if (admission_) {
     stageStarted_ = dispatchedAt_;
     phase_ = Phase::kConnecting;
@@ -477,6 +496,13 @@ void ProxySession::confirmConnected() {
   upstreamLease_.markConnected();
   phase_ = Phase::kUpstream;
   connectedAt_ = io_.now();
+#ifdef GATEWAY_CONNECTION_TRACE
+  if (traceRecord_) {
+    trace_->recordTime(traceRecord_, connection_diagnosis::Time::kConnected,
+                       connection_diagnosis::ConnectionTrace::monotonicNs());
+    trace_->observeEndpoint(traceRecord_, upstreamLease_.fd(), 1);
+  }
+#endif
   updateInterests();
   armDeadline();
 }
@@ -590,6 +616,11 @@ void ProxySession::writeUpstream() {
 
   if (upstreamOffset_ == upstreamOutput_.size()) {
     requestWriteComplete_ = true;
+#ifdef GATEWAY_CONNECTION_TRACE
+    if (traceRecord_)
+      trace_->recordTime(traceRecord_, connection_diagnosis::Time::kSent,
+                         connection_diagnosis::ConnectionTrace::monotonicNs());
+#endif
     releaseString(upstreamOutput_);
     upstreamOffset_ = 0;
   }
@@ -795,6 +826,14 @@ void ProxySession::writeDownstream() {
 void ProxySession::beginClosing(int remainingCalls) {
   // 此时最后一个字节已提交内核；只记录一次，不代表客户端应用已消费。
   outputCompletedAt_ = io_.now();
+#ifdef GATEWAY_CONNECTION_TRACE
+  if (traceRecord_) {
+    trace_->recordTime(traceRecord_, connection_diagnosis::Time::kOutput,
+                       connection_diagnosis::ConnectionTrace::monotonicNs());
+    trace_->recordTime(traceRecord_, connection_diagnosis::Time::kClosing,
+                       traceRecord_->times[5]);
+  }
+#endif
   phase_ = Phase::kClosing;
   releaseString(downstreamOutput_);
   downstreamOffset_ = 0;

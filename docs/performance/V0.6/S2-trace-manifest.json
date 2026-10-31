@@ -1,0 +1,324 @@
+{
+  "schema": "S2-trace-1",
+  "status": "Frozen",
+  "role": "builder",
+  "output": "/home/power/projects/AI-Inference-L7-Gateway/build-local/builder/v0.6-s2-trace/evidence/run",
+  "cells": [
+    {
+      "id": "N-connection-limit",
+      "stage": "negative",
+      "variant": "T",
+      "negative": "connection-limit"
+    },
+    {
+      "id": "N-reservation",
+      "stage": "negative",
+      "variant": "T",
+      "negative": "reservation"
+    },
+    {
+      "id": "N-peer-reset",
+      "stage": "negative",
+      "variant": "T",
+      "negative": "peer-reset"
+    },
+    {
+      "id": "L-1920-U-r0",
+      "stage": "low",
+      "variant": "U",
+      "repeat": 0,
+      "path": "L",
+      "workload": "A",
+      "rate": 1920,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "L-1920-O-r0",
+      "stage": "low",
+      "variant": "O",
+      "repeat": 0,
+      "path": "L",
+      "workload": "A",
+      "rate": 1920,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "L-1920-T-r0",
+      "stage": "low",
+      "variant": "T",
+      "repeat": 0,
+      "path": "L",
+      "workload": "A",
+      "rate": 1920,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "L-1920-O-r1",
+      "stage": "low",
+      "variant": "O",
+      "repeat": 1,
+      "path": "L",
+      "workload": "A",
+      "rate": 1920,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "L-1920-T-r1",
+      "stage": "low",
+      "variant": "T",
+      "repeat": 1,
+      "path": "L",
+      "workload": "A",
+      "rate": 1920,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "L-1920-U-r1",
+      "stage": "low",
+      "variant": "U",
+      "repeat": 1,
+      "path": "L",
+      "workload": "A",
+      "rate": 1920,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "L-1920-T-r2",
+      "stage": "low",
+      "variant": "T",
+      "repeat": 2,
+      "path": "L",
+      "workload": "A",
+      "rate": 1920,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "L-1920-U-r2",
+      "stage": "low",
+      "variant": "U",
+      "repeat": 2,
+      "path": "L",
+      "workload": "A",
+      "rate": 1920,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "L-1920-O-r2",
+      "stage": "low",
+      "variant": "O",
+      "repeat": 2,
+      "path": "L",
+      "workload": "A",
+      "rate": 1920,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "L-3840-U-r0",
+      "stage": "high",
+      "variant": "U",
+      "repeat": 0,
+      "path": "L",
+      "workload": "A",
+      "rate": 3840,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "L-3840-T-r0",
+      "stage": "high",
+      "variant": "T",
+      "repeat": 0,
+      "path": "L",
+      "workload": "A",
+      "rate": 3840,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "L-3840-T-r1",
+      "stage": "high",
+      "variant": "T",
+      "repeat": 1,
+      "path": "L",
+      "workload": "A",
+      "rate": 3840,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "L-3840-U-r1",
+      "stage": "high",
+      "variant": "U",
+      "repeat": 1,
+      "path": "L",
+      "workload": "A",
+      "rate": 3840,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "L-3840-U-r2",
+      "stage": "high",
+      "variant": "U",
+      "repeat": 2,
+      "path": "L",
+      "workload": "A",
+      "rate": 3840,
+      "warm": 3,
+      "duration": 20
+    },
+    {
+      "id": "L-3840-T-r2",
+      "stage": "high",
+      "variant": "T",
+      "repeat": 2,
+      "path": "L",
+      "workload": "A",
+      "rate": 3840,
+      "warm": 3,
+      "duration": 20
+    }
+  ],
+  "configuration": {
+    "workers": 2,
+    "slots": 128,
+    "backends": 1,
+    "capacity": 32,
+    "reuse": false,
+    "nodelay": 1,
+    "stream_mib": 4,
+    "sample_interval": 0.1,
+    "fault": "none"
+  },
+  "limits": {
+    "cells": 18,
+    "seconds": 1200,
+    "cell_seconds": 60,
+    "evidence_bytes": 4294967296,
+    "performance_cell_bytes": 268435456,
+    "negative_cell_bytes": 16777216,
+    "closure_bytes": 134217728,
+    "rss_bytes": 1073741824,
+    "fds": 2048,
+    "child_as_bytes": 134217728,
+    "export_seconds": 10
+  },
+  "gates": {
+    "low_good": 0.99,
+    "low_difference": 0.01,
+    "latency_ratio": 1.1,
+    "cpu_ratio": 1.1,
+    "high_difference": 0.02
+  },
+  "binaries": {
+    "U": {
+      "gateway": "/home/power/projects/AI-Inference-L7-Gateway/build-local/builder/v0.6-s2-trace/gateway/uninstrumented/ai-inference-gateway",
+      "l4lb": "/home/power/projects/AI-Inference-L7-Gateway/build-local/builder/v0.6-s2-trace/l4-build/uninstrumented/bin/l4lb"
+    },
+    "trace": {
+      "gateway": "/home/power/projects/AI-Inference-L7-Gateway/build-local/builder/v0.6-s2-trace/gateway/trace/ai-inference-gateway",
+      "l4lb": "/home/power/projects/AI-Inference-L7-Gateway/build-local/builder/v0.6-s2-trace/l4-build/trace/bin/l4lb"
+    }
+  },
+  "files": {
+    "tests/connection_diagnosis/RunCell.py": "52d6b11f6ec9f5a8f714a89e3b2a9b171d1815da4202de4cff54137c07c45c97",
+    "tests/connection_diagnosis/Decode.py": "63625b29cef161b097a5beff985fea15eddd976f3a7ace419dd4fd77474b356c",
+    "tests/connection_diagnosis/Client.py": "1eac45b0c73070d4345a9f80c7dbde4bfddc6c87f4247a5ccd1aca3653acab0e",
+    "tests/connection_diagnosis/Prepare.py": "ed43e048aca81df151a6f40f58f3c6f9345236ea14bfb5a22b0f07c280d0fab9",
+    "tests/connection_diagnosis/Backend.py": "5b5a650d3e7d3edf3814e84a899e1e2c656c567e8109464b3f31bc16a55d708d",
+    "tests/connection_diagnosis/SelfTest.py": "bb2731e5ec3defee0902d3b0624932c6f2165211b153d73f0a030c68b986e0aa",
+    "tests/connection_diagnosis/MatrixTest.py": "899bccb6c48fbbd9bb3a7631711fd0872d9d92174cd12ac47ed846c4ffca7a58",
+    "tests/connection_diagnosis/Negative.py": "8e698eb8d1ed1d6984d0dc372cc07b19bb87b45b60cad42d5f5d8fa44726e56c",
+    "tests/connection_diagnosis/TraceRuntime.py": "c416f39292b7cb8180dbf66f8f331b0aa8310a9f4e13a1ca5af2480deb87093d",
+    "tests/connection_diagnosis/Matrix.py": "e41f5d9bc085778525a2665378df4fc32c61e30b732a9e617fab20a7c4910c3f",
+    "tests/connection_diagnosis/FixtureTest.py": "4711d8aefa0ac7a5d98aecd52ac34c51efd62d445e39aa3c285d0f0a65e5c07c",
+    "tests/connection_diagnosis/ResetBackend.py": "9ae179a70dc49d5f533711198e9cda37509354fb95cbf55bf4a8e2275c97e4ba",
+    "tests/capacity/Formal.py": "5e622a3b60d9440c89c57b2e5a196ef0d1ba1dd996b103012feace19d6b9351f",
+    "tests/capacity/Reaudit.py": "24948de2996d59deb976902f590676f39638b4f9d0bb8b67f9136b4c44187dd6",
+    "tests/capacity/Client.py": "ec5ec86e36fde119f1e285f7ea2f075970f3563a8a20a3931166122055175f4e",
+    "tests/capacity/Analyze.py": "d65cc699c76b777a5b43c71273c2d631563a46e5a9514a144f8461d50c813b6c",
+    "tests/capacity/Run.py": "1657157ce9b9727775f50ad0d78e7da7ebcbea52172b9bcc95edb639ebbf06d0",
+    "tests/capacity/Backend.py": "644d54bba36a46d8d62579165d896adbd640adb73a5e2cd991030f756d7b7311",
+    "tests/capacity/SelfTest.py": "36f8fb38d56fbf72eec8a2fb75866e4098b975a75d249f33a6d4d4c8a349e764",
+    "tests/capacity/Negative.py": "caa452f536f2765116961f92af71520cd7b397920d85b48d88b19a5fa3a76f00",
+    "tests/capacity/Resume.py": "c1139f195dda8901a0d16746c7badcc544eade38ed1302d02008d57d9c92bdf2",
+    "tests/capacity/Environment.py": "c94699ad4b94ce617e3cd787959a3f36bf22956bf919e53006df10fb94438fc0",
+    "tests/capacity/InterruptTest.py": "f0e844de3fae35ef4809c6a9f74e937671c95258f4fe6e04c16558840e59786a",
+    "tests/capacity/Runtime.py": "354af9159bf175cb5ed7790c75be5e8e880096c88dfe4ea6977c46a87ef96c6c",
+    "tests/capacity/Common.py": "13a68b8e28749ae2bb54d6dce23710fc3c031057c191d0964e96fe99e233f8aa",
+    "tests/capacity/WriterBench.py": "a12a1bbc5fede3d15e1944b1087f9665d4c2577116cce51abf5e6ced388c044e",
+    "tests/capacity/ResourceSummary.py": "c1dd865e43767cb96fff15809d3b327782a5fff0e0c1cf9641c0679bf7738055",
+    "tests/connection_diagnosis/L4ConnectionTrace.patch": "239af4f6d435229d810192bf7fb549ab9fd70b109f13373d567edac09c85c6c4",
+    "/home/power/projects/AI-Inference-L7-Gateway/build-local/builder/v0.6-s2-trace/evidence/source-freeze-cpp-005.json": "33073dc06c0177678b3594ff091b263aeea0d441c4257b31a737c7b789680807",
+    "build-local/builder/v0.6-s2-trace/evidence/l4-original-files.json": "4f48c0013650bcb09cfb1bb5f93ec206b2dd4596b9385de7d804ad553ec0fbce",
+    "/home/power/projects/AI-Inference-L7-Gateway/build-local/builder/v0.6-s2-trace/gateway/uninstrumented/ai-inference-gateway": "a4e729016ffaa3b23f785eacefba5a4177a197b901b24cda1291f81d378c0ed1",
+    "/home/power/projects/AI-Inference-L7-Gateway/build-local/builder/v0.6-s2-trace/l4-build/uninstrumented/bin/l4lb": "dc4c217780a3bc189fc65b50ac83345cb2dee240b77269e30138c1dc2403b77e",
+    "/home/power/projects/AI-Inference-L7-Gateway/build-local/builder/v0.6-s2-trace/gateway/trace/ai-inference-gateway": "c73cb9328e26712e84aba1db3d3d3f64167114dee22a9e751878868e79465c54",
+    "/home/power/projects/AI-Inference-L7-Gateway/build-local/builder/v0.6-s2-trace/l4-build/trace/bin/l4lb": "75a71c0efb0a565fbe24c93139c978523cae6d5e864c6db3d3d1bf09287de092",
+    "/home/power/projects/AI-Inference-L7-Gateway/build-local/builder/v0.6-s2-trace/gateway/uninstrumented/CMakeCache.txt": "ca7ed2577611c4a884e1e74f75347f42b61e51c7caf75ebd3ea7f733c9988318",
+    "/home/power/projects/AI-Inference-L7-Gateway/build-local/builder/v0.6-s2-trace/gateway/trace/CMakeCache.txt": "0123e485e5ac4f3e352808ab5c3fcfd7524cd03844bf057d47b37d29af81b368",
+    "/home/power/projects/AI-Inference-L7-Gateway/build-local/builder/v0.6-s2-trace/l4-build/uninstrumented/CMakeCache.txt": "fe8025fed52401c64f62299f94540be9965ae48e17431dd0b37ded8976c94eb7",
+    "/home/power/projects/AI-Inference-L7-Gateway/build-local/builder/v0.6-s2-trace/l4-build/trace/CMakeCache.txt": "71501ea2730498338702089959acf50c97b4260dd925900b30e5a61ac89be89c"
+  },
+  "cpu_affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "environment": {
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "clock": "Linux CLOCK_MONOTONIC ns",
+    "compiler": "c++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+  },
+  "source_snapshot": "/home/power/projects/AI-Inference-L7-Gateway/build-local/builder/v0.6-s2-trace/evidence/source-freeze-cpp-005.json",
+  "l4_source": "/home/power/projects/AI-Inference-L7-Gateway/build-local/builder/v0.6-s2-trace/l4-source",
+  "external_l4": "/home/power/projects/L4-LoadBalancer-withXDP",
+  "budget": {
+    "full_reservation_bytes": 4211081216,
+    "negative_connections": [
+      2,
+      2,
+      1
+    ],
+    "maximum_performance_scheduled": 88320,
+    "record_bytes": 256,
+    "slots_per_process": 131071,
+    "maximum_trace_processes": 3,
+    "maximum_export_bytes_per_process": 33554432,
+    "row_caps": {
+      "client": 512,
+      "backend": 192,
+      "client_endpoints": 256,
+      "backend_endpoints": 192,
+      "association": 256,
+      "l4_log_per_request": 256
+    }
+  }
+}

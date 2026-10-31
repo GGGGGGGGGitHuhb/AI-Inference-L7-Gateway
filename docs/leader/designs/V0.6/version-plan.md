@@ -30,7 +30,7 @@
 - 正确性、取消、背压、半关闭、健康、排队与资源回收不允许退化。没有有效收益的候选回退或不采纳，记录负面结果，不靠增加资源掩盖效率退化。
 - 多Worker或外部协议/兼容性变化不是隐含授权；若成为候选，先形成明确架构与验收修订，再进入实现。
 
-2026-10-31后续规划：[直接归因取证设计](S2-trace-design.md)与[审查计划](../../../reviewer/reviews/V0.6/S2-trace-review.md)已形成Draft，见[规划报告](../../reports/V0.6/S2-trace-report-001.md)。本次只交付计划，尚未启动观察点实现或新实验；S2产品入口继续BLOCKED。
+2026-10-31后续规划：[直接归因取证设计](S2-trace-design.md)与[审查计划](../../../reviewer/reviews/V0.6/S2-trace-review.md)已按用户“那就按计划开始吧”转为Approved并进入实现，见[启动报告](../../reports/V0.6/S2-trace-report-002.md)。按门槛执行后，第三项控制因测试后端SIGTERM退出首错停止；观察设施未验收，15项性能均未开始，S2产品优化入口继续BLOCKED。见[本轮结果](../../../performance/V0.6/S2-trace-results.md)与[收口报告003](../../reports/V0.6/S2-trace-report-003.md)。
 
 ### S3：组合复验与版本收口
 
