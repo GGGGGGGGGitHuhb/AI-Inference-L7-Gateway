@@ -16,6 +16,9 @@ GatewayRuntime::GatewayRuntime(app::GatewayConfig config)
       budget_(config_.maxReservedBytes, config_.streamBuffer.maxTotalBytes),
       pool_(loop_, config_.upstreamPool, io_),
       router_(config_) {
+#ifdef GATEWAY_CONNECTION_TRACE
+  trace_ = connection_diagnosis::ConnectionTrace::processTrace();
+#endif
   app::validateAdmission(config_);
   if (config_.admission.enabled)
     admission_ = std::make_unique<admission::AdmissionController>(config_);
@@ -30,6 +33,11 @@ GatewayRuntime::~GatewayRuntime() {
   for (auto& [id, session] : sessions_)
     session->finishSession(FinishReason::kStopped);
   sessions_.clear();
+#ifdef GATEWAY_CONNECTION_TRACE
+  if (trace_)
+    trace_->finishTeardown(
+        connection_diagnosis::ConnectionTrace::monotonicNs());
+#endif
   if (shutdownTimer_) loop_.cancelTimer(shutdownTimer_);
   if (listenerChannel_) listenerChannel_->removeChannel();
   if (signalChannel_) signalChannel_->removeChannel();
@@ -113,22 +121,91 @@ void GatewayRuntime::onListenerEvent(std::uint32_t events) {
 
     const auto acceptedAt = io_.now();
     net::Socket client(fd);
-    if (sessions_.size() >= config_.maxConnections) continue;
+#ifdef GATEWAY_CONNECTION_TRACE
+    auto* traceRecord =
+        trace_
+            ? trace_->acceptRecord(
+                  1, fd, connection_diagnosis::ConnectionTrace::monotonicNs(),
+                  static_cast<std::uint32_t>(sessions_.size()),
+                  budget_.snapshot().reserved)
+            : nullptr;
+#endif
+    if (sessions_.size() >= config_.maxConnections) {
+#ifdef GATEWAY_CONNECTION_TRACE
+      if (traceRecord) {
+        trace_->classifyAccept(traceRecord,
+                               connection_diagnosis::Outcome::kConnectionLimit);
+        trace_->finishRecord(
+            traceRecord, connection_diagnosis::ConnectionTrace::monotonicNs(),
+            0);
+      }
+#endif
+      continue;
+    }
     auto reservation = budget_.acquireCapacity(CapacityKind::kSession);
-    if (!reservation.valid()) continue;
-    if (!nextSessionId_) throw std::overflow_error("session ID exhausted");
+    if (!reservation.valid()) {
+#ifdef GATEWAY_CONNECTION_TRACE
+      if (traceRecord) {
+        trace_->classifyAccept(traceRecord,
+                               connection_diagnosis::Outcome::kReservation);
+        trace_->finishRecord(
+            traceRecord, connection_diagnosis::ConnectionTrace::monotonicNs(),
+            0);
+      }
+#endif
+      continue;
+    }
+    if (!nextSessionId_) {
+#ifdef GATEWAY_CONNECTION_TRACE
+      if (traceRecord) {
+        trace_->classifyAccept(traceRecord,
+                               connection_diagnosis::Outcome::kOther);
+        trace_->finishRecord(
+            traceRecord, connection_diagnosis::ConnectionTrace::monotonicNs(),
+            0);
+      }
+#endif
+      throw std::overflow_error("session ID exhausted");
+    }
     const auto id = nextSessionId_++;
     try {
       auto session = std::make_unique<ProxySession>(
           loop_, config_, io_, pool_, std::move(client), acceptedAt, budget_,
           std::move(reservation), config_.models.empty() ? nullptr : &router_,
           &pools_, admission_.get(), id);
+#ifdef GATEWAY_CONNECTION_TRACE
+      session->trace_ = trace_;
+      session->traceRecord_ = traceRecord;
+#endif
       session->startSession();
       sessions_.emplace(id, std::move(session));
+#ifdef GATEWAY_CONNECTION_TRACE
+      if (traceRecord)
+        trace_->classifyAccept(traceRecord,
+                               connection_diagnosis::Outcome::kPublished, id);
+#endif
       peakSessions_ = std::max(peakSessions_, sessions_.size());
     } catch (const std::bad_alloc&) {
+#ifdef GATEWAY_CONNECTION_TRACE
+      if (traceRecord) {
+        trace_->classifyAccept(
+            traceRecord, connection_diagnosis::Outcome::kConstruction, id);
+        trace_->finishRecord(
+            traceRecord, connection_diagnosis::ConnectionTrace::monotonicNs(),
+            0);
+      }
+#endif
       // 新会话尚未发布；局部 RAII 回收，不损害其他会话。
     } catch (...) {
+#ifdef GATEWAY_CONNECTION_TRACE
+      if (traceRecord) {
+        trace_->classifyAccept(traceRecord,
+                               connection_diagnosis::Outcome::kOther, id);
+        trace_->finishRecord(
+            traceRecord, connection_diagnosis::ConnectionTrace::monotonicNs(),
+            0);
+      }
+#endif
       throw;
     }
   }
@@ -138,7 +215,15 @@ void GatewayRuntime::onCleanup() {
   scheduleWaiting();
   for (auto iterator = sessions_.begin(); iterator != sessions_.end();) {
     if (iterator->second->finished()) {
+#ifdef GATEWAY_CONNECTION_TRACE
+      auto* traceRecord = iterator->second->traceRecord_;
+#endif
       iterator = sessions_.erase(iterator);
+#ifdef GATEWAY_CONNECTION_TRACE
+      if (trace_)
+        trace_->removeRecord(
+            traceRecord, connection_diagnosis::ConnectionTrace::monotonicNs());
+#endif
     } else
       ++iterator;
   }

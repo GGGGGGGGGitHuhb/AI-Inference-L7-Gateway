@@ -1,5 +1,8 @@
 #pragma once
 #include <map>
+#ifdef GATEWAY_CONNECTION_TRACE
+#include "diagnostics/ConnectionTrace.h"
+#endif
 
 #include "app/GatewayConfig.h"
 #include "app/SignalSource.h"
@@ -49,6 +52,9 @@ class GatewayRuntime {
   void onShutdownDeadline();
   void forceShutdown();
 
+#ifdef GATEWAY_CONNECTION_TRACE
+  connection_diagnosis::ConnectionTrace* trace_ = nullptr;
+#endif
   app::GatewayConfig config_;
   BufferBudget budget_;
   SessionIo io_;
