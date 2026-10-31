@@ -1,0 +1,20 @@
+{
+  "status": "failed",
+  "tests": [
+    {
+      "name": "SelfTest.py",
+      "returncode": 0
+    },
+    {
+      "name": "MatrixTest.py",
+      "returncode": 0
+    },
+    {
+      "name": "ShutdownTest.py",
+      "returncode": 2
+    }
+  ],
+  "control_started": false,
+  "error": "RuntimeError('ShutdownTest.py failed; stop without repair/retry')",
+  "elapsed_seconds": 0.3453966080005557
+}

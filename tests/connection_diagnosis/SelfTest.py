@@ -72,7 +72,7 @@ class Tests(unittest.TestCase):
             item.name=str(i);item.process.pid=100+i
             item.process.poll.return_value=None
             item.process.wait.return_value=-9
-        second.process.send_signal.side_effect=TimeoutError('notify deadline')
+        second.request_stop.side_effect=TimeoutError('notify deadline')
         second.close.side_effect=TimeoutError('close deadline')
         first.close.return_value={'name':'first','returncode':0}
         records,errors=R.close_all([first,second])
@@ -96,6 +96,7 @@ class Tests(unittest.TestCase):
                 self.baseline_fd=0;self.tail=b'to=Healthy to=Healthy';self.closed=False
                 owned.append(self)
             def ready(self,*args):pass
+            def request_stop(self):pass
             def close(self):
                 self.closed=True;self.process.returncode=0
                 if self.name=='generator-1':signal.raise_signal(signal.SIGALRM)

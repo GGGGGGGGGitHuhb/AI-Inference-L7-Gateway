@@ -52,6 +52,7 @@ class Owned(BaseOwned):
     activity_deadline=0
 
     def __init__(self,command,name,root,limit):
+        self._stop_requested=False
         self.trace_expected=self.variant=='T' and (name.startswith('gateway-') or name=='l4lb')
         if self.trace_expected:
             directory=Path(root)/name;directory.mkdir()
@@ -60,13 +61,20 @@ class Owned(BaseOwned):
             command=['env','-u','CONNECTION_TRACE_DIR',*command]
         super().__init__(command,name,root,limit)
 
+    def request_stop(self):
+        # 同一控制线程中，批量通知和单项回收共享一次停止请求。
+        # 先标记再发信号；通知失败保留错误，由原截止/kill/reap兜底，不重发TERM。
+        if getattr(self,'_stop_requested',False):return
+        self._stop_requested=True
+        if self.process.poll() is None:
+            try:self.process.send_signal(signal.SIGTERM)
+            except ProcessLookupError:pass
+
     def close(self):
         started=time.monotonic();export_start=None;failure=None;killed=False
         deadline=min(self.activity_deadline or started+12,started+12)
         try:
-            if self.process.poll() is None:
-                try:self.process.send_signal(signal.SIGTERM)
-                except ProcessLookupError:pass
+            self.request_stop()
             while self.process.poll() is None:
                 match=re.search(rb'TRACE_EXPORT_BEGIN ([0-9]+)',self.tail)
                 if match:
@@ -100,7 +108,7 @@ def close_all(owned):
     records=[];errors=[]
     for item in reversed(owned):
         try:
-            if item.process.poll() is None:item.process.send_signal(signal.SIGTERM)
+            item.request_stop()
         except ProcessLookupError:pass
         except BaseException as error:errors.append('notify '+item.name+':'+repr(error))
     for item in reversed(owned):

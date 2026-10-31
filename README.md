@@ -1,6 +1,6 @@
 # AI Inference L7 Gateway
 
-> 当前状态（2026-10-31）：**V0.6/S2直接归因取证因测试工具退出异常首错停止，观察设施未验收，产品优化入口仍BLOCKED。** 三项控制通过两项；第三项测试后端SIGTERM退出，15项性能对照均未开始。没有新性能或主因结论，未发布。见[本轮结果](docs/performance/V0.6/S2-trace-results.md)与[收口报告](docs/leader/reports/V0.6/S2-trace-report-003.md)。
+> 当前状态（2026-10-31）：**V0.6/S2直接归因取证因测试工具退出异常首错停止，观察设施未验收，产品优化入口仍BLOCKED。** 三项控制通过两项；第三项测试后端SIGTERM退出，15项性能对照均未开始。没有新性能或主因结论，未发布。后续一次工具修复验证亦失败，已依用户要求停止，见[修复记录](docs/leader/reports/V0.6/S2-trace-report-004.md)。见[本轮结果](docs/performance/V0.6/S2-trace-results.md)与[收口报告](docs/leader/reports/V0.6/S2-trace-report-003.md)。
 
 面向在线文本推理服务的独立 C++ 七层网关项目，计划围绕流式代理、资源控制和请求调度建立可复现的工程实验。
 

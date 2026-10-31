@@ -1,6 +1,8 @@
 # S2-trace：有界直接连接取证
 
-> 当前工具未通过整轮验收：冻结首轮在第三项控制的reset-peer退出码-15处停止，15项性能全部未开始。`close_all`与`Owned.close`存在重复TERM通知路径，具体致命时序未取证。保留当前冻结工具用于审计，不重跑原清单或视为可用性能工具；修复与后续采集须单独记录，见[结果](../../docs/performance/V0.6/S2-trace-results.md)。
+> 2026-10-31追加：用户允许的一次停止通知修复已实施，但验证入口参数冲突导致新测试未启动，已停止且不重跑；修复有效性未确认，见[修复记录](../../docs/leader/reports/V0.6/S2-trace-report-004.md)。
+
+> 原冻结首轮未通过整轮验收：冻结首轮在第三项控制的reset-peer退出码-15处停止，15项性能全部未开始。`close_all`与`Owned.close`存在重复TERM通知路径，具体致命时序未取证。保留当前冻结工具用于审计，不重跑原清单或视为可用性能工具；修复与后续采集须单独记录，见[结果](../../docs/performance/V0.6/S2-trace-results.md)。
 
 依据Approved S2-trace-design/review。此目录为新诊断工具，冻结capacity/capacity_diagnosis及旧证据不改。默认产品编译不含观察点；Gateway `GATEWAY_CONNECTION_TRACE=ON`、隔离L4 `L4LB_CONNECTION_TRACE=ON`才编译设施，且只有设置自有绝对/相对输出目录`CONNECTION_TRACE_DIR`才开启。U为未编译设施，O为编译但变量未设置，T为相同诊断二进制开启；三者使用完全相同Client/Backend端点适配器、请求与日志。
 
